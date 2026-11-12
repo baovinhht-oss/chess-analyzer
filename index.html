@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title data-i18n="page_title">Phân Tích Ván Cờ - Chess.com Game Review</title>
+
+    <!-- Font chữ Inter chuẩn Chess.com -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- CSS thư viện chessboard.js -->
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+
+    <!-- CSS ứng dụng -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Lớp nền mờ (scrim) khi mở menu drawer -->
+    <div class="scrim" id="scrim"></div>
+
+    <!-- MENU DRAWER (DANH SÁCH VÁN CỜ TRƯỢT TỪ BÊN TRÁI) -->
+    <aside class="drawer" id="game-drawer" aria-label="Danh sách ván cờ">
+        <div class="dh">
+            <b><span data-i18n="game_list_title">Danh sách ván cờ</span> (<span id="game-count">0</span>)</b>
+            <div style="display:flex;gap:6px;align-items:center;">
+                <button id="btn-drawer-lifetime-stats" class="sm" data-i18n="lifetime_stats_btn" title="Xem thống kê sự nghiệp">Thống kê</button>
+                <button id="btn-clear-all-cache" class="sm" data-i18n="clear_cache" title="Xóa toàn bộ bộ nhớ phân tích đã lưu">Xóa bộ nhớ</button>
+                <button id="btn-close-drawer" class="sm" aria-label="Đóng danh sách ván cờ">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                        <path d="M3 3l8 8M11 3l-8 8" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Điều hướng tháng & năm (Thanh gọn gàng tiết kiệm diện tích - Yêu cầu 8) -->
+        <div class="mnav-compact">
+            <div class="month-selector-group">
+                <button id="btn-prev-month" class="btn-icon-subtle" title="Xem tháng trước" aria-label="Tháng trước">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
+                </button>
+                <select id="month" title="Chọn tháng">
+                    <option value="01" data-i18n="month_01">Thg 1</option>
+                    <option value="02" data-i18n="month_02">Thg 2</option>
+                    <option value="03" data-i18n="month_03">Thg 3</option>
+                    <option value="04" data-i18n="month_04">Thg 4</option>
+                    <option value="05" data-i18n="month_05">Thg 5</option>
+                    <option value="06" data-i18n="month_06">Thg 6</option>
+                    <option value="07" data-i18n="month_07">Thg 7</option>
+                    <option value="08" data-i18n="month_08">Thg 8</option>
+                    <option value="09" data-i18n="month_09">Thg 9</option>
+                    <option value="10" data-i18n="month_10">Thg 10</option>
+                    <option value="11" data-i18n="month_11" selected>Thg 11</option>
+                    <option value="12" data-i18n="month_12">Thg 12</option>
+                </select>
+                <input type="number" id="year" min="2007" max="2030" value="2026" title="Năm">
+                <button id="btn-next-month" class="btn-icon-subtle" disabled title="Xem tháng sau" aria-label="Tháng sau">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg>
+                </button>
+            </div>
+            <button id="btn-fetch" class="primary btn-fetch-icon" title="Tải lại danh sách ván cờ">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M2 8a6 6 0 1 1 1.8 4.2M2 12V8h4"/>
+                </svg>
+                <span data-i18n="fetch_btn">Tải</span>
+            </button>
+        </div>
+
+        <!-- Thông báo lỗi / trạng thái nạp -->
+        <div id="status-message" class="status-message hidden"></div>
+
+        <!-- Bộ lọc & Sắp xếp (Dòng ngang tối giản - Yêu cầu 8) -->
+        <div class="filters-compact">
+            <select id="filter-result" title="Lọc theo kết quả ván đấu">
+                <option value="all" data-i18n="filter_result_all">Kết quả: Tất cả</option>
+                <option value="win" data-i18n="filter_result_win">Thắng</option>
+                <option value="loss" data-i18n="filter_result_loss">Thua</option>
+                <option value="draw" data-i18n="filter_result_draw">Hòa</option>
+            </select>
+            <select id="filter-time-class" title="Lọc theo thể loại thời gian">
+                <option value="all" data-i18n="filter_time_all">Thể loại: Tất cả</option>
+                <option value="rapid" data-i18n="filter_time_rapid">Rapid</option>
+                <option value="blitz" data-i18n="filter_time_blitz">Blitz</option>
+                <option value="bullet" data-i18n="filter_time_bullet">Bullet</option>
+                <option value="daily" data-i18n="filter_time_daily">Daily</option>
+            </select>
+            <button id="btn-toggle-sort" class="btn-sort-compact" title="Bấm để đổi thứ tự sắp xếp">
+                <span id="sort-icon" hidden>⬇️</span><span id="sort-label" data-i18n="sort_newest">Mới nhất</span>
+            </button>
+        </div>
+
+        <!-- Thanh điều khiển phân tích chạy nền liên tục (Batch Analysis) -->
+        <div class="batch-controls-bar">
+            <button id="btn-start-batch" class="primary" data-i18n="batch_start">▶ Chạy phân tích nền</button>
+            <button id="btn-stop-batch" style="display:none;" data-i18n="batch_stop">⏸ Dừng lại</button>
+            <span id="batch-progress-text" class="mute" style="font-size:12px; margin-left:8px;"></span>
+        </div>
+
+        <!-- Danh sách ván cờ -->
+        <div id="game-list" class="glist">
+            <p class="empty-text" data-i18n="loading_games">Đang tải danh sách ván cờ...</p>
+        </div>
+    </aside>
+
+    <!-- TOÀN BỘ KHUNG ỨNG DỤNG -->
+    <div class="app">
+        <!-- THANH TRÊN CÙNG (HEADER) -->
+        <header class="top">
+            <div class="brand">
+                <button id="btn-open-drawer" class="hb" aria-label="Mở danh sách ván cờ" aria-expanded="false">
+                    <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                        <path d="M1 1.5h14M1 6h14M1 10.5h14" />
+                    </svg>
+                </button>
+                Chess<span>Review</span>
+            </div>
+
+            <div class="tools">
+                <span class="pill hidden" id="cache-status-badge" data-i18n="cache_saved">Đã lưu - tải từ bộ nhớ</span>
+                <button id="btn-lifetime-stats" class="btn-tool-stats" title="Thống kê sự nghiệp (Lifetime Stats)" aria-label="Thống kê sự nghiệp">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 20V10M12 20V4M6 20v-6" />
+                    </svg>
+                    <span data-i18n="lifetime_stats_btn">Thống kê</span>
+                </button>
+                <select id="select-lang" class="select-theme" title="Chọn ngôn ngữ / Select language">
+                    <option value="vi" selected>🇻🇳 Tiếng Việt</option>
+                    <option value="en">🇬🇧 English</option>
+                </select>
+                <select id="select-board-theme" class="select-theme" title="Chọn giao diện bàn cờ (Chessboard Theme)">
+                    <option value="green" data-i18n="board_green" selected>Bàn: Xanh lá</option>
+                    <option value="wood" data-i18n="board_wood">Bàn: Gỗ tự nhiên</option>
+                    <option value="walnut" data-i18n="board_walnut">Bàn: Gỗ óc chó</option>
+                    <option value="dark" data-i18n="board_dark">Bàn: Than tối</option>
+                    <option value="ocean" data-i18n="board_ocean">Bàn: Biển xanh</option>
+                    <option value="marble" data-i18n="board_marble">Bàn: Cẩm thạch</option>
+                    <option value="glass" data-i18n="board_glass">Bàn: Kính mờ</option>
+                    <option value="neon" data-i18n="board_neon">Bàn: Neon Glow</option>
+                    <option value="minimalist" data-i18n="board_minimalist">Bàn: Tối giản</option>
+                    <option value="parchment" data-i18n="board_parchment">Bàn: Giấy cổ</option>
+                    <option value="ice" data-i18n="board_ice">Bàn: Băng tuyết</option>
+                </select>
+                <select id="select-piece-theme" class="select-theme" title="Chọn bộ quân cờ (Piece Set)">
+                    <option value="classic" data-i18n="piece_classic" selected>Quân: Classic (Vector SVG)</option>
+                    <option value="neo" data-i18n="piece_neo">Quân: Neo (Chess.com)</option>
+                    <option value="game_room" data-i18n="piece_game_room">Quân: Game Room (Wood)</option>
+                    <option value="glass" data-i18n="piece_glass">Quân: Glass (Thủy tinh)</option>
+                    <option value="alpha" data-i18n="piece_alpha">Quân: Alpha (Hiện đại)</option>
+                    <option value="bases" data-i18n="piece_bases">Quân: Bases (Phẳng)</option>
+                    <option value="cburnett" data-i18n="piece_cburnett">Quân: Cburnett (Lichess)</option>
+                    <option value="merida" data-i18n="piece_merida">Quân: Merida (Truyền thống)</option>
+                    <option value="california" data-i18n="piece_california">Quân: California (Thanh lịch)</option>
+                    <option value="cardinal" data-i18n="piece_cardinal">Quân: Cardinal (Sắc sảo)</option>
+                    <option value="dubrovny" data-i18n="piece_dubrovny">Quân: Dubrovny (Gỗ cổ)</option>
+                </select>
+                <select id="select-depth" class="select-depth" title="Chọn độ sâu Stockfish (depth)">
+                    <option value="16" data-i18n="depth_16" selected>Độ sâu 16 (Nhanh - Dưới 1 phút)</option>
+                    <option value="18" data-i18n="depth_18">Độ sâu 18 (Cân bằng)</option>
+                    <option value="20" data-i18n="depth_20">Độ sâu 20 (Chuyên sâu)</option>
+                </select>
+                <button id="btn-theme" title="Đổi giao diện sáng/tối">Giao diện: Tối</button>
+            </div>
+        </header>
+
+        <!-- KHUNG CHỜ KHI CHƯA CHỌN VÁN CỜ (MINI-DASHBOARD) -->
+        <div id="review-placeholder" class="placeholder-box">
+            <!-- Trạng thái trống (khi chưa tải ván cờ hoặc không có dữ liệu) -->
+            <div id="welcome-empty" class="welcome-empty hidden">
+                <div class="placeholder-icon">♟️</div>
+                <h2 data-i18n="welcome_title">Chào mừng bạn đến với Chess.com Game Review</h2>
+                <p><span data-i18n="welcome_desc">Vui lòng bấm nút danh mục ở góc trên bên trái để chọn một ván cờ của</span> <strong id="header-username">bazu25022005</strong>.</p>
+            </div>
+
+            <!-- Mini-Dashboard hiển thị khi đã tải danh sách ván cờ -->
+            <div id="welcome-dashboard" class="welcome-dashboard">
+                <!-- Phân vùng 1: Hero (Ván cờ mới nhất) -->
+                <div class="card hero" id="welcome-hero">
+                    <div class="hero-left">
+                        <div class="mute hero-label" data-i18n="welcome_latest_game">Ván mới nhất của bạn</div>
+                        <h2 id="welcome-hero-title">Đang tải ván cờ...</h2>
+                        <div class="g hero-meta" id="welcome-hero-meta"></div>
+                    </div>
+                    <button type="button" id="btn-welcome-hero-analyze" class="primary btn-hero-analyze" data-i18n="welcome_analyze_this_game">Phân tích ván này</button>
+                </div>
+
+                <!-- Phân vùng 2: Tiles (Thống kê nhanh) -->
+                <div class="tiles" id="welcome-tiles">
+                    <!-- Tile 1: Tổng số ván trong tháng + Win/Draw/Loss bar -->
+                    <div class="card tile" id="welcome-tile-games">
+                        <div class="l" id="welcome-tile-games-label" data-i18n="welcome_month_games">Ván trong tháng</div>
+                        <div class="n" id="welcome-tile-games-count">0</div>
+                        <div class="wl" id="welcome-tile-games-bar">
+                            <i style="flex:1;background:var(--best)"></i>
+                            <i style="flex:0;background:var(--good)"></i>
+                            <i style="flex:0;background:var(--blu)"></i>
+                        </div>
+                        <div class="mute tile-sub" id="welcome-tile-games-sub">0 thắng · 0 hòa · 0 thua</div>
+                    </div>
+
+                    <!-- Tile 2: Tỉ lệ thắng -->
+                    <div class="card tile" id="welcome-tile-winrate">
+                        <div class="l" data-i18n="welcome_win_rate">Tỉ lệ thắng</div>
+                        <div class="n" id="welcome-tile-winrate-val">0%</div>
+                        <div class="mute tile-sub" id="welcome-tile-winrate-sub">0 ván thắng</div>
+                    </div>
+
+                    <!-- Tile 3: Độ chính xác trung bình -->
+                    <div class="card tile" id="welcome-tile-accuracy">
+                        <div class="l" data-i18n="welcome_avg_accuracy">Độ chính xác trung bình</div>
+                        <div class="n highlight-acc" id="welcome-tile-accuracy-val">--%</div>
+                        <div class="mute tile-sub" id="welcome-tile-accuracy-sub">Chưa có ván phân tích</div>
+                    </div>
+                </div>
+
+                <!-- Phân vùng 3: List (Ván gần đây) -->
+                <div class="card list" id="welcome-list-card">
+                    <div class="ttl">
+                        <span data-i18n="welcome_recent_games">Ván gần đây</span>
+                        <button type="button" id="btn-welcome-view-all" class="btn-view-all" data-i18n="welcome_view_all">Xem tất cả</button>
+                    </div>
+                    <div id="welcome-recent-list" class="recent-rows">
+                        <!-- 5 ván cờ gần nhất sẽ được render động -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VÙNG BÀN CỜ VÀ PHÂN TÍCH CHÍNH (Bọc bởi review-content, bị ẩn khi chưa chọn ván) -->
+        <main id="review-content" class="layout hidden">
+            <!-- CỘT TRÁI: BÀN CỜ + EVAL BAR + THÔNG TIN 2 KỲ THỦ -->
+            <div class="left">
+                <!-- THANH THÔNG TIN NGƯỜI CHƠI PHÍA TRÊN -->
+                <div id="player-bar-top" class="pbar">
+                    <div id="player-top-avatar" class="av top-av">D</div>
+                    <div class="pinfo">
+                        <div>
+                            <span id="player-top-name" class="pn">--</span>
+                            <span id="player-top-rating" class="pr">(-)</span>
+                        </div>
+                        <div class="cap-line">
+                            <span id="player-top-captured" class="cap"></span>
+                            <span id="player-top-advantage" class="adv hidden">+0</span>
+                        </div>
+                    </div>
+                    <div id="player-top-clock" class="clock hidden">00:00</div>
+                </div>
+
+                <!-- BÀN CỜ VÀ EVAL BAR -->
+                <div class="bw">
+                    <!-- THANH ĐÁNH GIÁ (EVAL BAR) -->
+                    <div id="eval-bar" class="evalbar orientation-white" title="Thanh đánh giá thế cờ (Eval Bar)">
+                        <i id="eval-bar-black" style="height: 50%;"></i>
+                        <span id="eval-score-black" class="eval-num black-num"></span>
+                        <div id="eval-bar-white" class="evalbar-white-wrap" style="height: 50%;"></div>
+                        <span id="eval-score-white" class="eval-num white-num">0,0</span>
+                    </div>
+
+                    <!-- BÀN CỜ VÀ LỚP PHỦ SVG + POPUP PHONG CẤP (BẮT BUỘC CLASS .board-wrapper) -->
+                    <div class="board-wrapper">
+                        <div id="board" class="board"></div>
+                        <svg id="board-overlay-svg" class="board-overlay-svg" viewBox="0 0 560 560"></svg>
+
+                        <!-- Hộp thoại phong cấp Tốt -->
+                        <div id="promotion-modal" class="promotion-modal hidden">
+                            <div class="promotion-dialog">
+                                <div class="promotion-title" data-i18n="promo_title">Chọn quân phong cấp:</div>
+                                <div class="promotion-pieces">
+                                    <button class="btn-promotion" data-piece="q" title="Phong Hậu (Queen)">
+                                        <span id="promo-icon-q" class="promotion-icon">♕</span>
+                                        <span class="promotion-label" data-i18n="promo_queen">Hậu</span>
+                                    </button>
+                                    <button class="btn-promotion" data-piece="r" title="Phong Xe (Rook)">
+                                        <span id="promo-icon-r" class="promotion-icon">♖</span>
+                                        <span class="promotion-label" data-i18n="promo_rook">Xe</span>
+                                    </button>
+                                    <button class="btn-promotion" data-piece="b" title="Phong Tượng (Bishop)">
+                                        <span id="promo-icon-b" class="promotion-icon">♗</span>
+                                        <span class="promotion-label" data-i18n="promo_bishop">Tượng</span>
+                                    </button>
+                                    <button class="btn-promotion" data-piece="n" title="Phong Mã (Knight)">
+                                        <span id="promo-icon-n" class="promotion-icon">♘</span>
+                                        <span class="promotion-label" data-i18n="promo_knight">Mã</span>
+                                    </button>
+                                </div>
+                                <button id="btn-cancel-promotion" class="btn-cancel-promotion" data-i18n="cancel_move">Hủy nước đi</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- THANH THÔNG TIN NGƯỜI CHƠI PHÍA DƯỚI -->
+                <div id="player-bar-bottom" class="pbar">
+                    <div id="player-bottom-avatar" class="av btm-av">B</div>
+                    <div class="pinfo">
+                        <div>
+                            <span id="player-bottom-name" class="pn">--</span>
+                            <span id="player-bottom-rating" class="pr">(-)</span>
+                        </div>
+                        <div class="cap-line">
+                            <span id="player-bottom-captured" class="cap"></span>
+                            <span id="player-bottom-advantage" class="adv hidden">+0</span>
+                        </div>
+                    </div>
+                    <div id="player-bottom-clock" class="clock hidden">00:00</div>
+                </div>
+            </div>
+
+            <!-- CỘT PHẢI: KHUNG PHÂN TÍCH, NHẬN XÉT, BIỂU ĐỒ, TABS, ĐIỀU KHIỂN -->
+            <div class="right">
+                <div class="scroll">
+                    <!-- TIÊU ĐỀ VÀ HÀNG NÚT TIỆN ÍCH -->
+                    <div class="rt">
+                        <div style="flex:1;">
+                            <div class="rt-head">
+                                <h1 data-i18n="game_review">Phân tích ván cờ</h1>
+                                <span id="game-result-badge" class="badge-result"></span>
+                            </div>
+                            <div class="sub" id="game-info-bar">
+                                <span id="game-players-info">--</span>
+                            </div>
+                        </div>
+                        <div class="rt-actions">
+                            <button id="btn-reanalyze" class="btn-action sm hidden" data-i18n="reanalyze" title="Xóa bộ nhớ đệm và phân tích lại ván này">Phân tích lại</button>
+                            <a id="btn-open-chesscom" class="btn-action sm" target="_blank" rel="noopener noreferrer" title="Mở ván cờ này trên Chess.com">Chess.com</a>
+                            <button id="btn-copy-pgn" class="btn-action sm" data-i18n="copy_pgn" title="Sao chép toàn bộ biên bản PGN">Copy PGN</button>
+                            <span id="copy-toast" class="copy-toast hidden" data-i18n="copied">Đã copy</span>
+                        </div>
+                    </div>
+
+                    <!-- THANH TIẾN ĐỘ PHÂN TÍCH STOCKFISH -->
+                    <div id="analysis-progress-box" class="analysis-progress-box hidden">
+                        <div class="progress-header">
+                            <div class="progress-header-left">
+                                <span id="analysis-progress-text">Đang phân tích... 0/0</span>
+                                <span id="analysis-elapsed-time" class="analysis-elapsed-time">00:00</span>
+                            </div>
+                            <div class="progress-header-right">
+                                <button id="btn-pause-analysis" class="btn-pause-analysis hidden" data-i18n="pause_analysis" title="Tạm dừng quá trình phân tích">Dừng phân tích</button>
+                                <span id="analysis-progress-percent">0%</span>
+                            </div>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div id="analysis-progress-fill" class="progress-bar-fill"></div>
+                        </div>
+                    </div>
+
+                    <!-- 4 Ô KPI CHÍNH THEO BẢN MẪU CHESS.COM -->
+                    <div class="acc">
+                        <div class="ab">
+                            <div class="an"><span class="dot" style="background:#fff;"></span><span data-i18n="your_accuracy">Độ chính xác của bạn</span></div>
+                            <div class="avl" id="kpi-user-accuracy" style="color:var(--pri);">--%</div>
+                        </div>
+                        <div class="ab">
+                            <div class="an"><span class="dot" style="background:#333;border:1px solid #888;"></span><span data-i18n="opp_accuracy">Độ chính xác của đối thủ</span></div>
+                            <div class="avl" id="kpi-opp-accuracy">--%</div>
+                        </div>
+                    </div>
+
+                    <!-- THẺ PERFORMANCE RATING (HIỆU SUẤT THI ĐẤU) -->
+                    <div class="perf-card" id="performance-card">
+                        <div class="perf-header">
+                            <div class="perf-title-wrap">
+                                <svg class="perf-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                                </svg>
+                                <span class="perf-title" data-i18n="performance_rating">Hiệu suất ván đấu</span>
+                            </div>
+                            <span class="perf-diff-badge hidden" id="kpi-perf-diff">--</span>
+                        </div>
+                        <div class="perf-body">
+                            <div class="perf-val-line">
+                                <span class="perf-val" id="kpi-performance-rating">--</span>
+                                <span class="perf-elo-label">Elo</span>
+                            </div>
+                            <span class="perf-sub" id="kpi-perf-comparison" data-i18n="perf_waiting">Chờ phân tích ván đấu...</span>
+                        </div>
+                    </div>
+
+                    <div class="facts">
+                        <div>
+                            <span data-i18n="opening">Khai cuộc</span>
+                            <b id="kpi-opening">--</b>
+                        </div>
+                        <div>
+                            <span data-i18n="your_mistakes">Nước sai của bạn</span>
+                            <b>
+                                <span id="kpi-user-mistakes" style="color:var(--ink);">0</span>
+                                <small id="kpi-user-mistakes-detail" style="color:var(--mute);font-weight:500;">(0 sai lầm, 0 sai lầm nặng)</small>
+                            </b>
+                        </div>
+                    </div>
+
+                    <!-- KHUNG "NHẬN XÉT NƯỚC ĐI" (COACH PANEL) -->
+                    <div class="coach" id="coach-panel">
+                        <div class="ch">
+                            <div class="mt" id="coach-move-title">
+                                <span class="dot" style="background:var(--good);"></span>
+                                <span class="move-title-text" data-i18n="starting_pos">Thế cờ xuất phát</span>
+                            </div>
+                            <div style="text-align:right;">
+                                <div class="eb" id="coach-eval-badge">+0,0</div>
+                                <div class="chip" id="coach-eval-perspective" data-i18n="white_perspective">Điểm số theo góc nhìn Trắng</div>
+                            </div>
+                        </div>
+
+                        <p id="coach-comment-text" data-i18n="starting_comment">Thế cờ xuất phát. Hãy bấm Tiến hoặc phím mũi tên Phải để xem từng nước đi.</p>
+
+                        <div class="cm">
+                            <span id="coach-pos-desc">Thế cờ cân bằng.</span>
+                            <span><span id="win-prob-label" data-i18n="win_prob_white">Tỉ lệ thắng (Trắng):</span> <b id="current-win-prob">50,0%</b></span>
+                            <span><span data-i18n="move_word">Nước</span> <b id="move-counter">0 / 0</b></span>
+                        </div>
+
+                        <!-- KHUNG TRẠNG THÁI ĐẤU VỚI BOT -->
+                        <div id="bot-game-panel" class="bot-game-panel hidden">
+                            <div class="bot-game-header">
+                                <div class="bot-badge-title">
+                                    <span class="bot-avatar-icon">🤖</span>
+                                    <strong data-i18n="bot_mode_title">Đang đấu với Bot (Stockfish)</strong>
+                                </div>
+                                <div class="bot-header-controls">
+                                    <button id="btn-bot-undo" class="btn-bot-undo" title="Đi lùi lại 1 lượt đấu (Lùi 2 nước)" data-i18n="btn_bot_undo">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 7v6h6"></path>
+                                            <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path>
+                                        </svg>
+                                        <span data-i18n="bot_undo_btn">Đi lùi</span>
+                                    </button>
+                                    <span class="bot-moves-counter" id="bot-moves-counter">0 nước</span>
+                                </div>
+                            </div>
+                            <div class="bot-status-message" id="bot-status-message">
+                                Tới lượt bạn đi quân...
+                            </div>
+                            <div id="bot-check-warning" class="bot-check-warning hidden"></div>
+                            <div id="bot-user-feedback" class="bot-user-feedback hidden"></div>
+                        </div>
+
+                        <!-- Các nút tác vụ Coach -->
+                        <div class="acts">
+                            <button id="btn-coach-exit-trial" class="btn-coach btn-exit-trial-coach hidden" data-i18n="btn_exit_trial" title="Thoát khỏi nhánh đi thử và quay lại ván gốc">Quay lại ván gốc</button>
+                            <button id="btn-exit-bot" class="btn-coach btn-exit-bot-coach hidden" data-i18n="btn_exit_bot" title="Thoát chế độ đấu với Bot và quay lại ván cờ">Thoát chế độ Bot</button>
+                            <button id="btn-play-bot" class="btn-coach btn-play-bot" disabled data-i18n="btn_play_bot" title="Chơi tiếp từ thế cờ này đấu với Bot (Stockfish)">Đấu với Bot</button>
+                            <button id="btn-coach-best" class="hidden" data-i18n="btn_best" title="Hiện/Ẩn nước đi tốt nhất của Stockfish">Nước tốt nhất</button>
+                            <button id="btn-coach-hint" disabled data-i18n="btn_hint" title="Gợi ý 3 nước hàng đầu (MultiPV = 3)">Gợi ý</button>
+                            <button id="btn-coach-explain" disabled data-i18n="btn_explain" title="Giải thích chi tiết nước đi này">Giải thích</button>
+                            <button id="btn-prev-mistake" disabled data-i18n="btn_prev_mistake" title="Nhảy về nước sai trước đó">Nước sai trước đó</button>
+                            <button id="btn-next-mistake" class="primary" disabled data-i18n="btn_next_mistake" title="Nhảy tới nước sai kế tiếp">Nước sai tiếp theo</button>
+                        </div>
+
+                        <!-- Khung 3 gợi ý MultiPV -->
+                        <div id="coach-hints-box" class="coach-hints-box hidden">
+                            <div class="hints-box-header">
+                                <span class="hints-title" data-i18n="hints_title">3 Nước gợi ý (Stockfish)</span>
+                                <button id="btn-close-hints" class="btn-close-hints" title="Đóng danh sách gợi ý">✕</button>
+                            </div>
+                            <div id="hints-list" class="hints-list"></div>
+                        </div>
+
+                        <!-- Khung giải thích chi tiết -->
+                        <div id="coach-explain-box" class="coach-explain-box hidden"></div>
+                    </div>
+
+                    <!-- BIỂU ĐỒ EVAL THẾ TRẬN -->
+                    <svg class="chart" id="eval-chart-svg" viewBox="0 0 600 100" preserveAspectRatio="none"></svg>
+
+                    <!-- KHU VỰC TABS (NƯỚC ĐI, PHÂN LOẠI, NƯỚC QUAN TRỌNG, ENGINE) -->
+                    <div class="tabs-container">
+                        <div class="tabs">
+                            <button class="on" data-tab="t-moves" data-i18n="tab_moves">Nước đi</button>
+                            <button data-tab="t-cls" data-i18n="tab_cls">Phân loại</button>
+                            <button data-tab="t-key" data-i18n="tab_key">Quan trọng</button>
+                            <button data-tab="t-engine" data-i18n="tab_engine">Engine</button>
+                        </div>
+
+                        <!-- Tab 1: Danh sách nước đi -->
+                        <div id="t-moves" class="tab-pane">
+                            <div class="moves" id="move-list"></div>
+                            <div class="moves bot-moves-container hidden" id="bot-move-list">
+                                <div class="bot-moves-header-bar">
+                                    <span class="bot-branch-tag" data-i18n="bot_branch_tag">🤖 Nhánh đấu với Bot</span>
+                                    <span id="bot-moves-live-count" class="bot-live-count">0 nước</span>
+                                </div>
+                                <div id="bot-moves-rows" class="bot-moves-rows">
+                                    <p class="empty-text" data-i18n="bot_no_moves">Chưa có nước đi nào trong trận đấu với Bot.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: Bảng phân loại & Thống kê Game Review (Yêu cầu 4) -->
+                        <div id="t-cls" class="tab-pane" style="display:none;padding-top:6px;">
+                            <div id="classification-bars"></div>
+
+                            <!-- Giữ bảng thống kê gốc ẩn trong DOM để bảo toàn 112 ID kiểm thử bắt buộc -->
+                            <div id="stats-panel" class="stats-panel hidden">
+                                <table class="stats-table">
+                                    <thead>
+                                        <tr>
+                                            <th id="th-white-name">⬜ Trắng</th>
+                                            <th id="th-black-name">⬛ Đen</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="stats-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab 3: Khối các nước quan trọng (Sai lầm của bạn) -->
+                        <div id="t-key" class="tab-pane" style="display:none;padding-top:8px;">
+                            <div id="key-moves-panel" class="key-moves-panel">
+                                <div class="key-moves-header">
+                                    <h3 data-i18n="key_moves_title">Các nước quan trọng (Sai lầm của bạn)</h3>
+                                    <span id="key-moves-count" class="key-moves-count-badge">0</span>
+                                </div>
+                                <div id="key-moves-list" class="key-moves-list">
+                                    <p class="empty-text" data-i18n="no_game_selected">Chưa chọn ván cờ.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 4: Engine phân tích trực tiếp -->
+                        <div id="t-engine" class="tab-pane" style="display:none;padding-top:8px;">
+                            <div id="live-engine-bar" class="live-engine-bar">
+                                <div class="live-engine-top">
+                                    <label class="engine-toggle-label" title="Bật/Tắt phân tích Stockfish trực tiếp khi đổi thế cờ">
+                                        <input type="checkbox" id="toggle-live-engine" checked>
+                                        <span class="engine-toggle-slider"></span>
+                                        <span class="engine-toggle-text" data-i18n="live_engine">Engine trực tiếp</span>
+                                    </label>
+                                    <div class="live-depth-control">
+                                        <label for="select-live-depth">Depth:</label>
+                                        <select id="select-live-depth" class="select-live-depth" title="Chọn độ sâu phân tích trực tiếp">
+                                            <option value="10" data-i18n="live_depth_10">10 (Nhanh)</option>
+                                            <option value="12" data-i18n="live_depth_12">12</option>
+                                            <option value="13" data-i18n="live_depth_13" selected>13 (Chuẩn)</option>
+                                            <option value="15" data-i18n="live_depth_15">15 (Sâu)</option>
+                                            <option value="18" data-i18n="live_depth_18">18 (Rất sâu)</option>
+                                        </select>
+                                    </div>
+                                    <span id="live-engine-status-badge" class="live-status-badge running" data-i18n="status_analyzing">Đang phân tích</span>
+                                </div>
+                                <div id="live-engine-results" class="live-engine-results">
+                                    <div class="live-result-item" title="Điểm đánh giá thế cờ hiện tại (góc nhìn Trắng)">
+                                        <span class="live-result-label" data-i18n="eval_label">Đánh giá:</span>
+                                        <span id="live-eval-text" class="live-result-val score-neutral">+0.00</span>
+                                    </div>
+                                    <div class="live-result-item" title="Nước đi tốt nhất Stockfish đề xuất">
+                                        <span class="live-result-label" data-i18n="best_move_label">Nước tốt nhất:</span>
+                                        <span id="live-best-move-text" class="live-result-val">--</span>
+                                    </div>
+                                    <div class="live-result-item" title="Độ sâu tìm kiếm hiện tại">
+                                        <span class="live-result-label" data-i18n="depth_label">Độ sâu:</span>
+                                        <span id="live-depth-text" class="live-result-val">0 / 13</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BỘ NÚT ĐIỀU KHIỂN CỐ ĐỊNH Ở ĐÁY PANEL PHẢI -->
+                <div class="ctrl">
+                    <button id="btn-start" aria-label="Về đầu ván" title="Về đầu ván (Home)">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 3v10M13 3L7 8l6 5" />
+                        </svg>
+                    </button>
+                    <button id="btn-prev" aria-label="Nước trước" title="Nước trước (←)">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 3L5 8l5 5" />
+                        </svg>
+                    </button>
+                    <button id="btn-play" class="primary" data-i18n="ctrl_play" title="Tự động phát ván cờ (Space)">Phát</button>
+                    <button id="btn-next" aria-label="Nước tiếp theo" title="Nước tiếp theo (→)">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 3l5 5-5 5" />
+                        </svg>
+                    </button>
+                    <button id="btn-end" aria-label="Tới cuối ván" title="Tới cuối ván (End)">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 3v10M3 3l6 5-6 5" />
+                        </svg>
+                    </button>
+                    <button id="btn-flip" data-i18n="ctrl_flip" title="Xoay bàn cờ (F)">Xoay bàn</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL THỐNG KÊ SỰ NGHIỆP (LIFETIME STATS MODAL) -->
+    <div id="lifetime-stats-modal" class="stats-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="stats-modal-title">
+        <div class="stats-modal-dialog">
+            <!-- Modal Header -->
+            <div class="stats-modal-header">
+                <div class="stats-modal-profile">
+                    <div class="stats-avatar" id="stats-user-avatar">B</div>
+                    <div class="stats-user-info">
+                        <div class="stats-header-title-wrap">
+                            <h2 id="stats-modal-title" data-i18n="lifetime_stats_title">Thống kê sự nghiệp</h2>
+                            <span class="stats-username-badge" id="stats-username">bazu25022005</span>
+                        </div>
+                        <p class="stats-subtitle" data-i18n="stats_subtitle">Tổng hợp phân tích từ toàn bộ lịch sử đấu</p>
+                    </div>
+                </div>
+                <button id="btn-close-stats-modal" class="stats-close-btn" aria-label="Đóng" title="Đóng bảng thống kê">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Body (Grid 4 thẻ Chess.com style) -->
+            <div class="stats-modal-body">
+                <div class="stats-grid">
+                    <!-- THẺ 1: TỔNG SỐ VÁN ĐẤU & BIỂU ĐỒ THẮNG / HÒA / THUA -->
+                    <div class="stats-card card-overview">
+                        <div class="stats-card-header">
+                            <span class="stats-card-icon">📊</span>
+                            <h3 data-i18n="stats_total_games">Tổng số ván đấu</h3>
+                        </div>
+                        <div class="stats-card-content">
+                            <div class="stats-big-number" id="stats-total-games-count">0</div>
+                            <div class="stats-wld-container">
+                                <div class="stats-wld-bar" id="stats-wld-bar">
+                                    <div class="wld-segment wld-win" id="wld-win-bar" style="width: 0%" title="Thắng: 0"></div>
+                                    <div class="wld-segment wld-draw" id="wld-draw-bar" style="width: 0%" title="Hòa: 0"></div>
+                                    <div class="wld-segment wld-loss" id="wld-loss-bar" style="width: 0%" title="Thua: 0"></div>
+                                </div>
+                                <div class="stats-wld-legend">
+                                    <div class="wld-legend-item legend-win">
+                                        <span class="legend-dot dot-win"></span>
+                                        <span class="legend-label" data-i18n="stats_win">Thắng</span>
+                                        <strong id="stats-wins-count">0</strong>
+                                        <span class="legend-pct" id="stats-wins-pct">(0%)</span>
+                                    </div>
+                                    <div class="wld-legend-item legend-draw">
+                                        <span class="legend-dot dot-draw"></span>
+                                        <span class="legend-label" data-i18n="stats_draw">Hòa</span>
+                                        <strong id="stats-draws-count">0</strong>
+                                        <span class="legend-pct" id="stats-draws-pct">(0%)</span>
+                                    </div>
+                                    <div class="wld-legend-item legend-loss">
+                                        <span class="legend-dot dot-loss"></span>
+                                        <span class="legend-label" data-i18n="stats_loss">Thua</span>
+                                        <strong id="stats-losses-count">0</strong>
+                                        <span class="legend-pct" id="stats-losses-pct">(0%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- THẺ 2: ĐỘ CHÍNH XÁC TRUNG BÌNH TOÀN SỰ NGHIỆP -->
+                    <div class="stats-card card-accuracy">
+                        <div class="stats-card-header">
+                            <span class="stats-card-icon">🎯</span>
+                            <h3 data-i18n="stats_career_accuracy">Độ chính xác trung bình</h3>
+                        </div>
+                        <div class="stats-card-content accuracy-center-content">
+                            <div class="accuracy-circle-wrap">
+                                <svg class="accuracy-circle-svg" viewBox="0 0 120 120">
+                                    <circle class="circle-bg" cx="60" cy="60" r="52"></circle>
+                                    <circle class="circle-progress" id="stats-accuracy-circle" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"></circle>
+                                </svg>
+                                <div class="accuracy-circle-value">
+                                    <span class="accuracy-main-num" id="stats-avg-accuracy">--%</span>
+                                </div>
+                            </div>
+                            <div class="accuracy-meta">
+                                <p class="stats-analyzed-count" id="stats-analyzed-games-text">Chưa có ván nào được phân tích</p>
+                                <div class="accuracy-split-row">
+                                    <span id="stats-white-accuracy">Cầm Trắng: --%</span>
+                                    <span id="stats-black-accuracy">Cầm Đen: --%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- THẺ 3: TỔNG SỐ HUY HIỆU TÍCH LŨY (10 HẠNG MỤC) -->
+                    <div class="stats-card card-badges">
+                        <div class="stats-card-header">
+                            <span class="stats-card-icon">🏅</span>
+                            <h3 data-i18n="stats_move_badges">Huy hiệu nước đi tích lũy</h3>
+                        </div>
+                        <div class="stats-card-content">
+                            <div class="stats-badges-grid" id="stats-badges-grid">
+                                <!-- Đổ động từ stats.js -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- THẺ 4: KHAI CUỘC CHƠI NHIỀU NHẤT -->
+                    <div class="stats-card card-openings">
+                        <div class="stats-card-header">
+                            <span class="stats-card-icon">📖</span>
+                            <h3 data-i18n="stats_favorite_openings">Khai cuộc chơi nhiều nhất</h3>
+                        </div>
+                        <div class="stats-card-content">
+                            <div class="stats-openings-list" id="stats-openings-list">
+                                <p class="empty-text" data-i18n="stats_no_games">Chưa có dữ liệu ván đấu nào.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NẠP THƯ VIỆN BÊN NGOÀI QUA CDN (GIỮ NGUYÊN THỨ TỰ) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <!-- NẠP CÁC FILE JAVASCRIPT ỨNG DỤNG (GIỮ NGUYÊN THỨ TỰ) -->
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script src="cache.js"></script>
+    <script src="engine.js"></script>
+    <script src="arrows.js"></script>
+    <script src="classify.js"></script>
+    <script src="explain.js"></script>
+    <script src="stats.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
