@@ -89,7 +89,7 @@ function calculateMoveAccuracy(winLoss, category = null, cpLoss = 0) {
  * @param {number} [moveIndex] - Chỉ số nước cờ (để nhận diện Book moves)
  * @returns {Object} Kết quả phân loại chi tiết
  */
-function evaluateMoveQuality(evalBefore, evalAfter, moverColor, playedUci, bestUci, moveIndex = null) {
+function evaluateMoveQuality(evalBefore, evalAfter, moverColor, playedUci, bestUci, moveIndex = null, moveContext = null) {
     const toWhitePerspectiveFn = (typeof toWhitePerspective === 'function')
         ? toWhitePerspective
         : (raw, turn) => {
@@ -163,13 +163,42 @@ function evaluateMoveQuality(evalBefore, evalAfter, moverColor, playedUci, bestU
 
     const isEngineBest = Boolean(playedUci && bestUci && playedUci === bestUci);
 
-    // 5. Great (!): Nước đi duy nhất (only move) giúp cứu vãn thế cờ hiểm nghèo hoặc duy trì ưu thế duy nhất
-    const isGreat = isEngineBest && (winLoss < 1.0) && (
-        (wasGettingMatedBefore && !isGettingMatedAfter) || // Thoát khỏi chiếu hết
-        (winBefore < 30.0 && winAfter >= 30.0) ||          // Cứu vãn thế cờ thua
-        (cpMoverAfter - cpMoverBefore >= 80) ||            // Engine nhìn thấy chiến thuật sâu hơn (Horizon effect)
-        (mateMoverAfter !== null && mateMoverAfter > 0 && mateMoverBefore === null) // Đột ngột tìm ra đường Mat
-    );
+    // 5. Great (!): Nước đi chuẩn xác (Best Move) trừng phạt sai lầm của đối thủ, 
+    // ăn quân chiến thuật quan trọng, hoặc giữ vững ưu thế trong thế cờ phức tạp.
+    let isGreat = false;
+    if (isEngineBest && !isBlunderedMate && !isAcceleratedMate && (moveIndex === null || moveIndex > 10)) {
+        // A. Kiểm tra sự dịch chuyển thế trận từ trước khi đối thủ đi (evalPrevPrev -> evalBefore)
+        let opponentGaveChance = false;
+        if (moveContext && moveContext.evalPrevPrev) {
+            const prevTurn = moverColor; // Lượt ở i-2 chính là của moverColor
+            const whitePrevPrev = (moveContext.evalPrevPrev.cpWhite !== undefined)
+                ? moveContext.evalPrevPrev
+                : toWhitePerspectiveFn(moveContext.evalPrevPrev, prevTurn);
+            const cpMoverPrevPrev = (whitePrevPrev.cpWhite || 0) * sign;
+            const winPrevPrev = winPercent(cpMoverPrevPrev);
+            const swingGain = winBefore - winPrevPrev;
+            // Đối thủ vừa đi sai giúp tỷ lệ thắng của ta tăng >= 12% (và ta đã đi đúng bestUci để chớp thời cơ)
+            if (swingGain >= 12.0 && winAfter >= 45.0) {
+                opponentGaveChance = true;
+            }
+        }
+
+        // B. Kiểm tra tính chất chiến thuật của nước đi (ăn quân giá trị >= Mã/Tượng, hoặc đòn thoát hiểm/chiếu)
+        const moveObj = moveContext && moveContext.move ? moveContext.move : null;
+        const capturedPiece = moveObj && moveObj.captured ? moveObj.captured.toLowerCase() : null;
+        const isHighValueCapture = Boolean(capturedPiece && ['q', 'r', 'b', 'n'].includes(capturedPiece));
+        const isTacticalCheck = Boolean(moveObj && moveObj.san && moveObj.san.includes('+'));
+
+        // C. Pha ăn quân/chiếu chiến thuật quyết định ở thế cờ giằng co hoặc vừa lật kèo
+        const isCrucialTacticalBest = (isHighValueCapture || isTacticalCheck) && 
+            (winAfter >= 52.0 && winBefore <= 88.0) && (winLoss <= 0.5);
+
+        // D. Horizon effect hoặc tìm ra đường chiếu hết
+        const isDeepHorizonGain = (cpMoverAfter - cpMoverBefore >= 60) || 
+            (hasMateAfter && !hadMateBefore);
+
+        isGreat = opponentGaveChance || isCrucialTacticalBest || isDeepHorizonGain;
+    }
 
     // 6. Book (📖): Nằm trong 10 ply đầu (moveIndex <= 10) và winLoss rất thấp
     const isBook = (moveIndex !== null && moveIndex !== undefined && moveIndex <= 10 && winLoss <= 1.0);
@@ -424,7 +453,11 @@ function classifyAllMovesAndStats(positions) {
         const playedUci = currPos.move.uci;
         const bestUci = prevPos.eval.bestmove;
 
-        const result = evaluateMoveQuality(prevPos.eval, currPos.eval, moverColor, playedUci, bestUci, i);
+        const evalPrevPrev = (i >= 2 && positions[i - 2] && positions[i - 2].eval) ? positions[i - 2].eval : null;
+        const result = evaluateMoveQuality(prevPos.eval, currPos.eval, moverColor, playedUci, bestUci, i, {
+            evalPrevPrev: evalPrevPrev,
+            move: currPos.move
+        });
         currPos.classification = result;
 
         // Tích hợp kiểm tra Brilliant trực tiếp

@@ -6,8 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title data-i18n="page_title">Phân Tích Ván Cờ - Chess.com Game Review</title>
 
-    <!-- Font chữ Inter chuẩn Chess.com -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Inter, Plus Jakarta Sans, Outfit, Space Grotesk, JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- CSS thư viện chessboard.js -->
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
@@ -109,9 +111,11 @@
         <!-- THANH TRÊN CÙNG (HEADER) -->
         <header class="top">
             <div class="brand">
-                <button id="btn-open-drawer" class="hb" aria-label="Mở danh sách ván cờ" aria-expanded="false">
-                    <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                        <path d="M1 1.5h14M1 6h14M1 10.5h14" />
+                <button id="btn-open-drawer" class="hb" aria-label="Mở danh sách ván cờ" aria-expanded="false" title="Mở danh sách ván cờ">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <line class="hb-line hb-line-1" x1="2.5" y1="4.5" x2="15.5" y2="4.5" />
+                        <line class="hb-line hb-line-2" x1="2.5" y1="9" x2="15.5" y2="9" />
+                        <line class="hb-line hb-line-3" x1="2.5" y1="13.5" x2="15.5" y2="13.5" />
                     </svg>
                 </button>
                 Chess<span>Review</span>
@@ -125,42 +129,62 @@
                     </svg>
                     <span data-i18n="lifetime_stats_btn">Thống kê</span>
                 </button>
-                <select id="select-lang" class="select-theme" title="Chọn ngôn ngữ / Select language">
-                    <option value="vi" selected>🇻🇳 Tiếng Việt</option>
-                    <option value="en">🇬🇧 English</option>
-                </select>
-                <select id="select-board-theme" class="select-theme" title="Chọn giao diện bàn cờ (Chessboard Theme)">
-                    <option value="green" data-i18n="board_green" selected>Bàn: Xanh lá</option>
-                    <option value="wood" data-i18n="board_wood">Bàn: Gỗ tự nhiên</option>
-                    <option value="walnut" data-i18n="board_walnut">Bàn: Gỗ óc chó</option>
-                    <option value="dark" data-i18n="board_dark">Bàn: Than tối</option>
-                    <option value="ocean" data-i18n="board_ocean">Bàn: Biển xanh</option>
-                    <option value="marble" data-i18n="board_marble">Bàn: Cẩm thạch</option>
-                    <option value="glass" data-i18n="board_glass">Bàn: Kính mờ</option>
-                    <option value="neon" data-i18n="board_neon">Bàn: Neon Glow</option>
-                    <option value="minimalist" data-i18n="board_minimalist">Bàn: Tối giản</option>
-                    <option value="parchment" data-i18n="board_parchment">Bàn: Giấy cổ</option>
-                    <option value="ice" data-i18n="board_ice">Bàn: Băng tuyết</option>
-                </select>
-                <select id="select-piece-theme" class="select-theme" title="Chọn bộ quân cờ (Piece Set)">
-                    <option value="classic" data-i18n="piece_classic" selected>Quân: Classic (Vector SVG)</option>
-                    <option value="neo" data-i18n="piece_neo">Quân: Neo (Chess.com)</option>
-                    <option value="game_room" data-i18n="piece_game_room">Quân: Game Room (Wood)</option>
-                    <option value="glass" data-i18n="piece_glass">Quân: Glass (Thủy tinh)</option>
-                    <option value="alpha" data-i18n="piece_alpha">Quân: Alpha (Hiện đại)</option>
-                    <option value="bases" data-i18n="piece_bases">Quân: Bases (Phẳng)</option>
-                    <option value="cburnett" data-i18n="piece_cburnett">Quân: Cburnett (Lichess)</option>
-                    <option value="merida" data-i18n="piece_merida">Quân: Merida (Truyền thống)</option>
-                    <option value="california" data-i18n="piece_california">Quân: California (Thanh lịch)</option>
-                    <option value="cardinal" data-i18n="piece_cardinal">Quân: Cardinal (Sắc sảo)</option>
-                    <option value="dubrovny" data-i18n="piece_dubrovny">Quân: Dubrovny (Gỗ cổ)</option>
-                </select>
-                <select id="select-depth" class="select-depth" title="Chọn độ sâu Stockfish (depth)">
-                    <option value="16" data-i18n="depth_16" selected>Độ sâu 16 (Nhanh - Dưới 1 phút)</option>
-                    <option value="18" data-i18n="depth_18">Độ sâu 18 (Cân bằng)</option>
-                    <option value="20" data-i18n="depth_20">Độ sâu 20 (Chuyên sâu)</option>
-                </select>
-                <button id="btn-theme" title="Đổi giao diện sáng/tối">Giao diện: Tối</button>
+                <button id="btn-open-settings" class="btn-tool-settings" title="Cài đặt (Settings)" aria-label="Cài đặt">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <span data-i18n="settings_btn">Cài đặt</span>
+                </button>
+
+                <!-- Thùng chứa ẩn lưu các ID cũ để bảo toàn 100% khả năng tương thích ngược và kiểm thử -->
+                <div class="hidden-legacy-controls" style="display: none;" aria-hidden="true">
+                    <select id="select-lang">
+                        <option value="vi" selected>Tiếng Việt</option>
+                        <option value="en">English</option>
+                    </select>
+                    <select id="select-board-theme">
+                        <option value="green" selected>Bàn: Xanh lá</option>
+                        <option value="wood">Bàn: Gỗ tự nhiên</option>
+                        <option value="walnut">Bàn: Gỗ óc chó</option>
+                        <option value="dark">Bàn: Than tối</option>
+                        <option value="ocean">Bàn: Biển xanh</option>
+                        <option value="marble">Bàn: Cẩm thạch</option>
+                        <option value="glass">Bàn: Kính mờ</option>
+                        <option value="neon">Bàn: Neon Glow</option>
+                        <option value="emerald">Bàn: Ngọc lục bảo</option>
+                        <option value="bubblegum">Bàn: Hồng pastel</option>
+                        <option value="icy_sea">Bàn: Xanh băng giá</option>
+                        <option value="8bit">Bàn: 8-Bit</option>
+                        <option value="minimalist">Bàn: Tối giản</option>
+                        <option value="parchment">Bàn: Giấy cổ</option>
+                        <option value="ice">Bàn: Băng tuyết</option>
+                    </select>
+                    <select id="select-piece-theme">
+                        <option value="classic" selected>Classic</option>
+                        <option value="neo">Neo</option>
+                        <option value="game_room">Game Room</option>
+                        <option value="glass">Glass</option>
+                        <option value="alpha">Alpha</option>
+                        <option value="bases">Bases</option>
+                        <option value="cburnett">Cburnett</option>
+                        <option value="merida">Merida</option>
+                        <option value="california">California</option>
+                        <option value="cardinal">Cardinal</option>
+                        <option value="dubrovny">Dubrovny</option>
+                        <option value="maestro">Maestro</option>
+                        <option value="staunty">Staunty</option>
+                        <option value="tatiana">Tatiana</option>
+                        <option value="governor">Governor</option>
+                        <option value="8_bit">8-Bit</option>
+                    </select>
+                    <select id="select-depth">
+                        <option value="16" selected>Độ sâu 16</option>
+                        <option value="18">Độ sâu 18</option>
+                        <option value="20">Độ sâu 20</option>
+                    </select>
+                    <button id="btn-theme">Giao diện: Tối</button>
+                </div>
             </div>
         </header>
 
@@ -587,6 +611,402 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- BẢNG CÀI ĐẶT CHUNG (SETTINGS MODAL 2 CỘT CHUẨN DISCORD / CHESS.COM) -->
+    <div id="settings-modal" class="settings-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+        <div class="settings-modal-dialog">
+            <!-- Header Bảng Cài đặt -->
+            <div class="settings-modal-header">
+                <div class="settings-modal-title-group">
+                    <div class="settings-title-icon-badge">⚙️</div>
+                    <div>
+                        <h2 id="settings-modal-title" data-i18n="settings_title">Cài đặt</h2>
+                        <p class="settings-subtitle" data-i18n="settings_subtitle">Tùy biến giao diện, font chữ, bàn cờ, quân cờ và engine phân tích</p>
+                    </div>
+                </div>
+                <button id="btn-close-settings-modal" class="settings-close-btn" aria-label="Đóng bảng cài đặt" title="Đóng cài đặt (Esc)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Thân Modal 2 Cột -->
+            <div class="settings-modal-body">
+                <!-- Cột trái: Sidebar Tabs -->
+                <nav class="settings-sidebar" aria-label="Danh mục cài đặt">
+                    <button type="button" class="settings-tab-btn active" data-settings-tab="ui">
+                        <span class="settings-tab-icon">🎨</span>
+                        <span class="settings-tab-label" data-i18n="settings_tab_ui">Giao diện & Font</span>
+                    </button>
+                    <button type="button" class="settings-tab-btn" data-settings-tab="board">
+                        <span class="settings-tab-icon">♟️</span>
+                        <span class="settings-tab-label" data-i18n="settings_tab_board">Bàn cờ & Quân cờ</span>
+                    </button>
+                    <button type="button" class="settings-tab-btn" data-settings-tab="engine">
+                        <span class="settings-tab-icon">⚡</span>
+                        <span class="settings-tab-label" data-i18n="settings_tab_engine">Trò chơi & Engine</span>
+                    </button>
+                    <button type="button" class="settings-tab-btn" data-settings-tab="data">
+                        <span class="settings-tab-icon">⚙️</span>
+                        <span class="settings-tab-label" data-i18n="settings_tab_data">Hệ thống & Dữ liệu</span>
+                    </button>
+                </nav>
+
+                <!-- Cột phải: Content Area -->
+                <div class="settings-content-area">
+                    <!-- ==============================================
+                         TAB 1: GIAO DIỆN & FONT
+                         ============================================== -->
+                    <div class="settings-pane active" id="settings-pane-ui">
+                        <!-- Theme Section -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <div>
+                                    <h3 data-i18n="settings_theme_label">Giao diện hiển thị</h3>
+                                    <p class="settings-card-desc" data-i18n="settings_theme_desc">Chuyển đổi giữa chế độ nền Tối và nền Sáng bảo vệ mắt</p>
+                                </div>
+                                <div class="settings-segmented" id="settings-theme-segmented">
+                                    <button type="button" class="seg-btn active" data-theme-val="dark">
+                                        <span class="seg-icon">🌙</span> <span data-i18n="settings_theme_dark">Tối</span>
+                                    </button>
+                                    <button type="button" class="seg-btn" data-theme-val="light">
+                                        <span class="seg-icon">☀️</span> <span data-i18n="settings_theme_light">Sáng</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Language Section -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <div>
+                                    <h3 data-i18n="settings_lang_label">Ngôn ngữ giao diện</h3>
+                                    <p class="settings-card-desc" data-i18n="settings_lang_desc">Lựa chọn ngôn ngữ sử dụng trên toàn bộ trang và huấn luyện viên</p>
+                                </div>
+                                <div class="settings-segmented" id="settings-lang-segmented">
+                                    <button type="button" class="seg-btn active" data-lang-val="vi">🇻🇳 Tiếng Việt</button>
+                                    <button type="button" class="seg-btn" data-lang-val="en">🇬🇧 English</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Font Selection Section -->
+                        <div class="settings-card">
+                            <div class="settings-card-header-simple">
+                                <h3 data-i18n="settings_font_label">Font chữ ứng dụng</h3>
+                                <p class="settings-card-desc" data-i18n="settings_font_desc">Chọn phong cách Typography ưa thích từ Google Fonts cao cấp</p>
+                            </div>
+                            <div class="settings-fonts-grid" id="settings-fonts-grid">
+                                <div class="font-option-card active" data-font="inter" style="font-family: 'Inter', sans-serif;">
+                                    <div class="font-card-top">
+                                        <span class="font-name">Inter</span>
+                                        <span class="font-badge" data-i18n="settings_font_default">Mặc định</span>
+                                    </div>
+                                    <div class="font-preview-sample">Aa Bb 123 • Chess Review</div>
+                                </div>
+                                <div class="font-option-card" data-font="plus-jakarta-sans" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                    <div class="font-card-top">
+                                        <span class="font-name">Plus Jakarta Sans</span>
+                                    </div>
+                                    <div class="font-preview-sample">Aa Bb 123 • Chess Review</div>
+                                </div>
+                                <div class="font-option-card" data-font="outfit" style="font-family: 'Outfit', sans-serif;">
+                                    <div class="font-card-top">
+                                        <span class="font-name">Outfit</span>
+                                    </div>
+                                    <div class="font-preview-sample">Aa Bb 123 • Chess Review</div>
+                                </div>
+                                <div class="font-option-card" data-font="space-grotesk" style="font-family: 'Space Grotesk', sans-serif;">
+                                    <div class="font-card-top">
+                                        <span class="font-name">Space Grotesk</span>
+                                    </div>
+                                    <div class="font-preview-sample">Aa Bb 123 • Chess Review</div>
+                                </div>
+                                <div class="font-option-card" data-font="jetbrains-mono" style="font-family: 'JetBrains Mono', monospace;">
+                                    <div class="font-card-top">
+                                        <span class="font-name">JetBrains Mono</span>
+                                    </div>
+                                    <div class="font-preview-sample">Aa Bb 123 • Chess Review</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         TAB 2: BÀN CỜ & QUÂN CỜ
+                         ============================================== -->
+                    <div class="settings-pane" id="settings-pane-board">
+                        <!-- Mini Live Preview -->
+                        <div class="mini-live-preview-card">
+                            <div class="mini-board-wrapper">
+                                <div class="mini-board" id="settings-mini-board">
+                                    <div class="mini-sq sq-l"><img class="mini-piece" data-piece="wN" alt="wN"></div>
+                                    <div class="mini-sq sq-d"></div>
+                                    <div class="mini-sq sq-l"><img class="mini-piece" data-piece="bK" alt="bK"></div>
+                                    <div class="mini-sq sq-d"></div>
+                                    <div class="mini-sq sq-d"></div>
+                                    <div class="mini-sq sq-l"><img class="mini-piece" data-piece="wP" alt="wP"></div>
+                                    <div class="mini-sq sq-d"></div>
+                                    <div class="mini-sq sq-l"></div>
+                                    <div class="mini-sq sq-l"></div>
+                                    <div class="mini-sq sq-d"></div>
+                                    <div class="mini-sq sq-l"></div>
+                                    <div class="mini-sq sq-d"><img class="mini-piece" data-piece="bQ" alt="bQ"></div>
+                                    <div class="mini-sq sq-d"></div>
+                                    <div class="mini-sq sq-l"></div>
+                                    <div class="mini-sq sq-d"><img class="mini-piece" data-piece="wB" alt="wB"></div>
+                                    <div class="mini-sq sq-l"></div>
+                                </div>
+                                <div class="mini-board-info">
+                                    <div class="mini-board-title" id="mini-preview-theme-title">Bàn cờ: Xanh lá • Quân cờ: Classic</div>
+                                    <p class="mini-board-subtitle" data-i18n="settings_mini_preview_hint">Xem trước thời gian thực — Bấm chọn bàn cờ hoặc quân cờ bên dưới để thay đổi lập tức!</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Board Themes Grid -->
+                        <div class="settings-card">
+                            <div class="settings-card-header-simple">
+                                <h3 data-i18n="settings_board_theme">Mẫu bàn cờ (Board Themes)</h3>
+                                <p class="settings-card-desc" data-i18n="settings_board_desc">Chọn màu sắc và chất liệu bàn cờ trực quan</p>
+                            </div>
+                            <div class="board-swatches-grid" id="settings-board-swatches">
+                                <!-- Đổ động từ JS -->
+                            </div>
+                        </div>
+
+                        <!-- Piece Sets Grid -->
+                        <div class="settings-card">
+                            <div class="settings-card-header-simple">
+                                <h3 data-i18n="settings_piece_theme">Bộ quân cờ (Piece Sets)</h3>
+                                <p class="settings-card-desc" data-i18n="settings_piece_desc">Chọn bộ thiết kế quân cờ từ Chess.com, Lichess và Vector cổ điển</p>
+                            </div>
+                            <div class="pieces-grid" id="settings-pieces-grid">
+                                <!-- Đổ động từ JS -->
+                            </div>
+                        </div>
+
+                        <!-- Display Options -->
+                        <div class="settings-card">
+                            <div class="settings-card-header-simple">
+                                <h3 data-i18n="settings_display_options">Tùy chọn hiển thị bàn cờ</h3>
+                            </div>
+                            <div class="settings-toggles-list">
+                                <div class="settings-toggle-row">
+                                    <div class="toggle-info">
+                                        <span class="toggle-label" data-i18n="settings_coordinates">Tọa độ bàn cờ (1-8, a-h)</span>
+                                        <span class="toggle-desc" data-i18n="settings_coords_desc">Hiển thị ký hiệu hàng và cột ở mép bàn cờ</span>
+                                    </div>
+                                    <label class="settings-switch">
+                                        <input type="checkbox" id="toggle-settings-coords" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="settings-toggle-row">
+                                    <div class="toggle-info">
+                                        <span class="toggle-label" data-i18n="settings_legal_hints">Chấm gợi ý nước đi hợp lệ</span>
+                                        <span class="toggle-desc" data-i18n="settings_legal_desc">Hiển thị các ô có thể đi khi nhấp chuột chọn quân</span>
+                                    </div>
+                                    <label class="settings-switch">
+                                        <input type="checkbox" id="toggle-settings-legal-hints" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="settings-toggle-row">
+                                    <div class="toggle-info">
+                                        <span class="toggle-label" data-i18n="settings_highlight_last">Tô sáng nước đi cuối (Highlight)</span>
+                                        <span class="toggle-desc" data-i18n="settings_highlight_desc">Đánh dấu ô xuất phát và ô đích của nước vừa đi</span>
+                                    </div>
+                                    <label class="settings-switch">
+                                        <input type="checkbox" id="toggle-settings-highlight-last" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="settings-toggle-row">
+                                    <div class="toggle-info">
+                                        <span class="toggle-label" data-i18n="settings_auto_flip">Tự động xoay bàn cờ theo màu quân</span>
+                                        <span class="toggle-desc" data-i18n="settings_autoflip_desc">Tự động xoay góc nhìn theo phía người dùng (Trắng/Đen) khi chọn ván cờ</span>
+                                    </div>
+                                    <label class="settings-switch">
+                                        <input type="checkbox" id="toggle-settings-auto-flip" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         TAB 3: TRÒ CHƠI & ENGINE
+                         ============================================== -->
+                    <div class="settings-pane" id="settings-pane-engine">
+                        <!-- Sound Effects -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <div>
+                                    <h3 data-i18n="settings_sound">Âm thanh (Sound Effects)</h3>
+                                    <p class="settings-card-desc" data-i18n="settings_sound_desc">Phát âm thanh khi đi quân, ăn quân, chiếu Vua và kết thúc ván</p>
+                                </div>
+                                <label class="settings-switch">
+                                    <input type="checkbox" id="toggle-settings-sound" checked>
+                                    <span class="switch-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Piece Animation Speed -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <div>
+                                    <h3 data-i18n="settings_anim_speed">Tốc độ di chuyển quân</h3>
+                                    <p class="settings-card-desc" data-i18n="settings_anim_desc">Thời gian chuyển động lướt quân cờ trên bàn đấu</p>
+                                </div>
+                                <div class="settings-segmented" id="settings-speed-segmented">
+                                    <button type="button" class="seg-btn" data-speed-val="0" data-i18n="settings_speed_instant">Tức thì (0ms)</button>
+                                    <button type="button" class="seg-btn" data-speed-val="150" data-i18n="settings_speed_fast">Nhanh (150ms)</button>
+                                    <button type="button" class="seg-btn active" data-speed-val="280" data-i18n="settings_speed_standard">Chuẩn (280ms)</button>
+                                    <button type="button" class="seg-btn" data-speed-val="450" data-i18n="settings_speed_smooth">Mượt (450ms)</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Review Depth -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <div>
+                                    <h3 data-i18n="settings_review_depth">Độ sâu phân tích (Review Depth)</h3>
+                                    <p class="settings-card-desc" data-i18n="settings_depth_desc">Độ sâu tính toán của Stockfish khi chạy Game Review toàn ván</p>
+                                </div>
+                                <div class="settings-segmented" id="settings-depth-segmented">
+                                    <button type="button" class="seg-btn active" data-depth-val="16">16 (Nhanh)</button>
+                                    <button type="button" class="seg-btn" data-depth-val="18">18 (Cân bằng)</button>
+                                    <button type="button" class="seg-btn" data-depth-val="20">20 (Sâu)</button>
+                                    <button type="button" class="seg-btn" data-depth-val="22">22 (GM)</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Move Time Slider -->
+                        <div class="settings-card">
+                            <div class="settings-card-header-simple">
+                                <div class="slider-header-wrap">
+                                    <div>
+                                        <h3 data-i18n="settings_move_time">Thời gian suy nghĩ mỗi nước</h3>
+                                        <p class="settings-card-desc" data-i18n="settings_movetime_desc">Giới hạn thời gian tối đa Stockfish tính toán cho mỗi nước cờ</p>
+                                    </div>
+                                    <span class="settings-val-badge" id="settings-move-time-val">180ms</span>
+                                </div>
+                                <div class="slider-container">
+                                    <input type="range" id="settings-move-time-slider" min="100" max="500" step="25" value="180" class="settings-range-slider">
+                                    <div class="slider-ticks">
+                                        <span>100ms</span>
+                                        <span>200ms</span>
+                                        <span>300ms</span>
+                                        <span>400ms</span>
+                                        <span>500ms</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Arrows and Badges -->
+                        <div class="settings-card">
+                            <div class="settings-card-header-simple">
+                                <h3 data-i18n="settings_arrows_badges">Mũi tên & Huy hiệu trên bàn cờ</h3>
+                            </div>
+                            <div class="settings-toggles-list">
+                                <div class="settings-toggle-row">
+                                    <div class="toggle-info">
+                                        <span class="toggle-label" data-i18n="settings_best_arrow">Mũi tên gợi ý nước đi tốt nhất</span>
+                                        <span class="toggle-desc" data-i18n="settings_arrow_desc">Vẽ mũi tên vector xanh lá chỉ rõ nước cờ tối ưu của Stockfish</span>
+                                    </div>
+                                    <label class="settings-switch">
+                                        <input type="checkbox" id="toggle-settings-best-arrow" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="settings-toggle-row">
+                                    <div class="toggle-info">
+                                        <span class="toggle-label" data-i18n="settings_eval_badges">Huy hiệu đánh giá trên ô cờ</span>
+                                        <span class="toggle-desc" data-i18n="settings_badge_desc">Gắn biểu tượng Brilliant (!!), Great (!), Best (★), Blunder (??)... vào ô đích</span>
+                                    </div>
+                                    <label class="settings-switch">
+                                        <input type="checkbox" id="toggle-settings-eval-badges" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ==============================================
+                         TAB 4: HỆ THỐNG & DỮ LIỆU
+                         ============================================== -->
+                    <div class="settings-pane" id="settings-pane-data">
+                        <!-- Chess.com Username -->
+                        <div class="settings-card">
+                            <div class="settings-card-header-simple">
+                                <h3 data-i18n="settings_default_user">Tài khoản Chess.com mặc định</h3>
+                                <p class="settings-card-desc" data-i18n="settings_user_desc">Tự động tải danh sách ván đấu, nhận diện màu quân và thống kê sự nghiệp theo người chơi này</p>
+                            </div>
+                            <div class="username-input-group">
+                                <input type="text" id="settings-username-input" class="settings-text-input" placeholder="Nhập username Chess.com (VD: bazu25022005)" autocomplete="off">
+                                <button type="button" id="btn-save-username" class="settings-action-btn primary">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                        <polyline points="7 3 7 8 15 8"></polyline>
+                                    </svg>
+                                    <span data-i18n="settings_save_user">Lưu & Tải lại</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- IndexedDB Cache Management -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <div>
+                                    <h3 data-i18n="settings_cache_mgmt">Quản lý bộ nhớ đệm phân tích (IndexedDB)</h3>
+                                    <p class="settings-card-desc">Lưu trữ kết quả đánh giá ván cờ trên trình duyệt giúp tải lại tức thì không cần phân tích lại</p>
+                                </div>
+                                <div class="cache-stat-badge">
+                                    <span class="stat-number" id="settings-cache-count">0 ván cờ</span>
+                                </div>
+                            </div>
+                            <div class="card-action-bar">
+                                <button type="button" id="btn-settings-clear-cache" class="settings-action-btn danger">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                    <span data-i18n="settings_clear_cache_btn">Xóa bộ nhớ phân tích</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Reset Defaults -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <div>
+                                    <h3 data-i18n="settings_reset_label">Khôi phục cài đặt gốc</h3>
+                                    <p class="settings-card-desc" data-i18n="settings_reset_desc">Đưa toàn bộ tùy biến giao diện, font chữ, bàn cờ, âm thanh và engine về mặc định ban đầu</p>
+                                </div>
+                                <button type="button" id="btn-settings-reset-defaults" class="settings-action-btn warning">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                                        <path d="M3 3v5h5"></path>
+                                    </svg>
+                                    <span data-i18n="settings_reset_btn">Khôi phục mặc định</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL THỐNG KÊ SỰ NGHIỆP (LIFETIME STATS MODAL) -->

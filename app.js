@@ -291,7 +291,64 @@ const TRANSLATIONS = {
         batch_running: 'Đang phân tích ván {0} / {1}...',
         batch_paused: 'Đã tạm dừng phân tích nền.',
         batch_done: 'Đã hoàn tất phân tích toàn bộ tháng!',
-        batch_no_games: 'Chưa có danh sách ván cờ.'
+        batch_no_games: 'Chưa có danh sách ván cờ.',
+
+        // Settings Modal
+        settings_title: 'Cài đặt',
+        settings_subtitle: 'Tùy biến giao diện, font chữ, bàn cờ, quân cờ và engine phân tích',
+        settings_btn: 'Cài đặt',
+        settings_tab_ui: 'Giao diện & Font',
+        settings_tab_board: 'Bàn cờ & Quân cờ',
+        settings_tab_engine: 'Trò chơi & Engine',
+        settings_tab_data: 'Hệ thống & Dữ liệu',
+        settings_theme_label: 'Giao diện hiển thị',
+        settings_theme_desc: 'Chuyển đổi giữa chế độ nền Tối và nền Sáng bảo vệ mắt',
+        settings_theme_dark: 'Tối',
+        settings_theme_light: 'Sáng',
+        settings_lang_label: 'Ngôn ngữ giao diện',
+        settings_lang_desc: 'Lựa chọn ngôn ngữ sử dụng trên toàn bộ trang và huấn luyện viên',
+        settings_font_label: 'Font chữ ứng dụng',
+        settings_font_desc: 'Chọn phong cách Typography ưa thích từ Google Fonts cao cấp',
+        settings_font_default: 'Mặc định',
+        settings_board_theme: 'Mẫu bàn cờ',
+        settings_board_desc: 'Chọn màu sắc và chất liệu bàn cờ trực quan',
+        settings_piece_theme: 'Bộ quân cờ',
+        settings_piece_desc: 'Chọn bộ thiết kế quân cờ từ Chess.com, Lichess và Vector cổ điển',
+        settings_mini_preview_hint: 'Xem trước thời gian thực — Bấm chọn bàn cờ hoặc quân cờ bên dưới để thay đổi lập tức!',
+        settings_display_options: 'Tùy chọn hiển thị bàn cờ',
+        settings_coordinates: 'Tọa độ bàn cờ (1-8, a-h)',
+        settings_coords_desc: 'Hiển thị ký hiệu hàng và cột ở mép bàn cờ',
+        settings_legal_hints: 'Chấm gợi ý nước đi hợp lệ',
+        settings_legal_desc: 'Hiển thị các ô có thể đi khi nhấp chuột chọn quân',
+        settings_highlight_last: 'Tô sáng nước đi cuối (Highlight)',
+        settings_highlight_desc: 'Đánh dấu ô xuất phát và ô đích của nước vừa đi',
+        settings_auto_flip: 'Tự động xoay bàn cờ theo màu quân',
+        settings_autoflip_desc: 'Tự động xoay góc nhìn theo phía người dùng (Trắng/Đen) khi chọn ván cờ',
+        settings_sound: 'Âm thanh (Sound Effects)',
+        settings_sound_desc: 'Phát âm thanh khi đi quân, ăn quân, chiếu Vua và kết thúc ván',
+        settings_anim_speed: 'Tốc độ di chuyển quân',
+        settings_anim_desc: 'Thời gian chuyển động lướt quân cờ trên bàn đấu',
+        settings_speed_instant: 'Tức thì (0ms)',
+        settings_speed_fast: 'Nhanh (150ms)',
+        settings_speed_standard: 'Chuẩn (280ms)',
+        settings_speed_smooth: 'Mượt (450ms)',
+        settings_review_depth: 'Độ sâu phân tích (Review Depth)',
+        settings_depth_desc: 'Độ sâu tính toán của Stockfish khi chạy Game Review toàn ván',
+        settings_move_time: 'Thời gian suy nghĩ mỗi nước',
+        settings_movetime_desc: 'Giới hạn thời gian tối đa Stockfish tính toán cho mỗi nước cờ',
+        settings_arrows_badges: 'Mũi tên & Huy hiệu trên bàn cờ',
+        settings_best_arrow: 'Mũi tên gợi ý nước đi tốt nhất',
+        settings_arrow_desc: 'Vẽ mũi tên vector xanh lá chỉ rõ nước cờ tối ưu của Stockfish',
+        settings_eval_badges: 'Huy hiệu đánh giá trên ô cờ',
+        settings_badge_desc: 'Gắn biểu tượng Brilliant (!!), Great (!), Best (★), Blunder (??)... vào ô đích',
+        settings_default_user: 'Tài khoản Chess.com mặc định',
+        settings_user_desc: 'Tự động tải danh sách ván đấu, nhận diện màu quân và thống kê sự nghiệp theo người chơi này',
+        settings_save_user: 'Lưu & Tải lại',
+        settings_cache_mgmt: 'Quản lý bộ nhớ đệm phân tích (IndexedDB)',
+        settings_clear_cache_btn: 'Xóa bộ nhớ phân tích',
+        settings_reset_label: 'Khôi phục cài đặt gốc',
+        settings_reset_desc: 'Đưa toàn bộ tùy biến giao diện, font chữ, bàn cờ, âm thanh và engine về mặc định ban đầu',
+        settings_reset_btn: 'Khôi phục mặc định'
     },
     en: {
         page_title: 'Chess Analyzer',
@@ -534,7 +591,64 @@ const TRANSLATIONS = {
         batch_running: 'Analyzing game {0} / {1}...',
         batch_paused: 'Batch analysis paused.',
         batch_done: 'All monthly games analyzed!',
-        batch_no_games: 'No games to analyze.'
+        batch_no_games: 'No games to analyze.',
+
+        // Settings Modal
+        settings_title: 'Settings',
+        settings_subtitle: 'Customize appearance, font, chessboard, pieces, and engine review',
+        settings_btn: 'Settings',
+        settings_tab_ui: 'Appearance & Font',
+        settings_tab_board: 'Board & Pieces',
+        settings_tab_engine: 'Game & Engine',
+        settings_tab_data: 'System & Data',
+        settings_theme_label: 'Color Theme',
+        settings_theme_desc: 'Switch between Dark mode and Light mode for comfort',
+        settings_theme_dark: 'Dark',
+        settings_theme_light: 'Light',
+        settings_lang_label: 'Language',
+        settings_lang_desc: 'Select preferred interface language for app and coach',
+        settings_font_label: 'Application Font',
+        settings_font_desc: 'Choose typography from modern Google Fonts',
+        settings_font_default: 'Default',
+        settings_board_theme: 'Chessboard Theme',
+        settings_board_desc: 'Select visual board colors and textures',
+        settings_piece_theme: 'Piece Set',
+        settings_piece_desc: 'Choose piece set from Chess.com, Lichess, and Vector designs',
+        settings_mini_preview_hint: 'Real-time Live Preview — Click any board or piece set below to see immediate updates!',
+        settings_display_options: 'Board Display Options',
+        settings_coordinates: 'Board Coordinates (1-8, a-h)',
+        settings_coords_desc: 'Show rank and file numbers along board edges',
+        settings_legal_hints: 'Legal Move Dots',
+        settings_legal_desc: 'Highlight legal target squares when a piece is clicked',
+        settings_highlight_last: 'Highlight Last Move',
+        settings_highlight_desc: 'Highlight origin and destination squares of the latest move',
+        settings_auto_flip: 'Auto-flip Board to User Side',
+        settings_autoflip_desc: 'Automatically orient board to your player color (White/Black)',
+        settings_sound: 'Sound Effects',
+        settings_sound_desc: 'Play sounds for moves, captures, checks, and game over',
+        settings_anim_speed: 'Piece Animation Speed',
+        settings_anim_desc: 'Smooth sliding duration when pieces move',
+        settings_speed_instant: 'Instant (0ms)',
+        settings_speed_fast: 'Fast (150ms)',
+        settings_speed_standard: 'Standard (280ms)',
+        settings_speed_smooth: 'Smooth (450ms)',
+        settings_review_depth: 'Stockfish Review Depth',
+        settings_depth_desc: 'Search depth used during full game reviews',
+        settings_move_time: 'Think Time per Move',
+        settings_movetime_desc: 'Maximum calculation time per move allowed for Stockfish',
+        settings_arrows_badges: 'Arrows & Badges on Board',
+        settings_best_arrow: 'Best Move Arrow',
+        settings_arrow_desc: 'Render green vector arrow indicating engine best move',
+        settings_eval_badges: 'Square Evaluation Badges',
+        settings_badge_desc: 'Attach Brilliant (!!), Great (!), Best (★), Blunder (??)... on squares',
+        settings_default_user: 'Default Chess.com Username',
+        settings_user_desc: 'Automatically fetch games, identify your side and compute lifetime stats',
+        settings_save_user: 'Save & Reload',
+        settings_cache_mgmt: 'Analysis Cache Management (IndexedDB)',
+        settings_clear_cache_btn: 'Clear Analysis Cache',
+        settings_reset_label: 'Restore Factory Defaults',
+        settings_reset_desc: 'Reset all appearance, font, board, sound, and engine settings to defaults',
+        settings_reset_btn: 'Restore Defaults'
     }
 };
 
@@ -745,7 +859,7 @@ let selectedGameIndex = null;
 function getCurrentUserColor(game = (selectedGameIndex !== null && loadedGames ? loadedGames[selectedGameIndex] : null)) {
     if (!game) return 'w';
     if (game.userColor) return game.userColor;
-    const defaultUser = (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : 'bazu25022005').toLowerCase();
+    const defaultUser = (typeof getAppUsername === 'function' ? getAppUsername() : (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : 'bazu25022005')).toLowerCase();
     if (game.white) {
         const whiteName = (typeof game.white === 'string' ? game.white : (game.white.username || '')).toLowerCase();
         if (whiteName === defaultUser) return 'w';
@@ -920,7 +1034,12 @@ const btnFlip = document.getElementById('btn-flip');
 function setDrawerOpen(isOpen) {
     if (gameDrawer) gameDrawer.classList.toggle('open', isOpen);
     if (scrim) scrim.classList.toggle('on', isOpen);
-    if (btnOpenDrawer) btnOpenDrawer.setAttribute('aria-expanded', String(isOpen));
+    if (btnOpenDrawer) {
+        btnOpenDrawer.setAttribute('aria-expanded', String(isOpen));
+        btnOpenDrawer.classList.toggle('active', isOpen);
+        btnOpenDrawer.setAttribute('aria-label', isOpen ? 'Đóng danh sách ván cờ' : 'Mở danh sách ván cờ');
+        btnOpenDrawer.setAttribute('title', isOpen ? 'Đóng danh sách ván cờ' : 'Mở danh sách ván cờ');
+    }
 }
 function openGameDrawer() { setDrawerOpen(true); }
 function closeGameDrawer() { setDrawerOpen(false); }
@@ -1027,6 +1146,12 @@ function hideStatus() {
 
 const SoundManager = (function () {
     let audioCtx = null;
+    let isSoundEnabled = true;
+    try {
+        const saved = localStorage.getItem('chess_sound_enabled');
+        if (saved !== null) isSoundEnabled = (saved === 'true');
+    } catch (e) {}
+
     function getAudioContext() {
         if (!audioCtx) {
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -1036,7 +1161,15 @@ const SoundManager = (function () {
         return audioCtx;
     }
     return {
+        setEnabled: function (val) {
+            isSoundEnabled = Boolean(val);
+            try { localStorage.setItem('chess_sound_enabled', String(val)); } catch (e) {}
+        },
+        isEnabled: function () {
+            return isSoundEnabled;
+        },
         playMove: function () {
+            if (!isSoundEnabled) return;
             try {
                 const ctx = getAudioContext(); if (!ctx) return;
                 const now = ctx.currentTime;
@@ -1051,6 +1184,7 @@ const SoundManager = (function () {
             } catch (err) { }
         },
         playCapture: function () {
+            if (!isSoundEnabled) return;
             try {
                 const ctx = getAudioContext(); if (!ctx) return;
                 const now = ctx.currentTime;
@@ -1065,6 +1199,7 @@ const SoundManager = (function () {
             } catch (err) { }
         },
         playIllegal: function () {
+            if (!isSoundEnabled) return;
             try {
                 const ctx = getAudioContext(); if (!ctx) return;
                 const now = ctx.currentTime;
@@ -1078,6 +1213,7 @@ const SoundManager = (function () {
             } catch (err) { }
         },
         playCheck: function () {
+            if (!isSoundEnabled) return;
             try {
                 const ctx = getAudioContext(); if (!ctx) return;
                 const now = ctx.currentTime;
@@ -1089,6 +1225,7 @@ const SoundManager = (function () {
             } catch (err) { }
         },
         playEnd: function () {
+            if (!isSoundEnabled) return;
             try {
                 const ctx = getAudioContext(); if (!ctx) return;
                 const now = ctx.currentTime;
@@ -1102,25 +1239,78 @@ const SoundManager = (function () {
     };
 })();
 
-const BOARD_THEMES = { green: 'Xanh lá', wood: 'Gỗ', walnut: 'Gỗ óc chó', dark: 'Than tối', ocean: 'Biển xanh', marble: 'Cẩm thạch', glass: 'Kính mờ', neon: 'Neon', minimalist: 'Tối giản', parchment: 'Giấy cổ', ice: 'Băng tuyết' };
+// ============================================================================
+// BẢNG BÀN CỜ & QUÂN CỜ PHONG PHÚ
+// ============================================================================
+const BOARD_THEMES = {
+    green: { name: 'Xanh lá', nameEn: 'Green', light: '#ebecd0', dark: '#779556' },
+    wood: { name: 'Gỗ tự nhiên', nameEn: 'Wood', light: '#e9cda7', dark: '#a26c3f' },
+    walnut: { name: 'Gỗ óc chó', nameEn: 'Walnut', light: '#dfc39e', dark: '#8b5a2b' },
+    dark: { name: 'Than tối', nameEn: 'Dark', light: '#71828f', dark: '#495963' },
+    ocean: { name: 'Biển xanh', nameEn: 'Ocean', light: '#d0e4ee', dark: '#4682b4' },
+    marble: { name: 'Cẩm thạch', nameEn: 'Marble', light: '#f1f5f9', dark: '#94a3b8' },
+    glass: { name: 'Kính mờ', nameEn: 'Glass', light: '#e0f2fe', dark: '#64748b' },
+    neon: { name: 'Cyberpunk', nameEn: 'Neon', light: '#2d224c', dark: '#130f24' },
+    emerald: { name: 'Ngọc lục bảo', nameEn: 'Emerald', light: '#d8ebd4', dark: '#3f784c' },
+    bubblegum: { name: 'Hồng pastel', nameEn: 'Bubblegum', light: '#fce7f3', dark: '#d946ef' },
+    icy_sea: { name: 'Xanh băng giá', nameEn: 'Icy Sea', light: '#dbeafe', dark: '#60a5fa' },
+    '8bit': { name: '8-Bit Retro', nameEn: '8-Bit', light: '#e5e5e5', dark: '#525252' },
+    minimalist: { name: 'Tối giản', nameEn: 'Minimalist', light: '#ffffff', dark: '#334155' },
+    parchment: { name: 'Giấy cổ', nameEn: 'Parchment', light: '#f4ecd8', dark: '#bca072' },
+    ice: { name: 'Băng tuyết', nameEn: 'Ice', light: '#e0f2fe', dark: '#38bdf8' }
+};
+
+const PIECE_THEMES = {
+    classic: { name: 'Classic', desc: 'Vector SVG' },
+    neo: { name: 'Neo', desc: 'Chess.com' },
+    game_room: { name: 'Game Room', desc: 'Wood Vintage' },
+    glass: { name: 'Glass', desc: 'Thủy tinh' },
+    alpha: { name: 'Alpha', desc: 'Hiện đại' },
+    bases: { name: 'Bases', desc: 'Phẳng tối giản' },
+    cburnett: { name: 'Cburnett', desc: 'Lichess Chuẩn' },
+    merida: { name: 'Merida', desc: 'Truyền thống' },
+    california: { name: 'California', desc: 'Thanh lịch' },
+    cardinal: { name: 'Cardinal', desc: 'Sắc sảo' },
+    dubrovny: { name: 'Dubrovny', desc: 'Gỗ cổ điển' },
+    maestro: { name: 'Maestro', desc: 'Lichess' },
+    staunty: { name: 'Staunty', desc: 'Lichess' },
+    tatiana: { name: 'Tatiana', desc: 'Lichess' },
+    governor: { name: 'Governor', desc: 'Lichess' },
+    '8_bit': { name: '8-Bit', desc: 'Pixel Retro' }
+};
+
 let currentBoardTheme = 'green';
 let currentPieceTheme = 'classic';
-try { currentBoardTheme = localStorage.getItem('chess_board_theme') || 'green'; currentPieceTheme = localStorage.getItem('chess_piece_theme') || 'classic'; } catch (e) { }
+let currentAnimationSpeed = 280;
+let currentMoveTime = 180;
+try {
+    currentBoardTheme = localStorage.getItem('chess_board_theme') || 'green';
+    currentPieceTheme = localStorage.getItem('chess_piece_theme') || 'classic';
+    const savedSpeed = localStorage.getItem('chess_animation_speed');
+    if (savedSpeed !== null) currentAnimationSpeed = parseInt(savedSpeed, 10);
+    const savedMoveTime = localStorage.getItem('chess_move_time');
+    if (savedMoveTime !== null) currentMoveTime = parseInt(savedMoveTime, 10);
+} catch (e) { }
 
-const LICHESS_PIECE_THEMES = new Set(['cburnett', 'merida', 'california', 'cardinal', 'dubrovny']);
+const LICHESS_PIECE_THEMES = new Set([
+    'cburnett', 'merida', 'california', 'cardinal', 'dubrovny',
+    'maestro', 'staunty', 'tatiana', 'governor', 'pixel'
+]);
 
-function getPieceThemeUrl(pieceCode) {
+function getPieceThemeUrl(pieceCode, theme = currentPieceTheme) {
     if (!pieceCode) return '';
-    if (currentPieceTheme === 'classic') {
+    const activeTheme = theme || currentPieceTheme || 'classic';
+    if (activeTheme === 'classic') {
         return CUSTOM_SVG_PIECES[pieceCode] || '';
     }
-    if (LICHESS_PIECE_THEMES.has(currentPieceTheme)) {
+    if (LICHESS_PIECE_THEMES.has(activeTheme)) {
         const lichessPiece = pieceCode[0].toLowerCase() + pieceCode[1].toUpperCase();
-        return `https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/${currentPieceTheme}/${lichessPiece}.svg`;
+        return `https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/${activeTheme}/${lichessPiece}.svg`;
     }
     // Chess.com CDN
+    const chessComTheme = (activeTheme === '8-bit' || activeTheme === '8bit') ? '8_bit' : activeTheme;
     const codeLower = pieceCode.toLowerCase();
-    return `https://images.chesscomfiles.com/chess-themes/pieces/${currentPieceTheme}/150/${codeLower}.png`;
+    return `https://images.chesscomfiles.com/chess-themes/pieces/${chessComTheme}/150/${codeLower}.png`;
 }
 
 function attachPieceFallback(img, pieceCode) {
@@ -1169,6 +1359,26 @@ function updateBoardPieceImages() {
         }
     });
 }
+
+function updateMiniBoardPieces(theme = currentPieceTheme) {
+    const miniBoard = document.getElementById('settings-mini-board');
+    if (miniBoard) {
+        miniBoard.querySelectorAll('.mini-piece').forEach(img => {
+            const pieceCode = img.getAttribute('data-piece');
+            if (pieceCode) {
+                img.src = getPieceThemeUrl(pieceCode, theme);
+                attachPieceFallback(img, pieceCode);
+            }
+        });
+    }
+    const titleEl = document.getElementById('mini-preview-theme-title');
+    if (titleEl) {
+        const bName = BOARD_THEMES[currentBoardTheme]?.name || currentBoardTheme;
+        const pName = PIECE_THEMES[currentPieceTheme]?.name || currentPieceTheme;
+        titleEl.textContent = `${t('settings_board_theme') || 'Bàn cờ'}: ${bName} • ${t('settings_piece_theme') || 'Quân cờ'}: ${pName}`;
+    }
+}
+
 function applyBoardTheme(theme) {
     if (!BOARD_THEMES[theme]) theme = 'green';
     currentBoardTheme = theme;
@@ -1176,18 +1386,494 @@ function applyBoardTheme(theme) {
     try { localStorage.setItem('chess_board_theme', theme); } catch (e) { }
     const selectEl = document.getElementById('select-board-theme');
     if (selectEl && selectEl.value !== theme) selectEl.value = theme;
+    document.querySelectorAll('.board-swatch-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.boardTheme === theme);
+    });
+    updateMiniBoardPieces(currentPieceTheme);
 }
+
 function applyPieceTheme(theme) {
+    if (!PIECE_THEMES[theme] && theme !== '8-bit') theme = 'classic';
     currentPieceTheme = theme;
     try { localStorage.setItem('chess_piece_theme', theme); } catch (e) { }
     const selectEl = document.getElementById('select-piece-theme');
     if (selectEl && selectEl.value !== theme) selectEl.value = theme;
+    document.querySelectorAll('.piece-option-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.pieceTheme === theme);
+    });
     updateBoardPieceImages();
+    updateMiniBoardPieces(theme);
 }
+
+function applyFontFamily(fontName) {
+    const fontMap = {
+        'inter': "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        'plus-jakarta-sans': "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+        'outfit': "'Outfit', -apple-system, BlinkMacSystemFont, sans-serif",
+        'space-grotesk': "'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif",
+        'jetbrains-mono': "'JetBrains Mono', monospace"
+    };
+    const family = fontMap[fontName] || fontMap['inter'];
+    document.body.style.fontFamily = family;
+    try { localStorage.setItem('chess_app_font', fontName); } catch (e) { }
+    document.querySelectorAll('.font-option-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.font === fontName);
+    });
+}
+
+function applyBoardDisplayOptions() {
+    let showCoords = true, showLegal = true, highlightLast = true, autoFlip = true;
+    try {
+        if (localStorage.getItem('chess_show_coordinates') !== null) {
+            showCoords = localStorage.getItem('chess_show_coordinates') !== 'false';
+        }
+        if (localStorage.getItem('chess_show_legal_hints') !== null) {
+            showLegal = localStorage.getItem('chess_show_legal_hints') !== 'false';
+        }
+        if (localStorage.getItem('chess_highlight_last_move') !== null) {
+            highlightLast = localStorage.getItem('chess_highlight_last_move') !== 'false';
+        }
+        if (localStorage.getItem('chess_auto_flip') !== null) {
+            autoFlip = localStorage.getItem('chess_auto_flip') !== 'false';
+        }
+    } catch (e) {}
+
+    document.body.classList.toggle('hide-coordinates', !showCoords);
+    document.body.classList.toggle('hide-legal-hints', !showLegal);
+    document.body.classList.toggle('hide-last-move-highlight', !highlightLast);
+
+    const toggleCoords = document.getElementById('toggle-settings-coords');
+    if (toggleCoords) toggleCoords.checked = showCoords;
+    const toggleLegal = document.getElementById('toggle-settings-legal-hints');
+    if (toggleLegal) toggleLegal.checked = showLegal;
+    const toggleHighlight = document.getElementById('toggle-settings-highlight-last');
+    if (toggleHighlight) toggleHighlight.checked = highlightLast;
+    const toggleAutoFlip = document.getElementById('toggle-settings-auto-flip');
+    if (toggleAutoFlip) toggleAutoFlip.checked = autoFlip;
+}
+
+function applyAnimationSpeed(speed) {
+    currentAnimationSpeed = parseInt(speed, 10);
+    try { localStorage.setItem('chess_animation_speed', String(currentAnimationSpeed)); } catch (e) {}
+    if (typeof board !== 'undefined' && board && board.moveSpeed !== undefined) {
+        board.moveSpeed = currentAnimationSpeed;
+    }
+    const seg = document.getElementById('settings-speed-segmented');
+    if (seg) {
+        seg.querySelectorAll('.seg-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.speedVal, 10) === currentAnimationSpeed);
+        });
+    }
+}
+
+function applyMoveTime(val) {
+    currentMoveTime = parseInt(val, 10);
+    try { localStorage.setItem('chess_move_time', String(currentMoveTime)); } catch (e) {}
+    const badge = document.getElementById('settings-move-time-val');
+    if (badge) badge.textContent = `${currentMoveTime}ms`;
+    const slider = document.getElementById('settings-move-time-slider');
+    if (slider && parseInt(slider.value, 10) !== currentMoveTime) slider.value = currentMoveTime;
+}
+
+function applyReviewDepth(depth) {
+    currentDepth = parseInt(depth, 10);
+    try { localStorage.setItem('chess_analysis_depth', String(currentDepth)); } catch (e) {}
+    const selectEl = document.getElementById('select-depth');
+    if (selectEl && selectEl.value !== String(currentDepth)) selectEl.value = String(currentDepth);
+    const seg = document.getElementById('settings-depth-segmented');
+    if (seg) {
+        seg.querySelectorAll('.seg-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.depthVal, 10) === currentDepth);
+        });
+    }
+}
+
+function getAppUsername() {
+    try {
+        const saved = localStorage.getItem('chesscom_username');
+        if (saved && saved.trim()) return saved.trim();
+    } catch (e) {}
+    return (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : 'bazu25022005');
+}
+
+function updateAppUsername(newUsername) {
+    const clean = (newUsername || '').trim();
+    if (!clean) return;
+    try { localStorage.setItem('chesscom_username', clean); } catch (e) {}
+    if (typeof window !== 'undefined') window.CHESSCOM_USERNAME = clean;
+    if (typeof CHESSCOM_USERNAME !== 'undefined') CHESSCOM_USERNAME = clean;
+
+    const input = document.getElementById('settings-username-input');
+    if (input) input.value = clean;
+    const headerUser = document.getElementById('header-username');
+    if (headerUser) headerUser.textContent = clean;
+    const statsUser = document.getElementById('stats-username');
+    if (statsUser) statsUser.textContent = clean;
+
+    handleFetchGames();
+    showStatus(`Đã cập nhật tài khoản Chess.com: ${clean}`, 'info');
+}
+
+async function updateSettingsCacheStats() {
+    const countEl = document.getElementById('settings-cache-count');
+    if (!countEl) return;
+    try {
+        if (typeof getAllCachedAnalyses === 'function') {
+            const all = await getAllCachedAnalyses();
+            const count = all ? all.length : 0;
+            countEl.textContent = `${count} ván cờ`;
+        }
+    } catch (e) {
+        countEl.textContent = '0 ván cờ';
+    }
+}
+
+function renderSettingsSwatches() {
+    // 1. Board Swatches
+    const boardContainer = document.getElementById('settings-board-swatches');
+    if (boardContainer && boardContainer.children.length === 0) {
+        const boardKeys = ['green', 'wood', 'walnut', 'dark', 'ocean', 'marble', 'glass', 'neon', 'emerald', 'bubblegum', 'icy_sea', '8bit'];
+        boardContainer.innerHTML = boardKeys.map(key => {
+            const th = BOARD_THEMES[key] || { name: key, light: '#ebecd0', dark: '#779556' };
+            const isActive = currentBoardTheme === key ? 'active' : '';
+            return `
+                <div class="board-swatch-card ${isActive}" data-board-theme="${key}" title="${th.name}">
+                    <div class="swatch-2x2">
+                        <div style="background-color: ${th.light}"></div>
+                        <div style="background-color: ${th.dark}"></div>
+                        <div style="background-color: ${th.dark}"></div>
+                        <div style="background-color: ${th.light}"></div>
+                    </div>
+                    <span class="swatch-name">${th.name}</span>
+                </div>
+            `;
+        }).join('');
+
+        boardContainer.querySelectorAll('.board-swatch-card').forEach(card => {
+            card.addEventListener('click', () => {
+                applyBoardTheme(card.dataset.boardTheme);
+            });
+        });
+    }
+
+    // 2. Piece Sets Grid
+    const piecesContainer = document.getElementById('settings-pieces-grid');
+    if (piecesContainer && piecesContainer.children.length === 0) {
+        const pieceKeys = Object.keys(PIECE_THEMES);
+        piecesContainer.innerHTML = pieceKeys.map(key => {
+            const pInfo = PIECE_THEMES[key];
+            const isActive = currentPieceTheme === key ? 'active' : '';
+            const wNUrl = getPieceThemeUrl('wN', key);
+            const bKUrl = getPieceThemeUrl('bK', key);
+            return `
+                <div class="piece-option-card ${isActive}" data-piece-theme="${key}" title="${pInfo.name}">
+                    <div class="piece-preview-pair">
+                        <img class="piece-preview-img" src="${wNUrl}" alt="wN" data-piece="wN">
+                        <img class="piece-preview-img" src="${bKUrl}" alt="bK" data-piece="bK">
+                    </div>
+                    <span class="piece-name">${pInfo.name}</span>
+                </div>
+            `;
+        }).join('');
+
+        piecesContainer.querySelectorAll('.piece-option-card').forEach(card => {
+            card.addEventListener('click', () => {
+                applyPieceTheme(card.dataset.pieceTheme);
+            });
+        });
+
+        piecesContainer.querySelectorAll('.piece-preview-img').forEach(img => {
+            attachPieceFallback(img, img.getAttribute('data-piece'));
+        });
+    }
+}
+
+function openSettingsModal(defaultTab = 'ui') {
+    const modal = document.getElementById('settings-modal');
+    if (!modal) return;
+    renderSettingsSwatches();
+    modal.classList.remove('hidden');
+    switchSettingsTab(defaultTab);
+    updateSettingsCacheStats();
+    updateMiniBoardPieces(currentPieceTheme);
+
+    const usernameInput = document.getElementById('settings-username-input');
+    if (usernameInput) usernameInput.value = getAppUsername();
+
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const themeSeg = document.getElementById('settings-theme-segmented');
+    if (themeSeg) {
+        themeSeg.querySelectorAll('.seg-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.themeVal === currentTheme);
+        });
+    }
+
+    const langSeg = document.getElementById('settings-lang-segmented');
+    if (langSeg) {
+        langSeg.querySelectorAll('.seg-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.langVal === currentLang);
+        });
+    }
+
+    const soundToggle = document.getElementById('toggle-settings-sound');
+    if (soundToggle) soundToggle.checked = SoundManager.isEnabled();
+
+    const arrowToggle = document.getElementById('toggle-settings-best-arrow');
+    if (arrowToggle) {
+        arrowToggle.checked = localStorage.getItem('chess_show_best_arrow') !== 'false';
+    }
+
+    const badgeToggle = document.getElementById('toggle-settings-eval-badges');
+    if (badgeToggle) {
+        badgeToggle.checked = localStorage.getItem('chess_show_eval_badges') !== 'false';
+    }
+
+    applyMoveTime(currentMoveTime);
+    applyAnimationSpeed(currentAnimationSpeed);
+    applyReviewDepth(currentDepth);
+    applyBoardDisplayOptions();
+}
+
+function closeSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function switchSettingsTab(tabName) {
+    document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.settingsTab === tabName);
+    });
+    document.querySelectorAll('.settings-pane').forEach(pane => {
+        pane.classList.toggle('active', pane.id === `settings-pane-${tabName}`);
+    });
+}
+
+function initSettingsModal() {
+    // 1. Nút mở/đóng Modal Cài đặt
+    const btnOpenSettings = document.getElementById('btn-open-settings');
+    if (btnOpenSettings) {
+        btnOpenSettings.addEventListener('click', () => openSettingsModal());
+    }
+    const btnCloseSettings = document.getElementById('btn-close-settings-modal');
+    if (btnCloseSettings) {
+        btnCloseSettings.addEventListener('click', closeSettingsModal);
+    }
+    const modalEl = document.getElementById('settings-modal');
+    if (modalEl) {
+        modalEl.addEventListener('click', (e) => {
+            if (e.target === modalEl) closeSettingsModal();
+        });
+    }
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalEl && !modalEl.classList.contains('hidden')) {
+            closeSettingsModal();
+        }
+    });
+
+    // 2. Chuyển Tab Sidebar
+    document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchSettingsTab(btn.dataset.settingsTab);
+        });
+    });
+
+    // 3. Theme Segmented Control
+    const themeSeg = document.getElementById('settings-theme-segmented');
+    if (themeSeg) {
+        themeSeg.querySelectorAll('.seg-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const themeVal = btn.dataset.themeVal;
+                document.documentElement.setAttribute('data-theme', themeVal);
+                try { localStorage.setItem('chess_app_theme', themeVal); } catch (e) {}
+                updateThemeButtonText();
+                themeSeg.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b === btn));
+            });
+        });
+    }
+
+    // 4. Lang Segmented Control
+    const langSeg = document.getElementById('settings-lang-segmented');
+    if (langSeg) {
+        langSeg.querySelectorAll('.seg-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const langVal = btn.dataset.langVal;
+                applyLanguage(langVal);
+                langSeg.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b === btn));
+                updateMiniBoardPieces(currentPieceTheme);
+            });
+        });
+    }
+
+    // 5. Font Cards Selection
+    document.querySelectorAll('.font-option-card').forEach(card => {
+        card.addEventListener('click', () => {
+            applyFontFamily(card.dataset.font);
+        });
+    });
+
+    // 6. Board Display Toggles
+    const toggleCoords = document.getElementById('toggle-settings-coords');
+    if (toggleCoords) {
+        toggleCoords.addEventListener('change', () => {
+            try { localStorage.setItem('chess_show_coordinates', String(toggleCoords.checked)); } catch (e) {}
+            applyBoardDisplayOptions();
+        });
+    }
+    const toggleLegal = document.getElementById('toggle-settings-legal-hints');
+    if (toggleLegal) {
+        toggleLegal.addEventListener('change', () => {
+            try { localStorage.setItem('chess_show_legal_hints', String(toggleLegal.checked)); } catch (e) {}
+            applyBoardDisplayOptions();
+        });
+    }
+    const toggleHighlight = document.getElementById('toggle-settings-highlight-last');
+    if (toggleHighlight) {
+        toggleHighlight.addEventListener('change', () => {
+            try { localStorage.setItem('chess_highlight_last_move', String(toggleHighlight.checked)); } catch (e) {}
+            applyBoardDisplayOptions();
+        });
+    }
+    const toggleAutoFlip = document.getElementById('toggle-settings-auto-flip');
+    if (toggleAutoFlip) {
+        toggleAutoFlip.addEventListener('change', () => {
+            try { localStorage.setItem('chess_auto_flip', String(toggleAutoFlip.checked)); } catch (e) {}
+            applyBoardDisplayOptions();
+        });
+    }
+
+    // 7. Sound Toggle
+    const soundToggle = document.getElementById('toggle-settings-sound');
+    if (soundToggle) {
+        soundToggle.addEventListener('change', () => {
+            SoundManager.setEnabled(soundToggle.checked);
+        });
+    }
+
+    // 8. Animation Speed Segmented
+    const speedSeg = document.getElementById('settings-speed-segmented');
+    if (speedSeg) {
+        speedSeg.querySelectorAll('.seg-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                applyAnimationSpeed(btn.dataset.speedVal);
+            });
+        });
+    }
+
+    // 9. Depth Segmented
+    const depthSeg = document.getElementById('settings-depth-segmented');
+    if (depthSeg) {
+        depthSeg.querySelectorAll('.seg-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                applyReviewDepth(btn.dataset.depthVal);
+            });
+        });
+    }
+
+    // 10. Move Time Slider
+    const moveSlider = document.getElementById('settings-move-time-slider');
+    if (moveSlider) {
+        moveSlider.addEventListener('input', (e) => {
+            applyMoveTime(e.target.value);
+        });
+    }
+
+    // 11. Arrows & Badges Toggles
+    const arrowToggle = document.getElementById('toggle-settings-best-arrow');
+    if (arrowToggle) {
+        arrowToggle.addEventListener('change', () => {
+            try { localStorage.setItem('chess_show_best_arrow', String(arrowToggle.checked)); } catch (e) {}
+            if (!arrowToggle.checked && typeof clearArrows === 'function') clearArrows();
+            else updateCurrentMoveArrow();
+        });
+    }
+    const badgeToggle = document.getElementById('toggle-settings-eval-badges');
+    if (badgeToggle) {
+        badgeToggle.addEventListener('change', () => {
+            try { localStorage.setItem('chess_show_eval_badges', String(badgeToggle.checked)); } catch (e) {}
+            if (!badgeToggle.checked) clearBoardEvaluationBadge();
+            else updateCurrentMoveArrow();
+        });
+    }
+
+    // 12. Username Input & Save
+    const btnSaveUser = document.getElementById('btn-save-username');
+    if (btnSaveUser) {
+        btnSaveUser.addEventListener('click', () => {
+            const input = document.getElementById('settings-username-input');
+            if (input && input.value.trim()) {
+                updateAppUsername(input.value);
+            }
+        });
+    }
+    const userInput = document.getElementById('settings-username-input');
+    if (userInput) {
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && userInput.value.trim()) {
+                updateAppUsername(userInput.value);
+            }
+        });
+    }
+
+    // 13. Cache Management
+    const btnSettingsClearCache = document.getElementById('btn-settings-clear-cache');
+    if (btnSettingsClearCache) {
+        btnSettingsClearCache.addEventListener('click', async () => {
+            if (!confirm('Bạn có chắc chắn muốn xóa toàn bộ dữ liệu phân tích đã lưu trong bộ nhớ không?')) return;
+            if (typeof clearAllAnalysisCache === 'function') await clearAllAnalysisCache();
+            analyzedGameUrls.clear();
+            applyGameListFilters();
+            if (cacheStatusBadge) cacheStatusBadge.classList.add('hidden');
+            if (btnReanalyze) btnReanalyze.classList.add('hidden');
+            await updateSettingsCacheStats();
+            showStatus('Đã xóa toàn bộ bộ nhớ phân tích thành công.', 'info');
+        });
+    }
+
+    // 14. Reset Defaults
+    const btnResetDefaults = document.getElementById('btn-settings-reset-defaults');
+    if (btnResetDefaults) {
+        btnResetDefaults.addEventListener('click', () => {
+            if (!confirm('Bạn có chắc chắn muốn khôi phục toàn bộ cài đặt về mặc định ban đầu không?')) return;
+            try {
+                localStorage.removeItem('chess_app_theme');
+                localStorage.removeItem('chess_lang');
+                localStorage.removeItem('chess_app_font');
+                localStorage.removeItem('chess_board_theme');
+                localStorage.removeItem('chess_piece_theme');
+                localStorage.removeItem('chess_sound_enabled');
+                localStorage.removeItem('chess_animation_speed');
+                localStorage.removeItem('chess_analysis_depth');
+                localStorage.removeItem('chess_move_time');
+                localStorage.removeItem('chess_show_best_arrow');
+                localStorage.removeItem('chess_show_eval_badges');
+                localStorage.removeItem('chess_show_coordinates');
+                localStorage.removeItem('chess_show_legal_hints');
+                localStorage.removeItem('chess_highlight_last_move');
+                localStorage.removeItem('chess_auto_flip');
+                localStorage.removeItem('chesscom_username');
+            } catch (e) {}
+            location.reload();
+        });
+    }
+}
+
 function initCustomizationControls() {
+    let savedTheme = 'dark';
+    try { savedTheme = localStorage.getItem('chess_app_theme') || document.documentElement.getAttribute('data-theme') || 'dark'; } catch (e) {}
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
+    const savedFont = localStorage.getItem('chess_app_font') || 'inter';
+    applyFontFamily(savedFont);
+
     applyLanguage(currentLang);
     applyBoardTheme(currentBoardTheme);
     applyPieceTheme(currentPieceTheme);
+    applyBoardDisplayOptions();
+    applyAnimationSpeed(currentAnimationSpeed);
+    applyMoveTime(currentMoveTime);
+    applyReviewDepth(currentDepth);
+
+    // Đồng bộ các select ẩn cũ
     const langSelect = document.getElementById('select-lang');
     if (langSelect) {
         langSelect.value = currentLang;
@@ -1203,6 +1889,13 @@ function initCustomizationControls() {
         pieceSelect.value = currentPieceTheme;
         pieceSelect.addEventListener('change', (e) => applyPieceTheme(e.target.value));
     }
+    const depthSelect = document.getElementById('select-depth');
+    if (depthSelect) {
+        depthSelect.value = String(currentDepth);
+        depthSelect.addEventListener('change', (e) => applyReviewDepth(e.target.value));
+    }
+
+    initSettingsModal();
 }
 
 let lastBoardMouseDownButton = 0;
@@ -1215,6 +1908,13 @@ function clearBoardEvaluationBadge() {
 }
 function renderBoardMoveEvaluationBadge(square, category, isBrilliant = false) {
     clearBoardEvaluationBadge();
+    let showBadges = true;
+    try {
+        if (localStorage.getItem('chess_show_eval_badges') !== null) {
+            showBadges = localStorage.getItem('chess_show_eval_badges') !== 'false';
+        }
+    } catch (e) {}
+    if (!showBadges) return;
     if (!square) return;
     const boardEl = document.getElementById('board'); if (!boardEl) return;
     const squareEl = boardEl.querySelector(`.square-${square}`); if (!squareEl) return;
@@ -1249,7 +1949,7 @@ function initChessboard(orientation = 'white') {
     }
     board = Chessboard('board', {
         position: 'start', orientation: orientation, draggable: true,
-        moveSpeed: 280, snapbackSpeed: 70, snapSpeed: 70,
+        moveSpeed: currentAnimationSpeed, snapbackSpeed: 70, snapSpeed: 70,
         onDragStart: handleDragStart, onDrop: handleDrop, onSnapEnd: handleSnapEnd,
         pieceTheme: (pieceCode) => getPieceThemeUrl(pieceCode)
     });
@@ -2060,8 +2760,12 @@ async function evaluateAndClassifyBotUserMove(userPly, fenBefore, fenAfter, move
         const playedUci = `${moveRes.from}${moveRes.to}${moveRes.promotion || ''}`;
         const bestUci = evalBefore?.bestmove;
 
+        const evalPrevPrev = (botMovesHistory.length >= 2 && botMovesHistory[botMovesHistory.length - 2]?.eval) ? botMovesHistory[botMovesHistory.length - 2].eval : null;
         const classification = evaluateMoveQuality(
-            evalBefore, evalAfter, userPly.color, playedUci, bestUci
+            evalBefore, evalAfter, userPly.color, playedUci, bestUci, botMovesHistory.length, {
+                evalPrevPrev,
+                move: userPly
+            }
         );
 
         if (typeof detectBrilliant === 'function' && detectBrilliant({ move: userPly, eval: evalAfter, classification, fen: fenAfter }, { eval: evalBefore, fen: fenBefore })) {
@@ -2279,6 +2983,14 @@ function highlightActualMove(moveObj) {
 
 function drawBestMoveOnBoard(bestUci, categoryOverride, validationFen = null) {
     if (!bestUci || bestUci.length < 4 || bestUci === '(none)') return;
+    let showArrow = true;
+    try {
+        if (localStorage.getItem('chess_show_best_arrow') !== null) {
+            showArrow = localStorage.getItem('chess_show_best_arrow') !== 'false';
+        }
+    } catch (e) {}
+    if (!showArrow) return;
+
     const currentFen = validationFen || getCurrentBoardFen();
     if (typeof Chess === 'function') {
         const currentChess = new Chess(currentFen);
@@ -3059,7 +3771,7 @@ async function evaluateAndClassifyPosition(pos, isTrial, clearHash = false, move
         : (currentDepth || 16);
     const targetMoveTime = (isTrial || (isLiveEngineEnabled && !isAnalyzing))
         ? 200
-        : (moveTime !== undefined && moveTime !== null ? moveTime : 180);
+        : (moveTime !== undefined && moveTime !== null ? moveTime : (currentMoveTime || 180));
 
     if (!isTrial) updateLiveEngineUIAnalyzing(targetDepth);
     else updateCoachPanelForTrial();
@@ -3112,7 +3824,21 @@ async function evaluateAndClassifyPosition(pos, isTrial, clearHash = false, move
 
     if (evalBefore && evalBefore.bestmove && pos.move) {
         const playedUci = pos.move.uci || `${pos.move.from}${pos.move.to}${pos.move.promotion || ''}`;
-        pos.classification = evaluateMoveQuality(evalBefore, pos.eval, pos.move.color, playedUci, evalBefore.bestmove, pos.index);
+        let evalPrevPrev = null;
+        if (!isTrial && pos.index >= 2 && gamePositions[pos.index - 2]) {
+            evalPrevPrev = gamePositions[pos.index - 2].eval;
+        } else if (isTrial && trialBranch) {
+            const bIdx = trialBranch.currentIndex;
+            if (bIdx >= 2 && trialBranch.positions[bIdx - 2]) {
+                evalPrevPrev = trialBranch.positions[bIdx - 2].eval;
+            } else if (bIdx === 1) {
+                evalPrevPrev = gamePositions[trialBranch.baseMoveIndex]?.eval;
+            }
+        }
+        pos.classification = evaluateMoveQuality(evalBefore, pos.eval, pos.move.color, playedUci, evalBefore.bestmove, pos.index, {
+            evalPrevPrev,
+            move: pos.move
+        });
 
         if (prevPos && typeof detectBrilliant === 'function' && detectBrilliant(pos, prevPos)) {
             pos.classification.isBrilliant = true;
@@ -3401,15 +4127,12 @@ function applyCachedAnalysis(cachedData, game) {
         cachedData.positions.forEach(p => {
             if (gamePositions[p.index]) {
                 gamePositions[p.index].eval = p.eval;
-                gamePositions[p.index].classification = p.classification;
             }
         });
-        // Đồng bộ hóa cờ isBrilliant từ phân loại đã lưu trong bộ nhớ đệm
-        for (let i = 1; i < gamePositions.length; i++) {
-            const p = gamePositions[i];
-            if (p && p.classification && p.classification.category === 'Brilliant') {
-                p.classification.isBrilliant = true;
-            }
+        // Tự động phân loại lại theo thuật toán mới nhất
+        if (typeof classifyAllMovesAndStats === 'function') {
+            const freshStats = classifyAllMovesAndStats(gamePositions);
+            cachedData.stats = freshStats;
         }
     }
     for (let i = 1; i < gamePositions.length; i++) {
@@ -3570,9 +4293,14 @@ async function selectGame(gameOrIndex, keepDrawerOpen = false) {
 
         isAnalyzing = false; isAnalysisPaused = false; stockfishEngine.stop(); stopElapsedTimer();
         const userOrientation = (userColor === 'b') ? 'black' : 'white';
-        initChessboard(userOrientation);
-        if (board) board.orientation(userOrientation);
-        updateEvalBarOrientation(userOrientation);
+        const autoFlip = (typeof localStorage !== 'undefined' && localStorage.getItem('chess_auto_flip') !== 'false');
+        if (autoFlip) {
+            initChessboard(userOrientation);
+            if (board) board.orientation(userOrientation);
+            updateEvalBarOrientation(userOrientation);
+        } else {
+            initChessboard('white');
+        }
         if (typeof board.resize === 'function') board.resize();
         stopAutoplay(); gamePositions = buildPositionsFromPGN(game.pgn);
         renderMoveList(); drawEvalChart(); renderKeyMovesList(); goToMove(0);
@@ -3794,7 +4522,7 @@ async function handleFetchGames() {
     const progressEl = document.getElementById('batch-progress-text');
     if (progressEl) progressEl.textContent = '';
 
-    const username = typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : 'bazu25022005';
+    const username = (typeof getAppUsername === 'function' ? getAppUsername() : (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : 'bazu25022005'));
     const year = parseInt(yearInput.value, 10); const month = monthSelect.value;
     if (isFutureMonth(year, month)) { showStatus(`Tháng ${month}/${year} nằm trong tương lai, không thể tải danh sách ván cờ.`, 'error'); updateMonthNavButtons(); return; }
     btnFetch.disabled = true; btnFetch.textContent = 'Đang tải...'; showStatus(`Đang tải danh sách ván cờ...`, 'info');
@@ -4065,7 +4793,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 let resizeTimer = null;
-window.addEventListener('resize', () => {
+function handleResponsiveResize() {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
         if (board && typeof board.resize === 'function') {
@@ -4073,9 +4801,30 @@ window.addEventListener('resize', () => {
             if (typeof redrawArrows === 'function' && typeof board.orientation === 'function') {
                 redrawArrows(board.orientation());
             }
+            if (typeof highlightCheckSquare === 'function') {
+                highlightCheckSquare();
+            }
         }
-    }, 100);
+    }, 60);
+}
+
+window.addEventListener('resize', handleResponsiveResize);
+window.addEventListener('orientationchange', () => {
+    setTimeout(handleResponsiveResize, 150);
 });
+
+// Quan sát tự động thay đổi kích thước của .board-wrapper (khi xoay màn hình hoặc co giãn layout)
+if (typeof ResizeObserver !== 'undefined') {
+    const boardWrapperEl = document.querySelector('.board-wrapper');
+    if (boardWrapperEl) {
+        let roTimer = null;
+        const ro = new ResizeObserver(() => {
+            clearTimeout(roTimer);
+            roTimer = setTimeout(handleResponsiveResize, 40);
+        });
+        ro.observe(boardWrapperEl);
+    }
+}
 btnFetch.addEventListener('click', handleFetchGames);
 if (btnStartBatch) btnStartBatch.addEventListener('click', startBatchAnalysis);
 if (btnStopBatch) btnStopBatch.addEventListener('click', stopBatchAnalysis);
@@ -4127,9 +4876,51 @@ if (btnClearAllCache) {
     });
 }
 
-if (btnOpenDrawer) btnOpenDrawer.addEventListener('click', openGameDrawer);
+if (btnOpenDrawer) {
+    btnOpenDrawer.addEventListener('click', () => {
+        const isOpen = gameDrawer && gameDrawer.classList.contains('open');
+        setDrawerOpen(!isOpen);
+    });
+}
 if (btnCloseDrawer) btnCloseDrawer.addEventListener('click', closeGameDrawer);
-if (scrim) scrim.addEventListener('click', closeGameDrawer);
+if (scrim) {
+    scrim.addEventListener('click', closeGameDrawer);
+    scrim.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        closeGameDrawer();
+    }, { passive: false });
+}
+
+// Cử chỉ vuốt sang trái (Swipe-to-close) trên Drawer danh sách ván cờ trên thiết bị di động
+if (gameDrawer) {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+
+    gameDrawer.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches.length === 1) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+        }
+    }, { passive: true });
+
+    gameDrawer.addEventListener('touchend', (e) => {
+        if (e.changedTouches && e.changedTouches.length === 1) {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            const dx = touchEndX - touchStartX;
+            const dy = touchEndY - touchStartY;
+            const dt = Date.now() - touchStartTime;
+
+            // Vuốt sang trái tối thiểu 45px, ưu tiên trục hoành so với trục tung, thời gian vuốt < 600ms
+            if (dx < -45 && Math.abs(dx) > Math.abs(dy) * 1.2 && dt < 600) {
+                closeGameDrawer();
+            }
+        }
+    }, { passive: true });
+}
+
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && gameDrawer && gameDrawer.classList.contains('open')) closeGameDrawer(); });
 
 if (btnTheme) {
@@ -4138,6 +4929,7 @@ if (btnTheme) {
         const currentTheme = root.getAttribute('data-theme') || 'dark';
         const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
         root.setAttribute('data-theme', nextTheme);
+        try { localStorage.setItem('chess_app_theme', nextTheme); } catch (e) {}
         updateThemeButtonText();
     });
 }
