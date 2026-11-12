@@ -24,91 +24,117 @@ const PIECE_VALUES = {
 };
 
 /**
+ * Trợ thủ lấy hàm khởi tạo Chess an toàn cho cả trình duyệt và Node.js
+ */
+function getChessConstructor() {
+    if (typeof Chess !== 'undefined') return Chess;
+    if (typeof window !== 'undefined' && window.Chess) return window.Chess;
+    if (typeof global !== 'undefined' && global.Chess) return global.Chess;
+    try {
+        const c = require('./chess.js');
+        return c.Chess || c;
+    } catch (e) {
+        return null;
+    }
+}
+
+/**
  * DANH SÁCH CÂU MẪU CỐ ĐỊNH THEO NGÔN NGỮ (VI & EN)
+ * Bơm đầy nhiệt huyết, cảm xúc và phân tích sâu sắc chuẩn Chess.com Coach
  */
 const COMMENT_TEMPLATES = {
     vi: {
         Brilliant: [
-            'Nước đi xuất thần! Một nước thí quân tuyệt đỉnh mang lại ưu thế quyết định.',
-            'Nước đi xuất thần! Pha hy sinh quân tuyệt vời xoay chuyển toàn bộ ván cờ.'
+            'Tuyệt đỉnh! Một pha thí quân chói sáng mang dáng dấp của một Đại kiện tướng. Bạn đã nhìn thấy một viễn cảnh sâu sắc mà đối thủ không thể ngờ tới!',
+            'Thần sầu quỷ khốc! Pha hy sinh quân quả cảm xé toang phòng tuyến đối phương, biến thế cờ thành một kiệt tác tấn công!',
+            'Đẳng cấp Grandmaster! Bạn dâng tặng quân cờ để đổi lấy quyền kiểm soát tuyệt đối và thế công vũ bão!'
         ],
         Great: [
-            'Nước đi tuyệt hay! Đây là nước đi duy nhất giúp giữ vững ưu thế hoặc cứu vãn ván cờ.',
-            'Tuyệt hay! Bạn đã tìm ra nước đi then chốt duy nhất trong thế trận hiểm nghèo.'
+            'Tuyệt hay! Nhãn quan chiến thuật tuyệt vời. Đây là nước cờ duy nhất cứu vãn tình thế và lật ngược thế cờ.',
+            'Đỉnh cao bản lĩnh! Bạn đã tìm ra chìa khóa then chốt duy nhất trong mê cung chiến thuật hiểm nghèo.',
+            'Cực kỳ chuẩn xác! Nước cờ then chốt duy nhất giúp giữ vững ưu thế và xoay chuyển toàn bộ cục diện ván đấu.'
         ],
         Book: [
-            'Nước đi lý thuyết chuẩn sách giáo khoa.',
-            'Nước đi khai cuộc bài bản theo sách giáo khoa.'
+            'Bài bản như sách giáo khoa! Bạn đang triển khai quân theo đúng lý thuyết khai cuộc kinh điển.',
+            'Khai cuộc mẫu mực! Nước đi chuẩn lý thuyết giúp quân cờ chiếm lĩnh vị trí lý tưởng ngay từ đầu.'
         ],
         Best: [
-            'Nước đi tuyệt vời! Đây đúng là nước máy chọn.',
-            'Nước đi tuyệt vời! Đây chính xác là nước máy chọn.'
+            'Lựa chọn hoàn hảo! Đây chính xác là những gì cỗ máy cờ vua mạnh nhất đề xuất. Bạn đang kiểm soát thế trận rất tốt.',
+            'Chuẩn xác tuyệt đối! Nước đi tối ưu nhất giúp duy trì quyền chủ động và bóp nghẹt đối thủ.',
+            'Không thể hoàn hảo hơn! Bạn đang đi những nước cờ với nhãn quan sắc bén của một cỗ máy hàng đầu.'
         ],
         Excellent: [
-            'Nước đi xuất sắc, gần như là nước hay nhất.',
-            'Nước đi rất tốt, khai thác triệt để vị trí.'
+            'Nước đi xuất sắc! Bạn đang tạo ra áp lực lớn và đặt quân cờ vào vị trí chiến lược cực đẹp.',
+            'Rất sắc sảo! Nước đi gần như tối ưu, mở rộng không gian và tăng cường tính liên kết toàn đội hình.',
+            'Rất hay! Bạn đang làm chủ nhịp độ trận đấu và dồn ép đối thủ vào thế bị động.'
         ],
         Good: [
-            'Nước đi tốt, giữ vững thế trận.',
-            'Nước đi ổn định, tiếp tục kế hoạch ván đấu.'
+            'Nước đi tốt! Giữ vững đội hình và tiếp tục kế hoạch chiến lược đã định.',
+            'Chắc chắn và vững vàng! Bạn đang bảo toàn cấu trúc thế trận và kiên nhẫn chờ đón thời cơ.'
         ],
         Inaccuracy: [
-            'Nước này hơi kém chính xác, có nước tốt hơn.',
-            'Nước đi hơi thiếu chính xác, bạn có lựa chọn tốt hơn.'
+            'Chưa phải là tối ưu. Nước đi này hơi thụ động và nhường lại một chút quyền chủ động cho đối thủ.',
+            'Hơi chệch hướng! Bạn đã bỏ lỡ một phương án linh hoạt hơn, tạo khoảng thở cho đối phương củng cố phòng ngự.'
         ],
         Mistake: [
-            'Đây là một sai lầm, thế cờ của bạn bị xấu đi.',
-            'Đây là một sai lầm làm thế cờ của bạn xấu đi.'
+            'Một quyết định vội vàng! Nước đi này đã làm suy yếu cấu trúc phòng ngự và mở ra cơ hội phản công cho đối thủ.',
+            'Sai lầm đáng tiếc! Bạn đã để lộ điểm yếu về không gian, đối phương có thể chớp lấy thời cơ ngay lập tức.'
         ],
         Miss: [
-            'Bỏ lỡ cơ hội! Bạn đã để tuột mất ưu thế thắng lớn trong tầm tay.',
-            'Bỏ lỡ đòn quyết định! Bạn có thể gia tăng cách biệt lớn hơn ở nước này.'
+            'Tiếc quá, bạn vừa bỏ lỡ một cơ hội vàng! Một đòn trừng phạt quyết định đã vuột khỏi tầm tay.',
+            'Bỏ lỡ thời cơ! Bạn đã có thể gia tăng cách biệt mênh mông hoặc tung đòn kết liễu trận đấu ngay tại đây.'
         ],
         Blunder: [
-            'Sai lầm nghiêm trọng! Nước này làm bạn mất lợi thế lớn.',
-            'Sai lầm nghiêm trọng! Nước đi này khiến bạn thiệt hại rất lớn.'
+            'Trời ơi, một sai lầm chí mạng! Bạn đã để lộ điểm yếu chết người khiến thế trận sụp đổ. Hãy cẩn thận hơn!',
+            'Cú sốc lớn! Nước đi tai hại này dâng không lợi thế và khiến bạn tổn thất lực lượng nặng nề. Hãy bình tĩnh lại!',
+            'Báo động đỏ! Một pha xử lý mất tập trung khiến toàn bộ công sức trước đó đứng trước bờ vực sụp đổ.'
         ]
     },
     en: {
         Brilliant: [
-            'Brilliant move! A phenomenal sacrifice that seizes a decisive advantage.',
-            'Brilliant! A wonderful piece sacrifice that transforms the entire game.'
+            'Brilliant move! A breathtaking piece sacrifice worthy of a Grandmaster. You foresaw a deep tactical truth that blindsided the opponent!',
+            'Absolute genius! A courageous sacrifice that tears open enemy lines and turns the game into a masterpiece of attacking chess!',
+            'Grandmaster level! You gave up material to claim total board dominance and an unstoppable initiative!'
         ],
         Great: [
-            'Great move! This is the only move that maintains the advantage or saves the day.',
-            'Great! You found the only crucial continuation in a sharp position.'
+            'Great move! Outstanding tactical vision. This was the only move to preserve your advantage and turn the tables.',
+            'Sheer resilience! You navigated through a tactical minefield to find the single saving move on the board.',
+            'Pinpoint precision! The only critical continuation that holds the game together under severe pressure.'
         ],
         Book: [
-            'Standard book move from opening theory.',
-            'Solid textbook opening move.'
+            'Textbook opening play! Following classical theory with textbook discipline.',
+            'Pure opening mastery! Developing seamlessly along proven master lines.'
         ],
         Best: [
-            'Best move! Exactly what the engine recommends.',
-            'Excellent choice! This is the engine top pick.'
+            'Flawless choice! Exactly what the strongest chess engine commands. You are in total command of the position.',
+            'Absolute precision! The best move on the board, maintaining maximum pressure and suffocating counterplay.',
+            'Top engine pick! You are navigating this position with razor-sharp engine precision.'
         ],
         Excellent: [
-            'Excellent move, nearly the engine top choice.',
-            'Very good move, making the most of the position.'
+            'Excellent move! You are ramping up the pressure and planting your pieces on gorgeous strategic outposts.',
+            'Sharp and proactive! Almost the top engine choice, carving out space and tightening your coordination.',
+            'Impressive play! Dictating the tempo and forcing your opponent to dance to your tune.'
         ],
         Good: [
-            'Good move, holding the position firmly.',
-            'Solid move, continuing the game plan.'
+            'Solid move! Maintaining healthy structure and staying true to your game plan.',
+            'Sturdy and reliable! Keeping your forces compact and waiting for the right moment to strike.'
         ],
         Inaccuracy: [
-            'An inaccuracy. There were better options available.',
-            'Slightly inaccurate, you had a stronger alternative.'
+            'Suboptimal move. A bit too passive, letting your grip loosen and handing the initiative back to your opponent.',
+            'Slightly off the mark! There were more ambitious alternatives available that keep your opponent on the ropes.'
         ],
         Mistake: [
-            'This is a mistake, weakening your position.',
-            'A mistake that allows your opponent a counterchance.'
+            'A hasty decision! This move weakens your defensive pawn structure and gives your opponent a golden counterchance.',
+            'Costly slip! You ceded critical board space and gave away your strategic upper hand.'
         ],
         Miss: [
-            'Missed opportunity! You let a large winning advantage slip away.',
-            'Missed win! You could have pressed a much bigger advantage here.'
+            'Ouch! You missed a golden opportunity to land a knockout punch or seize a decisive advantage!',
+            'Missed win! A crushing tactical sequence was right there for the taking, but it slipped away.'
         ],
         Blunder: [
-            'Blunder! This move gives away significant material or advantage.',
-            'Severe blunder! This move incurs catastrophic damage.'
+            'Oh no, a catastrophic blunder! You left a lethal vulnerability that can cause your entire position to collapse. Stay alert!',
+            'Disaster strikes! This move hands over massive material or a crushing attack on a silver platter.',
+            'Red alert! A severe lapse in concentration that turns a promising position upside down.'
         ]
     }
 };
@@ -235,7 +261,9 @@ function convertPvToSanLine(fenBefore, pvUciList, maxMoves = 4, lang = (typeof c
         return { bestSan: null, continuationText: '' };
     }
 
-    const chess = new Chess(fenBefore);
+    const ChessClass = getChessConstructor();
+    if (!ChessClass) return { bestSan: null, continuationText: '' };
+    const chess = new ChessClass(fenBefore);
     const sanMoves = [];
 
     const limit = Math.min(pvUciList.length, maxMoves);
@@ -321,7 +349,9 @@ function translatePvToConversationalStory(fen, pvUciList, userColor, lang = 'vi'
     if (!pvUciList || pvUciList.length === 0) return '';
 
     try {
-        const chess = new Chess(fen);
+        const ChessClass = getChessConstructor();
+        if (!ChessClass) return '';
+        const chess = new ChessClass(fen);
         const steps = [];
         const limit = Math.min(pvUciList.length, 3);
 
@@ -362,7 +392,7 @@ function translatePvToConversationalStory(fen, pvUciList, userColor, lang = 'vi'
 
 /**
  * Phần 1: Ý nghĩa nước đi vừa rồi (What this move does)
- * Đổi ký hiệu sang tên quân đầy đủ, giải thích cụ thể điểm đến và hành vi
+ * Đổi ký hiệu sang tên quân đầy đủ, giải thích cụ thể điểm đến và hành vi với tư duy thế trận đỉnh cao
  */
 function describeMoveAction(currPos, isUserMove, lang = 'vi') {
     const isEn = lang === 'en';
@@ -380,29 +410,29 @@ function describeMoveAction(currPos, isUserMove, lang = 'vi') {
 
     if (san === 'O-O') {
         return isEn
-            ? `${subject} castled kingside (O-O). This tucks the King safely behind pawns and brings the Rook into active play.`
-            : `${subject} đã Nhập thành gần (cánh Vua, O-O). Nước đi này vừa đưa Vua vào góc an toàn sau hàng Tốt, vừa kích hoạt Xe tham gia trận chiến.`;
+            ? `${subject} castled kingside (O-O)! Tucking the King into an iron fortress behind protective pawns while launching the Rook onto an active central runway ready for combat!`
+            : `${subject} đã Nhập thành gần (cánh Vua, O-O)! Đưa Vua lui về pháo đài kiên cố sau bức tường Tốt và kích hoạt Xe sẵn sàng đổ bộ ra trung tâm ngắm bắn!`;
     }
     if (san === 'O-O-O') {
         return isEn
-            ? `${subject} castled queenside (O-O-O). This protects the King while placing the Rook directly onto an active central file.`
-            : `${subject} đã Nhập thành xa (cánh Hậu, O-O-O). Nước đi đưa Vua vào nơi ẩn nấp an toàn và lập tức đưa Xe ra kiểm soát cột trung tâm.`;
+            ? `${subject} castled queenside (O-O-O)! Securing the King in a deep bunker while instantly seizing an open central file with the Rook for heavy artillery pressure!`
+            : `${subject} đã Nhập thành xa (cánh Hậu, O-O-O)! Đưa Vua vào nơi ẩn nấp an toàn và lập tức đưa Xe ra kiểm soát cột mở trung tâm, sẵn sàng tạo hỏa lực đánh phá cánh đối phương!`;
     }
     if (move.flags && (move.flags.includes('p') || move.promotion)) {
         const promoName = getPieceName(move.promotion || 'q', lang);
         return isEn
-            ? `${subject} pushed a pawn to ${to} and promoted to a ${promoName} (${san})! A massive material upgrade.`
-            : `${subject} đã đẩy Tốt lên ô ${to} và phong cấp thành ${promoName} (${san})! Một bước ngoặt lực lượng vô cùng lớn.`;
+            ? `${subject} boldly pushed the pawn to ${to} and promoted to a ${promoName} (${san})! A massive material surge that reshapes the entire battlefield!`
+            : `${subject} đã dũng mãnh đẩy Tốt lên ô ${to} và phong cấp thành ${promoName} (${san})! Một bước ngoặt lực lượng áp đảo làm rung chuyển bàn cờ!`;
     }
     if (captured) {
         const isMate = san.includes('#');
         const isCheck = san.includes('+');
         if (isEn) {
-            const checkText = isMate ? ' and delivered checkmate!' : (isCheck ? ' with a check!' : '.');
-            return `${subject} captured ${oppPossessive} ${capturedName} on ${to} using the ${pieceName} from ${from} (${san})${checkText}`;
+            const checkText = isMate ? ' and delivered a crushing checkmate!' : (isCheck ? ' with a piercing check on the King!' : '.');
+            return `${subject} struck with the ${pieceName} from ${from}, eliminating ${oppPossessive} ${capturedName} on ${to} (${san})${checkText}`;
         } else {
-            const checkText = isMate ? ' và chiếu hết ván cờ!' : (isCheck ? ' kèm theo nước chiếu Vua nguy hiểm.' : '.');
-            return `${subject} dùng ${pieceName} ở ${from} ăn ${capturedName} ${oppPossessive} tại ô ${to} (${san})${checkText}`;
+            const checkText = isMate ? ' và tung đòn chiếu hết kết liễu trận đấu!' : (isCheck ? ' kèm theo nước chiếu Vua uy lực.' : '.');
+            return `${subject} dùng ${pieceName} ở ${from} dũng cảm tiêu diệt ${capturedName} ${oppPossessive} tại ô ${to} (${san})${checkText}`;
         }
     }
 
@@ -412,33 +442,33 @@ function describeMoveAction(currPos, isUserMove, lang = 'vi') {
 
     if (isMate) {
         return isEn
-            ? `${subject} moved the ${pieceName} from ${from} to ${to} (${san}), delivering checkmate and ending the game!`
-            : `${subject} di chuyển ${pieceName} từ ${from} đến ${to} (${san}), chiếu hết Vua đối phương và kết thúc ván cờ!`;
+            ? `${subject} maneuvered the ${pieceName} from ${from} to ${to} (${san}), landing a fatal checkmate blow and ending the game in triumph!`
+            : `${subject} di chuyển ${pieceName} từ ${from} đến ${to} (${san}), tung đòn chiếu hết sấm sét hạ gục đối thủ và kết liễu ván cờ!`;
     }
     if (isCheck) {
         return isEn
-            ? `${subject} moved the ${pieceName} from ${from} to ${to} (${san}) to deliver check, forcing the enemy King to respond!`
-            : `${subject} di chuyển ${pieceName} từ ${from} đến ${to} (${san}) và chiếu Vua đối phương! Buộc đối thủ phải tìm cách chống đỡ ngay lập tức.`;
+            ? `${subject} thrust the ${pieceName} from ${from} to ${to} (${san}) with an aggressive check! Seizing the tempo and forcing the enemy King to scramble.`
+            : `${subject} di chuyển ${pieceName} từ ${from} đến ${to} (${san}) tung đòn chiếu Vua hiểm hóc! Tước bỏ quyền chủ động và buộc đối phương phải loay hoay tìm đường tẩu thoát.`;
     }
     if (centerSquares.includes(to)) {
         return isEn
-            ? `${subject} moved the ${pieceName} from ${from} to ${to} (${san}). This occupies a vital central square, exerting strong pressure on surrounding squares.`
-            : `${subject} ${piece === 'n' ? 'nhảy Mã' : 'di chuyển ' + pieceName} từ ${from} lên ${to} (${san}). Đây là vị trí chiến lược ở trung tâm bàn cờ, giúp ${pieceName} kiểm soát nhiều ô xung quanh và gây áp lực lên phần sân ${isUserMove ? 'đối thủ' : 'của bạn'}.`;
+            ? `${subject} anchored the ${pieceName} from ${from} right onto the central hub ${to} (${san}). Dominating like a central fortress, this piece starves the enemy of breathing room and restricts their counterplay.`
+            : `${subject} ${piece === 'n' ? 'nhảy Mã' : 'di chuyển ' + pieceName} từ ${from} lên trung tâm ${to} (${san}). Quân cờ này như một pháo đài ngự trị ngay tại trung tâm, bóp nghẹt không gian và hạn chế tầm hoạt động của ${isUserMove ? 'đối thủ' : 'bạn'}.`;
     }
     if ((piece === 'n' || piece === 'b') && (from.endsWith('1') || from.endsWith('8'))) {
         return isEn
-            ? `${subject} developed the ${pieceName} from ${from} to an active square ${to} (${san}), mobilizing forces and freeing lines for other pieces.`
-            : `${subject} phát triển ${pieceName} từ ô xuất phát ${from} lên ${to} (${san}) nhằm huy động lực lượng tham gia trận đấu và mở đường cho các quân khác.`;
+            ? `${subject} mobilized the ${pieceName} from the back rank ${from} to an active post on ${to} (${san}), unleashing firing lines and connecting team forces.`
+            : `${subject} phát triển ${pieceName} từ tuyến hậu phương ${from} lên tiền đồn cơ động ${to} (${san}), khai thông tuyến lửa và sẵn sàng tham chiến phối hợp cùng toàn đội hình.`;
     }
 
     return isEn
-        ? `${subject} moved the ${pieceName} from ${from} to ${to} (${san}) to reposition forces and control key squares.`
-        : `${subject} di chuyển ${pieceName} từ ${from} sang ${to} (${san}) để củng cố thế trận và định hình lại các ô kiểm soát.`;
+        ? `${subject} maneuvered the ${pieceName} from ${from} to ${to} (${san}) to secure key strategic squares, tighten piece coordination, and expand positional control.`
+        : `${subject} cơ động ${pieceName} từ ${from} sang ${to} (${san}) để chiếm lĩnh ô chiến lược quan trọng, củng cố sự phối hợp và gia tăng kiểm soát không gian.`;
 }
 
 /**
  * Phần 2: Tại sao nó Tốt / Tại sao nó Sai lầm (Why it works / Why it fails)
- * Quét sâu bàn cờ bằng chess.js để chỉ rõ quân treo, đổi quân lỗ, đòn đe dọa, an toàn Vua
+ * Quét sâu bàn cờ bằng chess.js để phân tích thế trận, định vị quân, không gian, quân treo, đòn chiến thuật
  */
 function detectTacticalReason(prevPos, currPos, isUserMove = true, lang = (typeof currentLang !== 'undefined' ? currentLang : 'vi')) {
     const isEn = lang === 'en';
@@ -454,12 +484,15 @@ function detectTacticalReason(prevPos, currPos, isUserMove = true, lang = (typeo
     const otherSide = isEn ? (isUserMove ? 'the opponent' : 'you') : (isUserMove ? 'đối thủ' : 'bạn');
     const otherSideCap = isEn ? (isUserMove ? 'The opponent' : 'You') : (isUserMove ? 'Đối thủ' : 'Bạn');
 
+    const ChessClass = getChessConstructor();
+    if (!ChessClass) return '';
+
     // 1. Kiểm tra Chiếu hết đã diễn ra
-    const chessAfter = new Chess(currPos.fen);
+    const chessAfter = new ChessClass(currPos.fen);
     if (chessAfter.in_checkmate()) {
         return isEn
-            ? `Decisive Checkmate: ${subjectCap} delivered a fatal blow! The opposing King cannot escape, securing immediate victory.`
-            : `Đòn Chiếu Hết Quyết Định: ${subjectCap} đã tung ra đòn kết liễu hoàn hảo! Vua đối phương không còn đường thoát và ván cờ kết thúc ngay lập tức.`;
+            ? `Decisive Checkmate: ${subjectCap} delivered the ultimate coup de grâce! The enemy King is trapped in an inescapable net, sealing immediate victory.`
+            : `Đòn Chiếu Hết Quyết Định: ${subjectCap} đã tung ra đòn kết liễu ngoạn mục! Vua đối phương hoàn toàn bị phong tỏa và trận chiến khép lại với thắng lợi vang dội.`;
     }
 
     // 2. Bỏ lỡ chiếu hết ép buộc
@@ -471,16 +504,16 @@ function detectTacticalReason(prevPos, currPos, isUserMove = true, lang = (typeo
         if (currPos.eval.mate !== 0 && (mateForMoverAfter === null || mateForMoverAfter <= 0)) {
             const steps = Math.abs(prevPos.eval.mate);
             return isEn
-                ? `Missed Checkmate: ${subjectCap} had a forced checkmate in ${steps} moves, but this move let ${otherSide} off the hook!`
-                : `Bỏ Lỡ Chiếu Hết: ${subjectCap} đã nắm chắc chiến thắng với chuỗi chiếu hết ép buộc sau ${steps} nước, nhưng nước đi này đã vô tình để ${otherSide} thoát hiểm!`;
+                ? `Missed Checkmate: ${subjectCap} held a forced mate in ${steps} moves, but this hesitation let ${otherSide} slip through the cracks!`
+                : `Bỏ Lỡ Chiếu Hết: ${subjectCap} đã nắm chắc trong tay chuỗi chiếu hết ép buộc sau ${steps} nước, nhưng nước đi này đã vô tình để ${otherSide} lách qua khe cửa hẹp thoát hiểm!`;
         }
     }
 
     // 3. Chiếu Vua trực tiếp
     if (chessAfter.in_check()) {
         return isEn
-            ? `Direct Check: Places ${otherSide}'s King in immediate danger, disrupting their plans and forcing an evasive move.`
-            : `Chiếu Vua Trực Tiếp: Đặt Vua của ${otherSide} vào thế nguy hiểm cận kề, tước quyền chủ động và ép đối phương phải lập tức tìm cách cứu Vua.`;
+            ? `Fierce Check: Puts ${otherSide}'s King under severe fire, disrupting their tactical harmony and forcing immediate defensive triage.`
+            : `Chiếu Vua Uy Lực: Đặt Vua của ${otherSide} vào vòng lửa nguy cấp, cắt đứt sự phối hợp của đối phương và buộc họ phải chống đỡ trong thế bị động.`;
     }
 
     // 4. KIỂM TRA QUÂN TREO (HANGING PIECE) & BỊ ĂN HƠN QUÂN TRỰC TIẾP
@@ -494,7 +527,7 @@ function detectTacticalReason(prevPos, currPos, isUserMove = true, lang = (typeo
 
         let hasDefender = false;
         try {
-            const simChess = new Chess(currPos.fen);
+            const simChess = new ChessClass(currPos.fen);
             simChess.move(minAttacker);
             const recaptures = simChess.moves({ verbose: true }).filter(r => r.to === to);
             hasDefender = recaptures.length > 0;
@@ -503,19 +536,19 @@ function detectTacticalReason(prevPos, currPos, isUserMove = true, lang = (typeo
         if (!hasDefender && movedVal >= 3 && category !== 'Brilliant') {
             const attackerName = getPieceName(minAttacker.piece, lang);
             return isEn
-                ? `Severe Blunder (Hanging Piece): ${subjectCap} moved the ${pieceName} to ${to} without any protection! ${otherSideCap} can capture it for free with their ${attackerName}.`
-                : `Mất Quân Nghiêm Trọng (Quân treo): ${subjectCap} vừa đưa ${pieceName} đến ô ${to} mà không có quân nào bảo vệ! ${otherSideCap} có thể ăn đứt quân này bằng ${attackerName} mà không phải trả giá.`;
+                ? `Lethal Blunder (Hanging Piece): ${subjectCap} pushed the ${pieceName} to ${to} with zero backup from teammates! ${otherSideCap} can capture it for free with their ${attackerName}, gaining a massive material windfall.`
+                : `Sơ hở chết người! (Quân treo): ${subjectCap} vừa đẩy ${pieceName} đến ${to} mà không có bất kỳ đồng đội nào phía sau bọc lót, biến nó thành miếng mồi ngon cho đối thủ! ${otherSideCap} có thể ăn gọn quân này bằng ${attackerName} mà không tốn một giọt mồ hôi.`;
         } else if (hasDefender && minAttackerVal < movedVal && category !== 'Brilliant') {
             const attackerName = getPieceName(minAttacker.piece, lang);
             return isEn
-                ? `Bad Trade: The ${pieceName} (${movedVal} pts) on ${to} is attacked by a cheaper ${attackerName} (${minAttackerVal} pts). Trading here results in a net material deficit!`
-                : `Đổi Quân Thua Thiệt: Quân ${pieceName} (${movedVal} điểm) trên ô ${to} đang bị ${attackerName} rẻ tiền hơn (${minAttackerVal} điểm) tấn công. Đổi quân ở đây sẽ khiến ${subject} bị lỗ nặng về quân số!`;
+                ? `Disastrous Trade: The valuable ${pieceName} (${movedVal} pts) on ${to} is ambushed by a cheaper ${attackerName} (${minAttackerVal} pts). Trading here yields a crushing material deficit that tilts the entire game!`
+                : `Đổi quân lỗ nặng: Quân ${pieceName} (${movedVal} điểm) trên ô ${to} đang bị ${attackerName} rẻ tiền hơn (${minAttackerVal} điểm) đe dọa. Pha đổi quân này sẽ khiến ${subject} bị thâm hụt lực lượng nghiêm trọng và làm suy kiệt toàn bộ thế trận!`;
         }
     }
 
     // 5. Kiểm tra để hở quân khác bị ăn mất ở nước tiếp theo (theo PV của engine)
     if (currPos.eval && currPos.eval.pv && currPos.eval.pv.length > 0) {
-        const testChess = new Chess(currPos.fen);
+        const testChess = new ChessClass(currPos.fen);
         const oppReply = applyUciMove(testChess, currPos.eval.pv[0]);
         if (oppReply && oppReply.captured && oppReply.captured !== 'p') {
             const lostPieceCode = oppReply.captured;
@@ -528,8 +561,8 @@ function detectTacticalReason(prevPos, currPos, isUserMove = true, lang = (typeo
             if (lostVal - recapturedVal >= 2 && category !== 'Brilliant') {
                 const lostPieceName = getPieceName(lostPieceCode, lang);
                 return isEn
-                    ? `Overlooked Defense: This move diverted protection away from the ${lostPieceName}, allowing ${otherSide} to capture it with material advantage.`
-                    : `Bỏ Quên Phòng Thủ: Nước đi này đã rút đi quân bảo vệ hoặc mở đường cho đối phương, khiến quân ${lostPieceName} của ${subject} bị ăn mất ở nước tiếp theo mà không thể gỡ lại.`;
+                    ? `Overlooked Defense: This move abandoned the guarding post, leaving ${subject}'s ${lostPieceName} unprotected for ${otherSide} to snap up with impunity!`
+                    : `Bỏ rơi đồng đội: Nước đi này đã rút mất chốt chặn bảo vệ, bỏ mặc quân ${lostPieceName} quý giá của ${subject} cho đối phương ăn thịt ở nước tiếp theo mà không thể đòi lại!`;
             }
         }
     }
@@ -538,30 +571,30 @@ function detectTacticalReason(prevPos, currPos, isUserMove = true, lang = (typeo
     try {
         const fenParts = currPos.fen.split(' ');
         fenParts[1] = move.color;
-        const hypoChess = new Chess(fenParts.join(' '));
+        const hypoChess = new ChessClass(fenParts.join(' '));
         const threats = hypoChess.moves({ verbose: true }).filter(m => m.from === to && m.captured);
         const bigTarget = threats.find(m => m.captured === 'q' || m.captured === 'r');
         if (bigTarget && (category === 'Best' || category === 'Great' || category === 'Excellent' || category === 'Good')) {
             const targetName = getPieceName(bigTarget.captured, lang);
             return isEn
-                ? `Active Threat: The ${pieceName} on ${to} creates an immediate attack on ${otherSide}'s ${targetName}, seizing tempo and forcing them backwards.`
-                : `Đòn Đe Dọa Chủ Động: Quân ${pieceName} vừa lên ${to} tạo đòn tấn công trực tiếp vào ${targetName} của ${otherSide}, giành quyền chủ động và ép đối thủ phải lùi bước.`;
+                ? `Seizing the Tempo (Active Threat): The ${pieceName} on ${to} unleashes a direct assault on ${otherSide}'s ${targetName}, hijacking the initiative and forcing the enemy to scramble in retreat!`
+                : `Cướp Nhịp Độ (Tempo) & Đe Dọa: Quân ${pieceName} vừa lên ${to} tạo đòn tấn công trực diện vào ${targetName} của ${otherSide}, giành lấy quyền chủ động tối cao và ép đối phương phải hốt hoảng rút lui!`;
         }
     } catch (e) {}
 
     // 7. Nhập thành an toàn
     if (san === 'O-O' || san === 'O-O-O') {
         return isEn
-            ? `King Safety & Piece Mobilization: Castling secures the King behind protective pawns and establishes vital central communication for the Rook.`
-            : `Bảo Vệ Vua & Kết Nối Xe: Nước nhập thành giúp Vua lui về pháo đài kiên cố, đồng thời đưa Xe ra cột trung tâm để sẵn sàng tham chiến.`;
+            ? `King Bunker & Rook Launchpad: Castling locks the monarch into a reinforced citadel while launching the Rook onto open central runways ready for combat!`
+            : `Pháo Đài An Toàn & Động Viên Quân: Đưa Vua lui về pháo đài kiên cố sau bức tường Tốt và kích hoạt Xe sẵn sàng đổ bộ ra trung tâm ngắm bắn, hoàn thiện phòng tuyến và mở đường phản công!`;
     }
 
     // 8. Đẩy Tốt hở Vua
     if (piece === 'p' && (category === 'Inaccuracy' || category === 'Mistake' || category === 'Blunder')) {
         if (from.startsWith('f') || from.startsWith('g') || from.startsWith('h')) {
             return isEn
-                ? `Weakened King Shield: Pushing pawns around the King creates permanent holes and open lines that enemy pieces can infiltrate.`
-                : `Làm Hở Lá Chắn Của Vua: Đẩy các Tốt phòng thủ quanh Vua tạo ra các ô yếu chí mạng và mở đường cho quân địch tràn vào tấn công.`;
+                ? `Shattered King Shield: Pushing pawns around the King creates permanent defensive craters that invite enemy invaders straight into the throne room!`
+                : `Phá Nát Lá Chắn Vua: Đẩy các Tốt quanh Vua tạo ra những lỗ hổng vĩnh viễn không thể vá lành, trải thảm đỏ cho quân địch tràn vào công phá thành trì!`;
         }
     }
 
@@ -569,54 +602,54 @@ function detectTacticalReason(prevPos, currPos, isUserMove = true, lang = (typeo
     const centerSquares = ['e4', 'd4', 'e5', 'd5', 'c4', 'c5'];
     if (centerSquares.includes(to) && (category === 'Best' || category === 'Great' || category === 'Excellent' || category === 'Good')) {
         return isEn
-            ? `Dominating the Center: Occupies and controls critical central space, boosting piece mobility while cramping ${otherSide}'s options.`
-            : `Kiểm Soát Trung Tâm: Chiếm lĩnh và làm chủ ô trung tâm trọng yếu (${to}), mở rộng không gian hoạt động cho quân mình và kìm hãm đối phương.`;
+            ? `Dominating the Center: Staking an unshakeable claim on the vital center (${to}), smothering enemy space and giving your forces supreme mobility.`
+            : `Làm Chủ Trung Tâm: Quân cờ này như một pháo đài ngự trị ngay tại trung tâm (${to}), bóp nghẹt không gian và hạn chế tầm hoạt động của ${otherSide}.`;
     }
 
     // 10. Fallback theo phân loại chuẩn
     if (category === 'Brilliant') {
         return isEn
-            ? `Phenomenal Sacrifice: Voluntarily surrendering material to shatter enemy defenses or trigger an unstoppable offensive wave!`
-            : `Thí Quân Thiên Tài: Dũng cảm hy sinh vật chất để phá tan lớp phòng thủ của đối phương và mở màn cho đợt tấn công không thể cản phá!`;
+            ? `Brilliant Sacrifice: Audaciously offering up material to dismantle the enemy fortress and unleash an unstoppable tactical onslaught!`
+            : `Tuyệt Đỉnh Thí Quân: Dũng cảm hy sinh vật chất để phá tan lớp phòng ngự kiên cố nhất, mở toang cánh cửa dẫn tới chiến thắng rực rỡ!`;
     }
     if (category === 'Great') {
         return isEn
-            ? `Solitary Savior: The only precise move on the board that holds the position together or preserves a winning advantage!`
-            : `Nước Đi Cứu Cánh Duy Nhất: Đây là lựa chọn chuẩn xác duy nhất trên bàn cờ giúp giữ vững thế trận hoặc duy trì ưu thế thắng!`;
+            ? `The Solitary Savior: Masterclass tactical vision! This was the only move on the entire board to turn the tide and preserve the game!`
+            : `Nước Cờ Cứu Cánh Duy Nhất: Nhãn quan chiến thuật phi thường! Đây là nước cờ duy nhất trên toàn bộ bàn cờ cứu vãn tình thế và lật ngược thế cờ!`;
     }
     if (category === 'Best') {
         return isEn
-            ? `Engine Top Choice: The most harmonious move available, maximizing tactical defense and piece coordination.`
-            : `Nước Tối Ưu Nhất Của Máy: Nước đi hoàn hảo nhất trong thế cờ, dung hòa trọn vẹn giữa an toàn chiến thuật và sự cơ động của các quân.`;
+            ? `Engine Masterpiece: The highest-octane move on the board, flawlessly harmonizing aggressive pressure, tempo, and piece unity!`
+            : `Lựa Chọn Tối Ưu: Nước cờ hoàn hảo nhất cỗ máy đề xuất, cân bằng tuyệt đối giữa áp lực tấn công, nhịp độ và sự hài hòa của toàn đội hình!`;
     }
     if (category === 'Inaccuracy') {
         return isEn
-            ? `Suboptimal Choice: Not an immediate disaster, but it gives away a fraction of your initiative and grants ${otherSide} extra breathing room.`
-            : `Thiếu Chuẩn Xác: Chưa gây thiệt hại ngay lập tức nhưng làm giảm nhẹ ưu thế và cho ${otherSide} thêm thời gian để củng cố đội hình.`;
+            ? `Suboptimal Move: A step too passive that relinquishes a fraction of your initiative and affords ${otherSide} welcome breathing space.`
+            : `Chưa Phải Tối Ưu: Nước đi hơi thụ động và nhường lại một chút quyền chủ động, tạo cơ hội cho ${otherSide} có thêm khoảng thở để củng cố phòng ngự.`;
     }
     if (category === 'Mistake') {
         return isEn
-            ? `Costly Mistake: Lets the initiative slip away and provides ${otherSide} a clear opportunity to tilt the balance.`
-            : `Sai Lầm Đáng Tiếc: Khiến thế cờ của ${subject} bị thụ động và mở ra cơ hội rõ nét cho ${otherSide} nắm lấy quyền kiểm soát.`;
+            ? `Hasty Mistake: Erodes your structural foundation and presents ${otherSide} with an immediate tactical springboard to fight back!`
+            : `Một Quyết Định Vội Vàng: Nước đi này làm suy yếu cấu trúc thế trận và mở toang cánh cửa cho ${otherSide} chớp lấy thời cơ phản kích!`;
     }
     if (category === 'Miss') {
         return isEn
-            ? `Missed Opportunity: Overlooked a golden tactical blow or winning transition, allowing the opponent to stay alive.`
-            : `Bỏ Lỡ Đòn Quyết Định: Không nhìn thấy đòn chiến thuật trừng phạt sơ hở của đối thủ, để tuột mất cơ hội gia tăng cách biệt.`;
+            ? `Missed Golden Chance: You focused too much on defense and overlooked a lightning counter-strike that could have decided the game on the spot!`
+            : `Bỏ Lỡ Cơ Hội Vàng: Bạn đã quá tập trung vào phòng thủ mà bỏ lỡ một đòn phản công chớp nhoáng có thể định đoạt ngay ván đấu!`;
     }
     if (category === 'Blunder') {
         return isEn
-            ? `Critical Blunder: Gives away crucial material or positional stability, turning the evaluation heavily in ${otherSide}'s favor!`
-            : `Sai Lầm Nghiêm Trọng: Đánh mất quân quan trọng hoặc phá vỡ hoàn toàn thế trận, dâng ưu thế lớn cho ${otherSide}!`;
+            ? `Catastrophic Blunder: A devastating misstep that opens up a fatal wound and turns a promising fight into an uphill battle!`
+            : `Trời ơi, Sai Lầm Chí Mạng: Bạn đã để lộ điểm yếu chết người khiến toàn bộ thế trận đứng trước bờ vực sụp đổ. Hãy cẩn thận hơn!`;
     }
 
     return isEn
-        ? `Solid Continuation: Maintains healthy piece coordination, sound structure, and strategic balance.`
-        : `Nước Đi Vững Chắc: Duy trì tính liên kết chặt chẽ giữa các quân, giữ cấu trúc tốt và bảo đảm sự cân bằng.`;
+        ? `Solid Maneuver: Maintains disciplined piece coordination, preserves board real estate, and sets the stage for future operations.`
+        : `Nước Cờ Vững Vàng: Giữ vững tính liên kết chặt chẽ giữa các quân, bảo toàn không gian kiểm soát và chuẩn bị cho các đợt tác chiến tiếp theo.`;
 }
 
 /**
- * Phần 4: Lời khuyên cốt lõi của Huấn luyện viên dành cho người chơi Elo 500
+ * Phần 4: Lời khuyên cốt lõi của Huấn luyện viên cờ vua nhiệt huyết (Dành cho mọi kỳ thủ)
  */
 function getCoachTip(currPos, isUserMove, lang = 'vi') {
     const isEn = lang === 'en';
@@ -624,55 +657,62 @@ function getCoachTip(currPos, isUserMove, lang = 'vi') {
     const to = move.to || '';
     const piece = (move.piece || 'p').toLowerCase();
     const category = (currPos.classification && currPos.classification.category) || 'Good';
-    const moveNum = currPos.moveNumber || 1;
+    const moveNum = currPos.moveNumber || Math.ceil((currPos.index || 1) / 2);
 
     // 1. Mã ở biên
     const rimSquares = ['a1','a2','a3','a4','a5','a6','a7','a8','h1','h2','h3','h4','h5','h6','h7','h8'];
     if (piece === 'n' && rimSquares.includes(to)) {
         return isEn
-            ? `"A knight on the rim is dim." Knights placed on the board's edge control at most 4 squares. Keep them centralized (d4, e4, d5, e5) where they control up to 8 squares and radiate power!`
-            : `"Mã ở biên là Mã bỏ đi". Khi đứng ở rìa bàn cờ, quân Mã chỉ kiểm soát được tối đa 4 ô. Hãy luôn ưu tiên đưa Mã vào các ô trung tâm (d4, e4, d5, e5) để kiểm soát tới 8 ô và phát huy tối đa sức mạnh!`;
+            ? `"A knight on the rim is dim!" On the board edge, a knight controls merely 4 squares. Station your knights on protected central outposts (d4, e4, d5, e5) where they radiate octopus-like power across 8 vital squares!`
+            : `"Mã ở biên là Mã bỏ đi!" Khi đứng ở rìa bàn cờ, quân Mã chỉ kiểm soát được tối đa 4 ô và mất nửa sức mạnh. Hãy đặt Mã vào các tiền đồn trung tâm (Outpost d4, e4, d5, e5) được Tốt bảo vệ — nó sẽ trở thành một con quái vật bóp nghẹt toàn bộ trận địa của đối thủ!`;
     }
 
-    // 2. Sai lầm / Mất quân
+    // 2. Sai lầm / Mất quân (The 3-second blundercatcher)
     if (category === 'Blunder' || category === 'Mistake') {
         return isEn
-            ? `Before making your move, pause for 3 seconds and ask two life-saving questions: 1. "Can any enemy piece take my piece on this square?" and 2. "What is my opponent currently threatening?". This single habit prevents most beginner blunders!`
-            : `Trước mỗi nước đi, hãy dành 3 giây tự hỏi 2 câu thần chú: 1. "Ô mình sắp đến có bị quân nào của đối thủ ăn không?" và 2. "Đối thủ đang đe dọa ăn quân nào của mình?". Thói quen này sẽ giúp bạn tránh mất quân vô cớ và tăng ngay 200 Elo!`;
+            ? `Before releasing your move, pause for 3 life-saving seconds: 1. "Is my destination square truly safe from enemy fire?" and 2. "What is my opponent threatening with their last move?". This single mental checkpoint stops 90% of painful blunders!`
+            : `Trước mỗi lần hạ cờ, hãy hít sâu 3 giây và tự hỏi 2 câu sinh tử: 1. "Ô mình sắp hạ quân có bị ai ngắm bắn không?" và 2. "Đối thủ vừa đi nước đó để đe dọa ăn quân nào của mình?". Chỉ 3 giây này thôi sẽ cứu bạn khỏi 90% các ván thua tức tưởi và tăng ngay 200 Elo!`;
     }
 
     // 3. Khai cuộc (moveNumber <= 10)
     if (moveNum <= 10 && (category === 'Inaccuracy' || category === 'Mistake' || category === 'Blunder')) {
         return isEn
-            ? `Remember the 3 golden opening rules: 1. Occupy the center with pawns (e4/d4), 2. Develop Knights and Bishops, 3. Castle early to protect your King. Avoid moving the same piece repeatedly in the opening!`
-            : `3 nguyên tắc vàng khai cuộc cho người mới: 1. Chiếm trung tâm bằng Tốt (e4/d4), 2. Phát triển Mã và Tượng ra trận, 3. Nhập thành thật sớm để bảo vệ Vua an toàn. Hạn chế đi một quân nhiều lần trong giai đoạn này!`;
+            ? `The 3 golden opening laws: 1. Stake out the center with pawns (e4/d4), 2. Rapidly develop Knights and Bishops toward the center, 3. Castle early to tuck your King away. Never move the same piece repeatedly or unleash your Queen into early danger!`
+            : `3 nguyên tắc vàng khai cuộc cho mọi kỳ thủ: 1. Chiếm đóng trung tâm bằng Tốt (e4/d4), 2. Phát triển Mã và Tượng ra trận, 3. Nhập thành thật sớm để bảo vệ Vua. Tuyệt đối không đi một quân nhiều lần hay rút Hậu ra trận quá sớm khi quân khác còn đang ngủ!`;
     }
 
-    // 4. Nhập thành
+    // 4. Nhập thành & An toàn Vua
     if (move.san === 'O-O' || move.san === 'O-O-O') {
         return isEn
-            ? `King safety is paramount. Castling early prevents dangerous center attacks and activates your Rook into the game.`
-            : `An toàn của Vua là số 1 trong cờ vua. Nhập thành sớm giúp bạn tránh được các đòn tấn công bất ngờ ở trung lộ và đưa Xe vào trận chiến.`;
+            ? `No matter how fiery the tactical clash, King safety is rule #1. An exposed King is an invitation to checkmate. Castling early locks the monarch in a bunker and launches the Rook into battle.`
+            : `Dù thế trận có đang căng thẳng đến đâu, ưu tiên số 1 vẫn là sự an toàn của Vua. Một Vua hở sườn là một Vua sắp bị chiếu hết. Nhập thành sớm giúp bạn khóa chặt pháo đài kiên cố và kích hoạt Xe tham chiến.`;
     }
 
-    // 5. Đổi quân (Trading)
+    // 5. Đổi quân (Trading principle)
     if (move.captured) {
         return isEn
-            ? `Golden trading rule: When you have more material than your opponent, trade pieces to simplify into an easy winning endgame. When down material, avoid trades and keep pieces to create tactical counter-chances!`
-            : `Quy tắc đổi quân cốt lõi: Khi bạn đang hơn quân đối thủ, hãy tích cực đổi các quân cờ để đưa về tàn cuộc thắng dễ dàng. Khi đang bị thua quân, hãy tránh đổi quân để giữ lại cơ hội tạo đòn phản công!`;
+            ? `The golden trading rule: When ahead in material, trade pieces ruthlessly to cruise into a won endgame. When down material, avoid trades like the plague — keep the board messy and brew tactical storms for a comeback!`
+            : `Quy tắc đổi quân vàng: Khi bạn hơn quân, hãy tìm mọi cách đổi quân để đưa về tàn cuộc thắng nhẹ nhàng. Ngược lại, khi bị thua quân, tuyệt đối né tránh đổi quân — hãy giữ lại nhiều quân nhất có thể để giăng bẫy chiến thuật và tìm kiếm cơ hội lật kèo!`;
     }
 
-    // 6. Nước đi xuất sắc
+    // 6. Cấu trúc Tốt (Pawn structure)
+    if (piece === 'p') {
+        return isEn
+            ? `Remember: Pawns can never step backwards! Every pawn push leaves permanent holes and weaknesses behind. Push pawns with deep calculation, sculpting pawn chains that serve as springboards for your major pieces.`
+            : `Hãy nhớ: Tốt không bao giờ đi lùi được! Mỗi lần đẩy Tốt lên, bạn để lại những khoảng trống và ô yếu vĩnh viễn ở phía sau. Hãy đẩy Tốt có tính toán, xây dựng chuỗi xích Tốt vững chắc làm bàn đạp cho các quân nặng.`;
+    }
+
+    // 7. Nước đi xuất sắc / Tầm nhìn kiện tướng
     if (category === 'Brilliant' || category === 'Great' || category === 'Best') {
         return isEn
-            ? `Great chess vision! Always scan for tactical weaknesses and active piece placements just like this move.`
-            : `Tư duy cờ vua tuyệt vời! Hãy luôn duy trì thói quen quan sát toàn bộ bàn cờ để tìm kiếm các vị trí đặt quân tích cực như bạn vừa thực hiện.`;
+            ? `World-class vision! You are weaving together tempo, space, and lethal piece synergy. Maintain this razor-sharp momentum and squeeze the life out of your opponent's defense!`
+            : `Tầm nhìn thượng thừa! Bạn đang kết hợp hài hòa giữa nhịp độ (Tempo), không gian (Space) và đòn phối hợp. Hãy tiếp tục duy trì trạng thái tập trung đỉnh cao này để nghiền nát đối thủ!`;
     }
 
-    // 7. Mặc định
+    // 8. Mặc định: Phối hợp quân (Piece coordination)
     return isEn
-        ? `Always ensure piece coordination: never send a lone piece into enemy lines without teammates guarding its back.`
-        : `Luôn chú ý sự phối hợp giữa các quân cờ: đừng bao giờ đưa một quân đơn độc lao vào phần sân đối phương mà không có đồng đội bọc lót phía sau.`;
+        ? `Chess is the ultimate team game. Never launch a solo raid with an isolated Queen or Knight. Weave your pieces into an impenetrable web where every piece defends another and all guns point at the same target.`
+        : `Cờ vua là trò chơi đồng đội. Đừng để một quân Mã hay Hậu lao lên tấn công đơn độc. Hãy kết nối các quân cờ lại thành một mạng lưới không thể bị phá vỡ — quân này bảo vệ quân kia, cùng hướng về một mục tiêu chung.`;
 }
 
 /**
@@ -745,10 +785,10 @@ function buildMoveExplanation(prevPos, currPos, isUserMove = true, lang = (typeo
     const sec1Title = isEn ? '1. What this move does' : '1. Ý nghĩa nước đi vừa rồi';
     const isGoodMove = ['Brilliant', 'Great', 'Best', 'Excellent', 'Good', 'Book'].includes(category);
     const sec2Title = isEn
-        ? (isGoodMove ? '2. Why it works' : '2. Why it fails / Tactical vulnerability')
-        : (isGoodMove ? '2. Tại sao nước này Tốt' : '2. Tại sao nước này Sai lầm / Điểm sơ hở');
-    const sec3Title = isEn ? '3. What happens next' : '3. Kịch bản tiếp theo';
-    const sec4Title = isEn ? "4. Coach's Tip (For Elo 500)" : '4. Lời khuyên của HLV (Dành cho Elo 500)';
+        ? (isGoodMove ? '2. Why it works / Tactical strength' : '2. Critical flaw / Tactical vulnerability')
+        : (isGoodMove ? '2. Tại sao nước này Tốt / Sức mạnh chiến thuật' : '2. Điểm sơ hở chí mạng / Sai lầm chiến thuật');
+    const sec3Title = isEn ? '3. What happens next (Expected continuation)' : '3. Kịch bản tiếp theo (Diễn biến dự kiến)';
+    const sec4Title = isEn ? "4. Coach's Master Tip" : '4. Lời khuyên của Huấn luyện viên';
 
     return `
 <div class="explain-coach-card">

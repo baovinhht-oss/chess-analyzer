@@ -3,6 +3,11 @@
  * ĐÃ FIX LỖI SO SÁNH NƯỚC ĐI VÀ LỖI ĐÁNH GIÁ CHÉO.
  */
 
+// Fallback an toàn nếu config.js bị thiếu hoặc load thất bại
+if (typeof window !== 'undefined') {
+    window.CHESSCOM_USERNAME = window.CHESSCOM_USERNAME || (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : 'bazu25022005');
+}
+
 const CATEGORY_ARROW_COLORS = {
     Brilliant: '#1baca6', Great: '#5c8bb0', Book: '#a88865', Best: '#81b64c',
     Excellent: '#96bc4b', Good: '#96af8b', Inaccuracy: '#f7c631', Mistake: '#e58f2a',
@@ -275,6 +280,10 @@ const TRANSLATIONS = {
         bot_draw_50moves: 'Hòa cờ theo luật 50 nước!',
         bot_draw_generic: 'Hòa cờ!',
         bot_moves_count: '{0} nước',
+        bot_check_user: 'Bạn đang bị chiếu tướng!',
+        bot_check_bot: 'Bot đang bị chiếu tướng!',
+        live_engine_analyzing: 'Đang phân tích',
+        live_engine_done: 'Hoàn tất',
 
         // Batch Analysis
         batch_start: '▶ Chạy phân tích nền',
@@ -514,6 +523,10 @@ const TRANSLATIONS = {
         bot_draw_50moves: 'Draw by 50-move rule!',
         bot_draw_generic: 'Draw!',
         bot_moves_count: '{0} moves',
+        bot_check_user: 'You are in check!',
+        bot_check_bot: 'Bot is in check!',
+        live_engine_analyzing: 'Analyzing',
+        live_engine_done: 'Done',
 
         // Batch Analysis
         batch_start: '▶ Start Batch Analysis',
@@ -680,155 +693,7 @@ function calculatePerformanceRating(accuracy, mistakes = 0, blunders = 0, oppone
     return clampedPerf;
 }
 
-/**
- * Nhận diện nước đi xuất thần (Brilliant !!) theo chuẩn Expected Points & Chess.com:
- * CHỈ gán nhãn Brilliant khi nước đi đó là một nước HY SINH QUÂN
- * (đi quân vào ô bị tấn công mà không có bảo vệ, hoặc đổi quân lỗ giá trị material)
- * VÀ điểm số đánh giá sau đó của Stockfish vẫn giữ nguyên hoặc tốt hơn, đồng thời không ở trạng thái thua trước đó.
- * TUYỆT ĐỐI KHÔNG gán Brilliant cho các nước đổi Hậu hay ăn quân thông thường.
- * @param {Object} pos - Thế cờ sau nước đi
- * @param {Object} prevPos - Thế cờ trước nước đi
- * @returns {boolean} True nếu là nước cờ Brilliant
- */
-function detectBrilliant(pos, prevPos) {
-    if (!pos || !pos.classification || !pos.eval || !pos.move) return false;
-    if (!prevPos || !prevPos.eval) return false;
-
-    const cls = pos.classification;
-
-    // Không tính các nước mở đầu sách giáo khoa
-    if (cls.category === 'Book') return false;
-
-    const moverColor = pos.move.color;
-    const sign = (moverColor === 'w') ? 1 : -1;
-
-    // 1. Kiểm tra đánh giá TRƯỚC nước đi (prevPos):
-    // ĐIỀU KIỆN: KHÔNG ở trạng thái thua trước đó
-    const whiteCpBefore = (prevPos.eval.cpWhite !== undefined)
-        ? prevPos.eval.cpWhite
-        : ((prevPos.eval.cp || 0) * (prevPos.turn === 'w' ? 1 : -1));
-    const moverCpBefore = whiteCpBefore * sign;
-    const mateMoverBefore = (prevPos.eval.mateWhite !== null && prevPos.eval.mateWhite !== undefined)
-        ? (prevPos.eval.mateWhite * sign)
-        : null;
-
-    const wasGettingMatedBefore = (mateMoverBefore !== null && mateMoverBefore < 0);
-    // Nếu trước đó đang bị chiếu hết hoặc điểm số âm nặng (thua rõ rệt, cp < -100):
-    if (wasGettingMatedBefore || moverCpBefore < -100) return false;
-
-    // 2. Kiểm tra đánh giá SAU nước đi (pos):
-    // ĐIỀU KIỆN: Điểm số đánh giá sau đó của Stockfish vẫn GIỮ NGUYÊN hoặc TỐT HƠN
-    const whiteCpAfter = (pos.eval.cpWhite !== undefined)
-        ? pos.eval.cpWhite
-        : ((pos.eval.cp || 0) * (pos.turn === 'w' ? 1 : -1));
-    const moverCpAfter = whiteCpAfter * sign;
-    const mateMoverAfter = (pos.eval.mateWhite !== null && pos.eval.mateWhite !== undefined)
-        ? (pos.eval.mateWhite * sign)
-        : null;
-
-    const isGettingMatedAfter = (mateMoverAfter !== null && mateMoverAfter < 0);
-    const hasMateAfter = (mateMoverAfter !== null && mateMoverAfter > 0);
-
-    // Không thể là Brilliant nếu sau nước đi rơi vào thế bị chiếu hết
-    if (isGettingMatedAfter) return false;
-
-    // Điểm số sau nước đi phải giữ nguyên hoặc tốt hơn (cho phép sai số engine depth tối đa 15 cp)
-    // Hoặc đem lại thế chiếu hết thắng (hasMateAfter)
-    const evalMaintainedOrBetter = hasMateAfter || (moverCpAfter >= moverCpBefore - 15);
-    if (!evalMaintainedOrBetter) return false;
-
-    // Sau nước đi, thế cờ phải không thua (moverCpAfter >= -50)
-    if (moverCpAfter < -50) return false;
-
-    // Xác suất thắng không được sụt giảm quá 0.5%
-    if (cls.winLoss !== undefined && cls.winLoss > 0.5) return false;
-    if (cls.cpLoss !== undefined && cls.cpLoss > 15) return false;
-
-    // Phải là nước đi tốt nhất hoặc thuộc nhóm Best của Engine
-    const isTopChoice = Boolean(cls.isEngineBest || cls.category === 'Best' || (cls.winLoss !== undefined && cls.winLoss < 0.5));
-    if (!isTopChoice) return false;
-
-    // 3. ĐIỀU KIỆN HY SINH QUÂN (SACRIFICE) NGHIÊM NGẶT:
-    // Tuyệt đối không gán Brilliant cho các nước đổi Hậu hay ăn quân thông thường.
-    const pieceValues = { q: 9, r: 5, b: 3, n: 3, p: 1, k: 0 };
-    const movedPiece = (pos.move.piece || '').toLowerCase();
-    const movedVal = pieceValues[movedPiece] || 0;
-    const capturedPiece = pos.move.captured ? pos.move.captured.toLowerCase() : null;
-    const capturedVal = capturedPiece ? (pieceValues[capturedPiece] || 0) : 0;
-
-    // Vua không bao giờ là quân hy sinh
-    if (movedPiece === 'k') return false;
-
-    // TUYỆT ĐỐI LOẠI TRỪ: Nước ăn quân bình thường hoặc đổi quân (capturedVal >= movedVal)
-    // Ví dụ: Đổi Hậu (QxQ 9 vs 9), đổi Xe (RxR 5 vs 5), đổi Mã/Tượng (3 vs 3), ăn hơn quân (PxQ, NxQ, RxQ...)
-    if (capturedPiece && capturedVal >= movedVal) {
-        return false;
-    }
-
-    const fenAfter = pos.fen || (pos.move && pos.move.fen) || null;
-    const ChessConstructor = (typeof Chess !== 'undefined') ? Chess : (typeof window !== 'undefined' ? window.Chess : null);
-    if (!fenAfter || !ChessConstructor) return false;
-
-    try {
-        const cAfter = new ChessConstructor(fenAfter);
-        const oppMoves = cAfter.moves({ verbose: true });
-
-        // Trường hợp 1: Quân vừa đi là quân bị hy sinh (Knight, Bishop, Rook, Queen: movedVal >= 3)
-        if (movedVal >= 3) {
-            const toSq = pos.move.to;
-            const attacksOnPiece = oppMoves.filter(m => m.to === toSq);
-
-            if (attacksOnPiece.length > 0) {
-                const minAttackerVal = Math.min(...attacksOnPiece.map(m => pieceValues[m.piece] || 0));
-
-                // 1.1: Đối phương có thể ăn bằng quân giá trị nhỏ hơn (ví dụ Tốt ăn Hậu/Xe/Mã/Tượng, hoặc Mã/Tượng ăn Hậu)
-                // Đây chắc chắn là hy sinh material
-                if (minAttackerVal < movedVal) {
-                    return true;
-                }
-
-                // 1.2: Đi quân vào ô bị tấn công MÀ KHÔNG CÓ BẢO VỆ (unprotected / hanging piece)
-                // Khi đối phương ăn, ta không có nước ăn lại nào (recaptures.length === 0)
-                for (const oppCapture of attacksOnPiece) {
-                    const cSim = new ChessConstructor(fenAfter);
-                    const validOppMove = cSim.move(oppCapture);
-                    if (validOppMove) {
-                        const ourRecaptures = cSim.moves({ verbose: true }).filter(m => m.to === toSq);
-                        if (ourRecaptures.length === 0) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Trường hợp 2: Hy sinh quân khác (Discovered Sacrifice / Deflection):
-        // Nước đi bỏ mặc một quân giá trị cao khác (Xe, Hậu, Mã, Tượng >= 3) cho đối phương ăn
-        const oppCapturesOther = oppMoves.filter(m => m.captured && (pieceValues[m.captured] || 0) >= 3 && m.to !== pos.move.to);
-        for (const oppCap of oppCapturesOther) {
-            const oppPieceVal = pieceValues[oppCap.piece] || 0;
-            const targetPieceVal = pieceValues[oppCap.captured] || 0;
-
-            // Bỏ mặc quân bị ăn bởi quân giá trị nhỏ hơn
-            if (oppPieceVal < targetPieceVal) {
-                return true;
-            }
-
-            // Hoặc quân đó bị bỏ mặc hoàn toàn không có bảo vệ
-            const cSim = new ChessConstructor(fenAfter);
-            if (cSim.move(oppCap)) {
-                const recaptures = cSim.moves({ verbose: true }).filter(m => m.to === oppCap.to);
-                if (recaptures.length === 0) {
-                    return true;
-                }
-            }
-        }
-    } catch (e) {
-        return false;
-    }
-
-    return false;
-}
+// detectBrilliant được dùng từ classify.js (tránh trùng lặp mã nguồn)
 
 function scaleWinPctForChart(winPct) {
     const normalized = winPct / 100;
@@ -1070,6 +935,7 @@ function escapeHTML(str) {
         '"': '&quot;'
     }[match]));
 }
+if (typeof window !== 'undefined') window.escapeHTML = escapeHTML;
 
 function formatWinProbability(evalObj, userColor = getCurrentUserColor()) {
     if (!evalObj) return '--%';
@@ -1087,17 +953,7 @@ function formatWinProbability(evalObj, userColor = getCurrentUserColor()) {
     return `${finalPct.toFixed(1).replace('.', ',')}%`;
 }
 
-function extractOpeningName(pgn) {
-    if (!pgn || typeof pgn !== 'string') return '--';
-    const ecoUrlMatch = pgn.match(/\[ECOUrl\s+"https?:\/\/[^"]*\/openings\/([^"]+)"\]/i) || pgn.match(/\[ECOUrl\s+"[^"]*\/([^"/]+)"\]/i);
-    if (ecoUrlMatch && ecoUrlMatch[1]) {
-        let name = decodeURIComponent(ecoUrlMatch[1]).replace(/[-_]+/g, ' ').trim();
-        return name || '--';
-    }
-    const openingMatch = pgn.match(/\[Opening\s+"([^"]+)"\]/i);
-    if (openingMatch && openingMatch[1]) return openingMatch[1].trim();
-    return '--';
-}
+// extractOpeningNameFromPGN được dùng từ stats.js (tránh trùng lặp mã nguồn)
 
 // ============================================================================
 // 3. KHỞI TẠO BÀN CỜ, ÂM THANH
@@ -1462,7 +1318,7 @@ function buildPositionsFromPGN(pgn) {
         }
         positions.push({
             index: idx + 1, fenBefore: fenBefore, fen: fenAfter, turn: chess.turn(),
-            move: { san: moveObj.san, from: moveObj.from, to: moveObj.to, color: moveObj.color, piece: moveObj.piece, captured: moveObj.captured || null, uci: moveObj.from + moveObj.to + (moveObj.promotion || '') },
+            move: { san: moveObj.san, from: moveObj.from, to: moveObj.to, color: moveObj.color, piece: moveObj.piece, captured: moveObj.captured || null, promotion: moveObj.promotion || null, uci: moveObj.from + moveObj.to + (moveObj.promotion || '') },
             timeSpentSec: timeSpentSec, timeSpentStr: timeSpentStr,
             whiteClock: hasClockData ? { sec: whiteClockCur, str: formatClockDisplay(whiteClockCur) } : null,
             blackClock: hasClockData ? { sec: blackClockCur, str: formatClockDisplay(blackClockCur) } : null,
@@ -1605,19 +1461,14 @@ function handlePlayerMove(source, target, promotion = 'q') {
         }
 
         if (isUserTurn) {
-            botThinking = true; // Khóa UI NGAY LẬP TỨC để ngăn chặn spam click / race condition trong khoảng 400ms
+            botThinking = true;
             updateBotGameUI();
 
-            // Bọc executeBotMoveSafe trong setTimeout 400ms để hệ thống UI và Coach Panel của người chơi xử lý xong đồ họa chiếu tướng (Check Badge) trước khi khóa luồng Engine
-            setTimeout(() => {
-                executeBotMoveSafe();
-            }, 400);
-
-            // Chấm điểm và phân tích CHỈ cho nước đi của người chơi
             const currentEvalSession = ++botUserEvalSessionId;
-            setTimeout(() => {
-                evaluateAndClassifyBotUserMove(plyRecord, prevFen, plyRecord.fen, moveRes, currentEvalSession);
-            }, 500);
+            (async () => {
+                await executeBotMoveSafe();
+                await evaluateAndClassifyBotUserMove(plyRecord, prevFen, plyRecord.fen, moveRes, currentEvalSession);
+            })();
         }
         return true;
     }
@@ -1743,11 +1594,7 @@ function updateCoachPanelForTrial() {
     }
 
     if (pos.classification && pos.classification.info) {
-        let prevPos = null;
-        if (trialBranch.currentIndex === 0) prevPos = gamePositions[trialBranch.baseMoveIndex];
-        else prevPos = trialBranch.positions[trialBranch.currentIndex - 1];
-
-        const isBrill = Boolean(pos.classification.isBrilliant || detectBrilliant(pos, prevPos));
+        const isBrill = Boolean(pos.classification?.isBrilliant);
         const effectiveCategory = isBrill ? 'Brilliant' : pos.classification.category;
         const effectiveColor = CATEGORY_ARROW_COLORS[effectiveCategory] || (isBrill ? '#1baca6' : pos.classification.info.color);
         const effectiveVarName = getCategoryVarName(effectiveCategory);
@@ -1832,11 +1679,7 @@ function buildTrialBranchRowElement() {
         const cell = document.createElement('span'); cell.className = 'trial-move-cell'; cell.dataset.branchIndex = bIdx;
         let badgeHtml = '';
         if (pos.classification && pos.classification.info) {
-            let prevPos = null;
-            if (bIdx === 0) prevPos = gamePositions[trialBranch.baseMoveIndex];
-            else prevPos = trialBranch.positions[bIdx - 1];
-
-            const isBrill = Boolean(pos.classification.isBrilliant || detectBrilliant(pos, prevPos));
+            const isBrill = Boolean(pos.classification?.isBrilliant);
             const cat = isBrill ? 'Brilliant' : (pos.classification.category || 'Best');
             const symbol = EVAL_BADGE_SYMBOLS[cat] || SVG_ICONS.Best;
             const textSym = CATEGORY_TEXT_SYMBOLS[cat] || '★';
@@ -2221,7 +2064,7 @@ async function evaluateAndClassifyBotUserMove(userPly, fenBefore, fenAfter, move
             evalBefore, evalAfter, userPly.color, playedUci, bestUci
         );
 
-        if (detectBrilliant({ move: userPly, eval: evalAfter, classification, fen: fenAfter }, { eval: evalBefore, fen: fenBefore })) {
+        if (typeof detectBrilliant === 'function' && detectBrilliant({ move: userPly, eval: evalAfter, classification, fen: fenAfter }, { eval: evalBefore, fen: fenBefore })) {
             classification.isBrilliant = true;
             classification.category = 'Brilliant';
         }
@@ -2254,7 +2097,7 @@ function showBotUserFeedback(userPly) {
     const color = CATEGORY_ARROW_COLORS[cat] || '#81b64c';
     feedbackEl.innerHTML = `
         <span class="move-class-badge badge-${cat.toLowerCase()}">${symbol}</span>
-        <span><strong>${userPly.san}:</strong> <span style="color:${color};font-weight:700;">${catName}</span></span>
+        <span><strong>${escapeHTML(userPly.san)}:</strong> <span style="color:${color};font-weight:700;">${escapeHTML(catName)}</span></span>
     `;
     feedbackEl.classList.remove('hidden');
 }
@@ -2298,7 +2141,7 @@ function renderBotMoveList() {
                 badgeHtml = `<span class="move-class-badge badge-${cat.toLowerCase()}" title="${cat}">${sym}</span>`;
             }
             const colClass = mv.isUser ? 'user-col' : 'bot-col';
-            return `<span class="bot-move-san ${colClass}">${mv.san} ${badgeHtml}</span>`;
+            return `<span class="bot-move-san ${colClass}">${escapeHTML(mv.san)} ${badgeHtml}</span>`;
         };
 
         html += `
@@ -2355,8 +2198,8 @@ function handleBotUndo() {
         if (checkWarningEl) {
             checkWarningEl.classList.remove('hidden');
             checkWarningEl.textContent = botGameChess.turn() === botPlayerColor
-                ? 'Bạn đang bị chiếu tướng!'
-                : 'Bot đang bị chiếu tướng!';
+                ? t('bot_check_user')
+                : t('bot_check_bot');
         }
     } else {
         const checkWarningEl = document.getElementById('bot-check-warning');
@@ -2401,9 +2244,28 @@ function handleNextMove() {
 function handleStartMove() { stopAutoplay(); if (isInTrialBranch()) { trialBranch.isViewingBranch = false; trialBranch.currentIndex = null; goToMove(trialBranch.baseMoveIndex); return; } goToMove(0); }
 function handleEndMove() { stopAutoplay(); if (isInTrialBranch()) { trialBranch.currentIndex = trialBranch.positions.length - 1; updateBoardToTrialCurrent(); return; } goToMove(gamePositions.length - 1); }
 
+function highlightCheckSquare(turn) {
+    const boardEl = document.getElementById('board');
+    if (!boardEl || !botGameChess) return;
+    boardEl.querySelectorAll('.square-in-check').forEach(sq => sq.classList.remove('square-in-check'));
+    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    const ranks = ['1', '2', '3', '4', '5', '6', '7', '8'];
+    for (const f of files) {
+        for (const r of ranks) {
+            const sq = f + r;
+            const piece = botGameChess.get(sq);
+            if (piece && piece.type === 'k' && piece.color === turn) {
+                const sqEl = boardEl.querySelector(`.square-${sq}`);
+                if (sqEl) sqEl.classList.add('square-in-check');
+                return;
+            }
+        }
+    }
+}
+
 function clearBoardHighlightsAndArrows() {
     const boardEl = document.getElementById('board');
-    if (boardEl) boardEl.querySelectorAll('.square-55d63').forEach(sq => sq.classList.remove('highlight-last-move', 'highlight-best-move'));
+    if (boardEl) boardEl.querySelectorAll('.square-55d63').forEach(sq => sq.classList.remove('highlight-last-move', 'highlight-best-move', 'square-in-check'));
     if (boardOverlaySvg) boardOverlaySvg.innerHTML = '';
     if (typeof clearArrows === 'function') clearArrows();
     clearBoardEvaluationBadge();
@@ -2415,9 +2277,9 @@ function highlightActualMove(moveObj) {
     if (fromSq) fromSq.classList.add('highlight-last-move'); if (toSq) toSq.classList.add('highlight-last-move');
 }
 
-function drawBestMoveOnBoard(bestUci, categoryOverride) {
+function drawBestMoveOnBoard(bestUci, categoryOverride, validationFen = null) {
     if (!bestUci || bestUci.length < 4 || bestUci === '(none)') return;
-    const currentFen = getCurrentBoardFen();
+    const currentFen = validationFen || getCurrentBoardFen();
     if (typeof Chess === 'function') {
         const currentChess = new Chess(currentFen);
         if (currentChess.in_checkmate() || currentChess.in_draw() || currentChess.moves().length === 0) return;
@@ -2426,13 +2288,13 @@ function drawBestMoveOnBoard(bestUci, categoryOverride) {
         const fromSquare = bestUci.slice(0, 2);
         const toSquare = bestUci.slice(2, 4);
 
-        // 1. Xác định chính xác lượt đi hiện tại từ FEN bàn cờ đang hiển thị
+        // 1. Xác định chính xác lượt đi hiện tại từ FEN được kiểm tra
         const piece = currentChess.get(fromSquare);
 
         // 2. Đồng bộ hóa mũi tên với Stockfish:
-        // Nếu activeTurn === 'w' mà nước đi trong bestmove lại là của quân đen (hoặc ngược lại), ép engine phân tích lại FEN hiện tại
+        // Nếu activeTurn === 'w' mà nước đi trong bestmove lại là của quân đen (hoặc ngược lại), ép engine phân tích lại FEN
         if (!piece || piece.color !== activeTurn) {
-            console.warn(`[BestMoveArrow] Mũi tên ${bestUci} không khớp với lượt đi (${activeTurn}) của FEN hiện tại. Ép engine phân tích lại.`);
+            console.warn(`[BestMoveArrow] Mũi tên ${bestUci} không khớp với lượt đi (${activeTurn}) của FEN (${currentFen}). Ép engine phân tích lại.`);
             if (typeof triggerLiveAnalysis === 'function') {
                 triggerLiveAnalysis(currentFen, true);
             }
@@ -2490,11 +2352,7 @@ function updateCurrentMoveArrow() {
         const trialPos = trialBranch.positions[trialBranch.currentIndex];
         if (trialPos) {
             if (trialPos.move && trialPos.classification) {
-                let prevPos = null;
-                if (trialBranch.currentIndex === 0) prevPos = gamePositions[trialBranch.baseMoveIndex];
-                else prevPos = trialBranch.positions[trialBranch.currentIndex - 1];
-
-                const isBrill = Boolean(trialPos.classification.isBrilliant || detectBrilliant(trialPos, prevPos));
+                const isBrill = Boolean(trialPos.classification?.isBrilliant);
                 const cat = isBrill ? 'Brilliant' : trialPos.classification.category;
                 renderBoardMoveEvaluationBadge(trialPos.move.to, cat, isBrill);
             } else {
@@ -2504,7 +2362,7 @@ function updateCurrentMoveArrow() {
             // Gợi ý nước đi tốt nhất trên chính thế cờ hiện tại của nhánh thử
             const bestUci = trialPos?.eval?.bestmove;
             if (isShowingBestMove && bestUci && bestUci.length >= 4 && bestUci !== '(none)') {
-                drawBestMoveOnBoard(bestUci, 'Best');
+                drawBestMoveOnBoard(bestUci, 'Best', trialPos.fen);
             }
         }
         return;
@@ -2523,18 +2381,22 @@ function updateCurrentMoveArrow() {
 
     // Hiển thị badge đánh giá nước đi vừa thực hiện trên ô đích
     if (currentMoveIndex > 0 && currentPos.move && currentPos.classification) {
-        const prevPos = gamePositions[currentMoveIndex - 1];
-        const isBrill = Boolean(currentPos.classification.isBrilliant || detectBrilliant(currentPos, prevPos));
+        const isBrill = Boolean(currentPos.classification?.isBrilliant);
         const cat = isBrill ? 'Brilliant' : currentPos.classification.category;
         renderBoardMoveEvaluationBadge(currentPos.move.to, cat, isBrill);
     } else {
         clearBoardEvaluationBadge();
     }
 
-    // Vẽ mũi tên gợi ý nước đi tốt nhất (Best Move) cho FEN đang hiển thị trên bàn cờ
-    const bestUci = currentPos?.eval?.bestmove;
+    // Vẽ mũi tên gợi ý nước đi tốt nhất (Best Move) sửa sai cho người dùng:
+    // Khi đang xem lại nước đi (currentMoveIndex > 0), phải lấy prevPos.eval.bestmove thay vì currentPos.eval.bestmove
+    const prevPos = currentMoveIndex > 0 ? gamePositions[currentMoveIndex - 1] : null;
+    const targetPos = (currentMoveIndex > 0 && prevPos) ? prevPos : currentPos;
+    const bestUci = targetPos?.eval?.bestmove;
+    const targetFen = targetPos ? targetPos.fen : getCurrentBoardFen();
+
     if (isShowingBestMove && bestUci && bestUci.length >= 4 && bestUci !== '(none)') {
-        drawBestMoveOnBoard(bestUci, 'Best');
+        drawBestMoveOnBoard(bestUci, 'Best', targetFen);
     }
 }
 
@@ -2774,7 +2636,7 @@ function updateCoachPanel() {
 
     const cls = currentPos.classification;
     const catInfo = cls.info || (typeof MOVE_CATEGORIES !== 'undefined' ? MOVE_CATEGORIES[cls.category] : null) || { viName: cls.category, enName: cls.category, color: '#81b64c' };
-    const isBrilliant = Boolean(cls.isBrilliant || detectBrilliant(currentPos, prevPos));
+    const isBrilliant = Boolean(cls?.isBrilliant);
     const effectiveCategory = isBrilliant ? 'Brilliant' : cls.category;
     const effectiveColor = CATEGORY_ARROW_COLORS[effectiveCategory] || catInfo.color;
     const effectiveVarName = getCategoryVarName(effectiveCategory);
@@ -2798,23 +2660,24 @@ function updateCoachPanel() {
     coachEvalBadge.className = `coach-eval-badge ${isUserAhead ? 'white-adv' : 'black-adv'}`;
     coachPosDesc.textContent = getPositionDescriptionText(currentPos.eval, currentLang, userColor);
 
-    const currentFen = currentPos ? currentPos.fen : getCurrentBoardFen();
-    let isCurrentTerminal = false;
-    if (typeof Chess === 'function' && currentFen) {
-        const c = new Chess(currentFen);
-        isCurrentTerminal = c.in_checkmate() || c.in_draw() || c.moves().length === 0;
+    const targetPos = (currentMoveIndex > 0 && prevPos) ? prevPos : currentPos;
+    const targetFen = targetPos ? targetPos.fen : currentFen;
+    let isTargetTerminal = false;
+    if (typeof Chess === 'function' && targetFen) {
+        const c = new Chess(targetFen);
+        isTargetTerminal = c.in_checkmate() || c.in_draw() || c.moves().length === 0;
     }
 
-    const bestUci = currentPos?.eval?.bestmove;
-    if (!bestUci || isCurrentTerminal || bestUci === '(none)') {
+    const bestUci = targetPos?.eval?.bestmove;
+    if (!bestUci || isTargetTerminal || bestUci === '(none)') {
         btnCoachBest.classList.add('hidden');
         btnCoachBest.classList.remove('active');
     } else {
-        const { bestSan } = convertPvToSanLine(currentFen, [bestUci], 1, currentLang);
+        const { bestSan } = convertPvToSanLine(targetFen, [bestUci], 1, currentLang);
         btnCoachBest.classList.remove('hidden');
         btnCoachBest.classList.toggle('active', isShowingBestMove);
         btnCoachBest.textContent = isShowingBestMove ? `${t('btn_hide_best')} (${bestSan || bestUci})` : t('btn_best_move');
-        if (isShowingBestMove) drawBestMoveOnBoard(bestUci, 'Best');
+        if (isShowingBestMove) drawBestMoveOnBoard(bestUci, 'Best', targetFen);
     }
     btnCoachExplain.disabled = false; btnCoachExplain.classList.toggle('active', isShowingExplain); btnCoachExplain.textContent = isShowingExplain ? t('btn_close_explain') : t('btn_explain');
     if (isShowingExplain) { coachExplainBox.innerHTML = buildMoveExplanation(prevPos, currentPos, isUserMove, currentLang); coachExplainBox.classList.remove('hidden'); } else coachExplainBox.classList.add('hidden');
@@ -2844,8 +2707,7 @@ function updateNextMistakeButtonState() { updateMistakeButtonsState(); }
 
 function buildMoveCellBadgeHtml(pos) {
     if (!pos.classification) return '';
-    const prevPos = pos.index > 0 ? gamePositions[pos.index - 1] : null;
-    const isBrilliant = Boolean(pos.classification.isBrilliant || detectBrilliant(pos, prevPos));
+    const isBrilliant = Boolean(pos.classification?.isBrilliant);
     const category = isBrilliant ? 'Brilliant' : (pos.classification.category || 'Best');
     const symbol = EVAL_BADGE_SYMBOLS[category] || SVG_ICONS.Best;
     const textSym = CATEGORY_TEXT_SYMBOLS[category] || '★';
@@ -2900,8 +2762,7 @@ function getPhaseEvalBadge(positions, color, minTurn, maxTurn) {
     if (movesInPhase.length === 0) return `<span class="move-class-badge badge-neutral" title="${noMovesText}">-</span>`;
     let totalAcc = 0; let count = 0; let hasBrilliant = false;
     movesInPhase.forEach(p => {
-        const prev = p.index > 0 ? positions[p.index - 1] : null;
-        if (detectBrilliant(p, prev)) hasBrilliant = true;
+        if (p.classification?.isBrilliant) hasBrilliant = true;
         if (p.classification && typeof p.classification.accuracy === 'number') { totalAcc += p.classification.accuracy; count++; }
     });
     const avgAcc = count > 0 ? (totalAcc / count) : 0;
@@ -2922,8 +2783,8 @@ function renderStatsTable(stats, game) {
     currentStats = stats;
     let userBrilliant = 0; let oppBrilliant = 0; const userColor = game.userColor || 'w'; const oppColor = userColor === 'w' ? 'b' : 'w';
     for (let i = 1; i < gamePositions.length; i++) {
-        const p = gamePositions[i]; const prev = gamePositions[i - 1];
-        if (p && p.move && (p.classification?.category === 'Brilliant' || detectBrilliant(p, prev))) {
+        const p = gamePositions[i];
+        if (p && p.move && (p.classification?.category === 'Brilliant' || p.classification?.isBrilliant)) {
             if (p.move.color === userColor) userBrilliant++; else if (p.move.color === oppColor) oppBrilliant++;
         }
     }
@@ -3039,12 +2900,12 @@ function renderStatsTable(stats, game) {
             <div class="sym-tab-wrapper">
                 <div class="sym-top-section">
                     <div class="sym-player-card white-side">
-                        <div class="sym-player-header"><span class="sym-player-avatar">♔</span><span class="sym-player-name" title="${whiteName}">${whiteName}</span>${whiteRating ? `<span class="sym-player-rating">(${whiteRating})</span>` : ''}</div>
+                        <div class="sym-player-header"><span class="sym-player-avatar">♔</span><span class="sym-player-name" title="${escapeHTML(whiteName)}">${escapeHTML(whiteName)}</span>${whiteRating ? `<span class="sym-player-rating">(${escapeHTML(whiteRating)})</span>` : ''}</div>
                         <div class="sym-accuracy-box"><span class="sym-acc-label">${t('accuracy')}</span><span class="sym-acc-badge white-acc">${stats.w.avgAccuracy}%</span></div>
                     </div>
                     <div class="sym-vs-badge">VS</div>
                     <div class="sym-player-card black-side">
-                        <div class="sym-player-header"><span class="sym-player-name" title="${blackName}">${blackName}</span>${blackRating ? `<span class="sym-player-rating">(${blackRating})</span>` : ''}<span class="sym-player-avatar">♚</span></div>
+                        <div class="sym-player-header"><span class="sym-player-name" title="${escapeHTML(blackName)}">${escapeHTML(blackName)}</span>${blackRating ? `<span class="sym-player-rating">(${escapeHTML(blackRating)})</span>` : ''}<span class="sym-player-avatar">♚</span></div>
                         <div class="sym-accuracy-box"><span class="sym-acc-label">${t('accuracy')}</span><span class="sym-acc-badge black-acc">${stats.b.avgAccuracy}%</span></div>
                     </div>
                 </div>
@@ -3253,7 +3114,7 @@ async function evaluateAndClassifyPosition(pos, isTrial, clearHash = false, move
         const playedUci = pos.move.uci || `${pos.move.from}${pos.move.to}${pos.move.promotion || ''}`;
         pos.classification = evaluateMoveQuality(evalBefore, pos.eval, pos.move.color, playedUci, evalBefore.bestmove, pos.index);
 
-        if (prevPos && detectBrilliant(pos, prevPos)) {
+        if (prevPos && typeof detectBrilliant === 'function' && detectBrilliant(pos, prevPos)) {
             pos.classification.isBrilliant = true;
             pos.classification.category = 'Brilliant';
             pos.classification.info = MOVE_CATEGORIES['Brilliant'];
@@ -3372,20 +3233,6 @@ async function analyzeCurrentGame(game, startIndex = 0) {
         if (btnPauseAnalysis) btnPauseAnalysis.classList.add('hidden');
 
         const finalStats = classifyAllMovesAndStats(gamePositions);
-        for (let i = 1; i < gamePositions.length; i++) {
-            const p = gamePositions[i];
-            const prev = gamePositions[i - 1];
-            if (p && p.classification && detectBrilliant(p, prev) && p.classification.category !== 'Brilliant') {
-                const oldCat = p.classification.category;
-                p.classification.isBrilliant = true;
-                p.classification.category = 'Brilliant';
-                p.classification.info = MOVE_CATEGORIES['Brilliant'];
-                if (oldCat && finalStats[p.move.color].counts[oldCat] > 0) {
-                    finalStats[p.move.color].counts[oldCat]--;
-                }
-                finalStats[p.move.color].counts.Brilliant++;
-            }
-        }
         renderStatsTable(finalStats, game);
         updateCoachPanel(); updateEvalBar(); drawEvalChart(); renderKeyMovesList();
 
@@ -3557,14 +3404,11 @@ function applyCachedAnalysis(cachedData, game) {
                 gamePositions[p.index].classification = p.classification;
             }
         });
-        // Đồng bộ hóa các nước Brilliant cho ván cờ tải từ bộ nhớ đệm
+        // Đồng bộ hóa cờ isBrilliant từ phân loại đã lưu trong bộ nhớ đệm
         for (let i = 1; i < gamePositions.length; i++) {
             const p = gamePositions[i];
-            const prev = gamePositions[i - 1];
-            if (p && p.classification && detectBrilliant(p, prev) && p.classification.category !== 'Brilliant') {
+            if (p && p.classification && p.classification.category === 'Brilliant') {
                 p.classification.isBrilliant = true;
-                p.classification.category = 'Brilliant';
-                p.classification.info = MOVE_CATEGORIES['Brilliant'];
             }
         }
     }
@@ -3596,7 +3440,7 @@ function updateLiveEngineUIOff() {
     if (liveDepthText) liveDepthText.textContent = `Tắt / ${currentLiveDepth}`;
 }
 function updateLiveEngineUIAnalyzing(targetDepth) {
-    if (liveEngineStatusBadge) { liveEngineStatusBadge.className = 'live-status-badge running'; liveEngineStatusBadge.textContent = 'Đang phân tích'; }
+    if (liveEngineStatusBadge) { liveEngineStatusBadge.className = 'live-status-badge running'; liveEngineStatusBadge.textContent = t('live_engine_analyzing'); }
     if (liveDepthText) liveDepthText.textContent = `0 / ${targetDepth}`;
 }
 function updateLiveEngineUIProgress(data, targetDepth, fen) {
@@ -3630,7 +3474,7 @@ function updateLiveEngineUIProgress(data, targetDepth, fen) {
     }
 }
 function updateLiveEngineUIComplete(result, targetDepth, fen) {
-    if (liveEngineStatusBadge) { liveEngineStatusBadge.className = 'live-status-badge done'; liveEngineStatusBadge.textContent = 'Hoàn tất'; }
+    if (liveEngineStatusBadge) { liveEngineStatusBadge.className = 'live-status-badge done'; liveEngineStatusBadge.textContent = t('live_engine_done'); }
     updateLiveEngineUIProgress(result, targetDepth, fen);
 }
 
@@ -3699,7 +3543,7 @@ async function selectGame(gameOrIndex, keepDrawerOpen = false) {
         if (btnPlayBotEl) btnPlayBotEl.disabled = false;
         hideStatus(); trialBranch = null; if (btnCoachExitTrial) btnCoachExitTrial.classList.add('hidden');
         selectedSquareForMove = null; clearSquareMoveHighlights(); isShowingBestMove = true; isShowingExplain = false;
-        if (kpiOpening) kpiOpening.textContent = extractOpeningName(game.pgn);
+        if (kpiOpening) kpiOpening.textContent = (typeof extractOpeningNameFromPGN === 'function') ? extractOpeningNameFromPGN(game.pgn) : '--';
         document.getElementById('kpi-user-accuracy').textContent = '--%'; document.getElementById('kpi-opp-accuracy').textContent = '--%';
         document.getElementById('kpi-user-mistakes').textContent = '--'; document.getElementById('kpi-user-mistakes-detail').textContent = '(-- sai lầm, -- sai lầm nặng)';
         const kpiPerfRatingEl = document.getElementById('kpi-performance-rating');
@@ -3865,7 +3709,7 @@ async function renderWelcomeDashboard(games) {
                 for (const g of games) {
                     const cached = cacheByUrl.get(g.url);
                     if (cached && cached.stats) {
-                        const userSideStats = cached.stats[g.userColor === 'w' ? 'white' : 'black'];
+                        const userSideStats = cached.stats[g.userColor] || cached.stats[g.userColor === 'w' ? 'white' : 'black'];
                         if (userSideStats) {
                             const acc = Number(userSideStats.avgAccuracy ?? userSideStats.accuracy);
                             if (!isNaN(acc) && acc > 0) {
@@ -4007,11 +3851,12 @@ btnCoachBest.addEventListener('click', () => {
         clearBoardHighlightsAndArrows();
         if (trialPos && trialPos.move) highlightActualMove(trialPos.move);
         updateCurrentMoveArrow();
-        updateCoachTrialPanel(trialPos);
+        updateCoachPanelForTrial();
         return;
     }
-    const currentPos = gamePositions[currentMoveIndex];
-    if (!currentPos || !currentPos.eval || !currentPos.eval.bestmove) return;
+    const prevPos = currentMoveIndex > 0 ? gamePositions[currentMoveIndex - 1] : null;
+    const targetPos = (currentMoveIndex > 0 && prevPos) ? prevPos : gamePositions[currentMoveIndex];
+    if (!targetPos || !targetPos.eval || !targetPos.eval.bestmove) return;
     if (isShowingHints) {
         isShowingHints = false;
         currentHintsData = [];

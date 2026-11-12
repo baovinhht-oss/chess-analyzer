@@ -4,6 +4,11 @@
  * và chuẩn hóa dữ liệu (đối thủ, màu quân, kết quả, ngày chơi) để dễ hiển thị.
  */
 
+// Fallback an toàn nếu config.js bị thiếu hoặc load thất bại
+if (typeof window !== 'undefined') {
+    window.CHESSCOM_USERNAME = window.CHESSCOM_USERNAME || (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : 'bazu25022005');
+}
+
 /**
  * Hàm quy đổi mã kết quả của Chess.com sang tiếng Việt/Anh và phân loại Thắng/Thua/Hòa
  * @param {string} resultCode - Mã kết quả từ API Chess.com (VD: 'win', 'checkmated', 'stalemate'...)
@@ -57,8 +62,8 @@ function parseChessComResult(resultCode, lang = (typeof currentLang !== 'undefin
  * @param {string|number} month - Tháng (1-12 hoặc '01'-'12')
  * @returns {Promise<Array>} Danh sách các ván cờ đã được xử lý thông tin
  */
-async function fetchMonthlyGames(username = (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : ''), year, month) {
-    const targetUser = username || (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : '');
+async function fetchMonthlyGames(username = (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : (typeof window !== 'undefined' && window.CHESSCOM_USERNAME ? window.CHESSCOM_USERNAME : 'bazu25022005')), year, month) {
+    const targetUser = username || (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : (typeof window !== 'undefined' && window.CHESSCOM_USERNAME ? window.CHESSCOM_USERNAME : 'bazu25022005'));
     const cleanUsername = targetUser.trim().toLowerCase();
     if (!cleanUsername) {
         throw new Error('Không tìm thấy username Chess.com được cấu hình.');

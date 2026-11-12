@@ -10,12 +10,18 @@ const CACHE_DB_NAME = 'ChessReviewCacheDB';
 const CACHE_DB_VERSION = 2; // Tăng version lên 2 để ép trình duyệt dọn sạch cache bị lỗi cũ
 const CACHE_STORE_NAME = 'game_analysis';
 
+// Singleton Pattern: Tái sử dụng kết nối IndexedDB, chống memory leak khi chạy Batch Analysis liên tục
+let dbPromise = null;
+
 /**
- * Mở hoặc khởi tạo cơ sở dữ liệu IndexedDB
+ * Mở hoặc khởi tạo cơ sở dữ liệu IndexedDB (Singleton Pattern)
  */
 function openCacheDB() {
-    return new Promise((resolve, reject) => {
+    if (dbPromise) return dbPromise;
+
+    dbPromise = new Promise((resolve, reject) => {
         if (typeof window === 'undefined' || !window.indexedDB) {
+            dbPromise = null;
             return reject(new Error('Trình duyệt không hỗ trợ IndexedDB'));
         }
 
@@ -33,9 +39,19 @@ function openCacheDB() {
             store.createIndex('depth', 'depth', { unique: false });
         };
 
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+            const db = request.result;
+            db.onclose = () => { dbPromise = null; };
+            db.onversionchange = () => { db.close(); dbPromise = null; };
+            resolve(db);
+        };
+        request.onerror = () => {
+            dbPromise = null;
+            reject(request.error);
+        };
     });
+
+    return dbPromise;
 }
 
 function makeCacheKey(gameUrl, depth) {

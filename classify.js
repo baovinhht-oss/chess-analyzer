@@ -164,9 +164,11 @@ function evaluateMoveQuality(evalBefore, evalAfter, moverColor, playedUci, bestU
     const isEngineBest = Boolean(playedUci && bestUci && playedUci === bestUci);
 
     // 5. Great (!): Nước đi duy nhất (only move) giúp cứu vãn thế cờ hiểm nghèo hoặc duy trì ưu thế duy nhất
-    const isGreat = isEngineBest && (winLoss < 0.5) && (
-        (wasGettingMatedBefore && !isGettingMatedAfter) ||
-        (cpMoverBefore <= -150 && cpMoverAfter >= -50)
+    const isGreat = isEngineBest && (winLoss < 1.0) && (
+        (wasGettingMatedBefore && !isGettingMatedAfter) || // Thoát khỏi chiếu hết
+        (winBefore < 30.0 && winAfter >= 30.0) ||          // Cứu vãn thế cờ thua
+        (cpMoverAfter - cpMoverBefore >= 80) ||            // Engine nhìn thấy chiến thuật sâu hơn (Horizon effect)
+        (mateMoverAfter !== null && mateMoverAfter > 0 && mateMoverBefore === null) // Đột ngột tìm ra đường Mat
     );
 
     // 6. Book (📖): Nằm trong 10 ply đầu (moveIndex <= 10) và winLoss rất thấp
@@ -272,9 +274,9 @@ function detectBrilliant(pos, prevPos) {
     // Không thể là Brilliant nếu sau nước đi rơi vào thế bị chiếu hết
     if (isGettingMatedAfter) return false;
 
-    // Điểm số sau nước đi phải giữ nguyên hoặc tốt hơn (cho phép sai số engine depth tối đa 15 cp)
+    // Điểm số sau nước đi phải giữ nguyên hoặc tốt hơn (cho phép sai số engine depth tối đa 5 cp)
     // Hoặc đem lại thế chiếu hết thắng (hasMateAfter)
-    const evalMaintainedOrBetter = hasMateAfter || (moverCpAfter >= moverCpBefore - 15);
+    const evalMaintainedOrBetter = hasMateAfter || (moverCpAfter >= moverCpBefore - 5);
     if (!evalMaintainedOrBetter) return false;
 
     // Sau nước đi, thế cờ phải không thua (moverCpAfter >= -50)
@@ -282,7 +284,8 @@ function detectBrilliant(pos, prevPos) {
 
     // Xác suất thắng không được sụt giảm quá 0.5%
     if (cls.winLoss !== undefined && cls.winLoss > 0.5) return false;
-    if (cls.cpLoss !== undefined && cls.cpLoss > 15) return false;
+    if (cls.cpLoss !== undefined && cls.cpLoss > 5) return false;
+    if (cls.winAfter !== undefined && cls.winAfter < 50.0) return false;
 
     // Phải là nước đi tốt nhất hoặc thuộc nhóm Best của Engine
     const isTopChoice = Boolean(cls.isEngineBest || cls.category === 'Best' || (cls.winLoss !== undefined && cls.winLoss < 0.5));

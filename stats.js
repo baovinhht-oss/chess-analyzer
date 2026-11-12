@@ -25,6 +25,24 @@ function extractOpeningNameFromPGN(pgn) {
 }
 
 /**
+ * Xử lý escape chuỗi chống tấn công XSS
+ * @param {string} str
+ * @returns {string}
+ */
+function escapeHTML(str) {
+    if (typeof window !== 'undefined' && typeof window.escapeHTML === 'function') {
+        return window.escapeHTML(str);
+    }
+    return String(str || '').replace(/[&<>'"]/g, match => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    }[match]));
+}
+
+/**
  * Tính toán thống kê trọn đời / sự nghiệp của người chơi
  * @param {Object} options
  * @param {Array} [options.loadedGames] - Danh sách ván cờ đã tải từ API Chess.com
@@ -353,10 +371,10 @@ function renderLifetimeStatsModal(stats, lang = (typeof currentLang !== 'undefin
             }
 
             badgesHtml += `
-                <div class="stats-badge-item" title="${catLabel}">
+                <div class="stats-badge-item" title="${escapeHTML(catLabel)}">
                     <div class="badge-item-left">
                         <span class="move-class-badge badge-${cssCls}">${svg}</span>
-                        <span class="badge-item-name">${catLabel}</span>
+                        <span class="badge-item-name">${escapeHTML(catLabel)}</span>
                     </div>
                     <span class="badge-item-count" style="color: ${color};">${count}</span>
                 </div>
@@ -381,7 +399,7 @@ function renderLifetimeStatsModal(stats, lang = (typeof currentLang !== 'undefin
                     <div class="stats-opening-row">
                         <div class="opening-row-info">
                             <div class="opening-title-line">
-                                <span class="opening-name" title="${op.name}">${op.name}</span>
+                                <span class="opening-name" title="${escapeHTML(op.name)}">${escapeHTML(op.name)}</span>
                                 <span class="opening-games-badge">${op.count} ${gamesWord}</span>
                             </div>
                             <div class="opening-winrate-bar-wrap">
