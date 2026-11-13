@@ -104,8 +104,17 @@
             </button>
         </div>
 
-        <!-- Thanh điều khiển phân tích chạy nền liên tục (Batch Analysis) -->
+        <!-- Thanh điều khiển phân tích chạy nền liên tục (Batch Analysis) & Nhập ván thủ công -->
         <div class="batch-controls-bar">
+            <button id="btn-open-custom-import" class="btn-custom-import-compact" title="Nhập biên bản PGN hoặc thế cờ FEN thủ công" data-i18n-title="custom_import_btn_title">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+                <span data-i18n="custom_import_btn">Nhập PGN / FEN</span>
+            </button>
             <button id="btn-start-batch" class="primary" data-i18n="batch_start">Chạy phân tích nền</button>
             <button id="btn-stop-batch" style="display:none;" data-i18n="batch_stop">Dừng lại</button>
             <span id="batch-progress-text" class="mute" style="font-size:12px; margin-left:8px;"></span>
@@ -136,6 +145,17 @@
 
             <div class="tools">
                 <span class="pill hidden" id="cache-status-badge" data-i18n="cache_saved">Đã lưu - tải từ bộ nhớ</span>
+                <button id="btn-personal-puzzles" class="btn-tool-puzzles" title="Kho giải đố cá nhân (Personal Puzzles)"
+                    data-i18n-title="personal_puzzles_btn_title" aria-label="Kho giải đố cá nhân">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M14 4a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2a2 2 0 0 0-2 2v2a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-2a2 2 0 0 0-2-2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2a2 2 0 0 0 2-2V4a2 2 0 0 1 2-2h3z">
+                        </path>
+                    </svg>
+                    <span data-i18n="personal_puzzles_btn">Giải đố</span>
+                    <span id="personal-puzzles-badge" class="tool-count-badge hidden">0</span>
+                </button>
                 <button id="btn-lifetime-stats" class="btn-tool-stats" title="Thống kê sự nghiệp (Lifetime Stats)"
                     aria-label="Thống kê sự nghiệp">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
@@ -522,6 +542,14 @@
                                     <strong data-i18n="bot_mode_title">Đang đấu với Bot (Stockfish)</strong>
                                 </div>
                                 <div class="bot-header-controls">
+                                    <select id="select-bot-elo" class="select-bot-elo" title="Chọn mức độ Elo của Bot"
+                                        data-i18n-title="select_bot_elo_title">
+                                        <option value="800" data-i18n="bot_elo_800">Tập sự (~800 Elo)</option>
+                                        <option value="1200" selected data-i18n="bot_elo_1200">Trung cấp (~1200 Elo)</option>
+                                        <option value="1600" data-i18n="bot_elo_1600">Nâng cao (~1600 Elo)</option>
+                                        <option value="2000" data-i18n="bot_elo_2000">Cao thủ (~2000 Elo)</option>
+                                        <option value="2400" data-i18n="bot_elo_2400">Kiện tướng (~2400 Elo)</option>
+                                    </select>
                                     <button id="btn-bot-undo" class="btn-bot-undo"
                                         title="Đi lùi lại 1 lượt đấu (Lùi 2 nước)" data-i18n-title="btn_bot_undo">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
@@ -718,6 +746,196 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- MODAL NHẬP PGN / FEN THỦ CÔNG (CUSTOM PGN / FEN LOADER) -->
+    <div id="custom-import-modal" class="custom-import-modal-backdrop hidden" role="dialog" aria-modal="true"
+        aria-labelledby="custom-import-title">
+        <div class="custom-import-dialog">
+            <div class="custom-import-header">
+                <div class="custom-import-title-group">
+                    <div class="custom-import-icon-badge">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="12" y1="18" x2="12" y2="12"></line>
+                            <line x1="9" y1="15" x2="15" y2="15"></line>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 id="custom-import-title" data-i18n="custom_import_title">Nhập PGN / FEN thủ công</h2>
+                        <p class="custom-import-subtitle" data-i18n="custom_import_subtitle">Dán biên bản ván cờ PGN đầy đủ hoặc chuỗi thế cờ FEN để phân tích hoặc đấu với Bot</p>
+                    </div>
+                </div>
+                <button id="btn-close-custom-import-modal" class="settings-close-btn" aria-label="Đóng bảng nhập"
+                    title="Đóng (Esc)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="custom-import-body">
+                <div class="custom-import-field">
+                    <label for="custom-pgn-fen-input" data-i18n="custom_import_input_label">Biên bản PGN hoặc chuỗi FEN:</label>
+                    <textarea id="custom-pgn-fen-input" rows="7"
+                        placeholder="Dán biên bản PGN đầy đủ hoặc chuỗi thế cờ FEN vào đây..."
+                        data-i18n-placeholder="custom_import_placeholder" spellcheck="false"></textarea>
+                </div>
+
+                <div class="custom-import-row">
+                    <div class="custom-import-color-select-group">
+                        <label for="select-custom-color" data-i18n="custom_import_color_label">Góc nhìn / Màu quân của bạn:</label>
+                        <select id="select-custom-color" class="select-custom-color">
+                            <option value="auto" selected data-i18n="custom_color_auto">Tự động (Theo PGN / FEN)</option>
+                            <option value="w" data-i18n="custom_color_white">Trắng (White)</option>
+                            <option value="b" data-i18n="custom_color_black">Đen (Black)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="custom-import-error" class="custom-import-error hidden" role="alert"></div>
+            </div>
+
+            <div class="custom-import-footer">
+                <button type="button" id="btn-cancel-custom-import" class="btn-cancel" data-i18n="cancel_btn">Hủy</button>
+                <button type="button" id="btn-submit-custom-import" class="primary" data-i18n="custom_import_submit">Nạp & Phân tích</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LUYỆN GIẢI ĐỐ CÁ NHÂN (PERSONAL PUZZLE GENERATOR) -->
+    <div id="personal-puzzle-modal" class="puzzle-modal-backdrop hidden" role="dialog" aria-modal="true"
+        aria-labelledby="puzzle-modal-title">
+        <div class="puzzle-modal-dialog">
+            <!-- Modal Header -->
+            <div class="puzzle-modal-header">
+                <div class="puzzle-header-title-group">
+                    <div class="puzzle-header-icon-badge">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M14 4a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2a2 2 0 0 0-2 2v2a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-2a2 2 0 0 0-2-2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2a2 2 0 0 0 2-2V4a2 2 0 0 1 2-2h3z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 id="puzzle-modal-title" data-i18n="personal_puzzles_title">Kho giải đố cá nhân</h2>
+                        <p class="puzzle-subtitle" data-i18n="personal_puzzles_subtitle">Rèn luyện chiến thuật từ chính những sai lầm trong ván đấu của bạn</p>
+                    </div>
+                </div>
+                <div class="puzzle-header-actions">
+                    <div class="puzzle-streak-badge" title="Chuỗi giải đúng liên tiếp">
+                        <span class="puzzle-fire-icon">🔥</span>
+                        <span class="puzzle-streak-label" data-i18n="puzzle_streak_lbl">Chuỗi:</span>
+                        <strong id="puzzle-streak-count">0</strong>
+                        <span class="puzzle-streak-max" id="puzzle-streak-max-wrap">(<span data-i18n="puzzle_record_lbl">Kỷ lục:</span> <span id="puzzle-streak-max">0</span>)</span>
+                    </div>
+                    <button id="btn-close-puzzle-modal" class="settings-close-btn" aria-label="Đóng" title="Đóng (Esc)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="puzzle-modal-body">
+                <!-- Vùng hiển thị khi có câu đố -->
+                <div id="puzzle-active-container" class="puzzle-active-layout">
+                    <!-- Cột trái: Bàn cờ giải đố -->
+                    <div class="puzzle-board-wrapper">
+                        <div id="puzzle-board" class="puzzle-board"></div>
+                        <svg id="puzzle-arrow-overlay" class="puzzle-arrow-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+                    </div>
+
+                    <!-- Cột phải: Bảng thông tin & Nút hành động -->
+                    <div class="puzzle-controls-panel">
+                        <!-- Thẻ nguồn ván đấu -->
+                        <div class="puzzle-source-card">
+                            <div class="puzzle-source-header">
+                                <span class="puzzle-source-tag" id="puzzle-source-cat">Blunder</span>
+                                <span class="puzzle-source-date" id="puzzle-source-date">--</span>
+                            </div>
+                            <div class="puzzle-source-players" id="puzzle-source-players">vs Opponent</div>
+                            <div class="puzzle-blunder-box">
+                                <span class="puzzle-blunder-lbl" data-i18n="puzzle_you_played">Bạn đã đi:</span>
+                                <strong id="puzzle-blunder-san" class="puzzle-blunder-san">--</strong>
+                                <span class="puzzle-blunder-desc" id="puzzle-blunder-desc" data-i18n="puzzle_blunder_desc">(Nước sai lầm)</span>
+                            </div>
+                        </div>
+
+                        <!-- Bảng hướng dẫn & Phản hồi -->
+                        <div class="puzzle-feedback-card" id="puzzle-feedback-card">
+                            <div class="puzzle-turn-banner" id="puzzle-turn-banner">
+                                <span class="puzzle-turn-dot" id="puzzle-turn-dot"></span>
+                                <span id="puzzle-turn-text">Lượt Trắng đi</span>
+                            </div>
+                            <div class="puzzle-status-message" id="puzzle-status-message" data-i18n="puzzle_initial_prompt">
+                                Tìm nước đi tốt nhất thay thế cho nước sai lầm trước đó của bạn!
+                            </div>
+                        </div>
+
+                        <!-- Các nút trợ giúp & Chuyển câu đố -->
+                        <div class="puzzle-actions-group">
+                            <div class="puzzle-assist-buttons">
+                                <button type="button" id="btn-puzzle-hint" class="btn-puzzle-assist" title="Gợi ý ô cờ xuất phát">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.8V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.2A7 7 0 0 0 12 2z"></path>
+                                    </svg>
+                                    <span data-i18n="puzzle_btn_hint">Gợi ý quân cờ</span>
+                                </button>
+                                <button type="button" id="btn-puzzle-solution" class="btn-puzzle-assist" title="Xem đáp án nước đi tốt nhất">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                                    </svg>
+                                    <span data-i18n="puzzle_btn_solution">Xem đáp án</span>
+                                </button>
+                            </div>
+
+                            <div class="puzzle-nav-buttons">
+                                <button type="button" id="btn-puzzle-skip" class="btn-puzzle-secondary" data-i18n="puzzle_btn_skip">Bỏ qua</button>
+                                <button type="button" id="btn-next-puzzle" class="primary btn-next-puzzle hidden" data-i18n="puzzle_btn_next">
+                                    <span>Câu tiếp theo</span>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M5 12h14M12 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="puzzle-footer-nav">
+                                <span id="puzzle-counter-text" class="puzzle-counter-text">Câu đố 1 / 1</span>
+                                <button type="button" id="btn-puzzle-review-game" class="btn-link-review" data-i18n="puzzle_btn_review_game">Mở ván cờ này</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vùng hiển thị Empty State (Khi chưa có câu đố) -->
+                <div id="puzzle-empty-container" class="puzzle-empty-state hidden">
+                    <div class="puzzle-empty-icon-wrap">
+                        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M14 4a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2a2 2 0 0 0-2 2v2a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2v-2a2 2 0 0 0-2-2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2a2 2 0 0 0 2-2V4a2 2 0 0 1 2-2h3z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h3 data-i18n="puzzle_empty_title">Chưa có câu đố nào</h3>
+                    <p data-i18n="puzzle_empty_desc">Kho câu đố sẽ tự động trích xuất từ các nước đi sai lầm (Blunder / Miss) trong các ván cờ đã phân tích. Hãy tải và phân tích vài ván cờ để bắt đầu luyện tập!</p>
+                    <button type="button" id="btn-puzzle-open-drawer" class="primary" data-i18n="puzzle_btn_open_games">Mở danh sách ván đấu</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- BẢNG CÀI ĐẶT CHUNG (SETTINGS MODAL 2 CỘT CHUẨN DISCORD / CHESS.COM) -->

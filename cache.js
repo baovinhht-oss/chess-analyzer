@@ -93,6 +93,15 @@ async function saveGameAnalysisCache(gameUrl, depth, positions, stats, userColor
             // Clone dữ liệu bằng Spread Operator để đảm bảo lấy ĐÚNG TÊN TẤT CẢ BIẾN từ classify.js và engine.js
             const cleanPositions = positions.map(pos => ({
                 index: pos.index,
+                fen: pos.fen || null,
+                turn: pos.turn || (pos.fen ? (pos.fen.split(' ')[1] || 'w') : null),
+                move: pos.move ? {
+                    san: pos.move.san,
+                    from: pos.move.from,
+                    to: pos.move.to,
+                    color: pos.move.color,
+                    piece: pos.move.piece
+                } : null,
                 eval: pos.eval ? { ...pos.eval } : null,
                 classification: pos.classification ? { ...pos.classification } : null
             }));

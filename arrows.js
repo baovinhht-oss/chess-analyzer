@@ -538,6 +538,7 @@ function getActiveArrows() {
 if (typeof window !== 'undefined') {
     window.squareToCoords = squareToCoords;
     window.drawArrow = drawArrow;
+    window.buildArrowSvgString = buildArrowSvgString;
     window.removeArrow = removeArrow;
     window.clearArrows = clearArrows;
     window.clearTrialSuggestionArrows = clearTrialSuggestionArrows;

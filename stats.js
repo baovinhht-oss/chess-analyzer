@@ -522,6 +522,162 @@ function initLifetimeStatsUI() {
     });
 }
 
+/**
+ * Tái tạo thế cờ và nước đi từ chuỗi PGN
+ * @param {string} pgn 
+ * @returns {Array<object>}
+ */
+function reconstructPositionsFromPgn(pgn) {
+    if (!pgn || typeof pgn !== 'string') return [];
+    if (typeof window !== 'undefined' && typeof window.buildPositionsFromPGN === 'function') {
+        try { return window.buildPositionsFromPGN(pgn); } catch (e) { }
+    }
+    const ChessLib = (typeof Chess !== 'undefined') ? Chess : (typeof require !== 'undefined' ? (require('./chess.js').Chess || require('./chess.js')) : null);
+    if (!ChessLib) return [];
+    try {
+        const chess = new ChessLib();
+        if (!chess.load_pgn(pgn, { sloppy: true })) return [];
+        const historyMoves = chess.history({ verbose: true });
+        chess.reset();
+        const positions = [{ index: 0, fen: chess.fen(), turn: chess.turn(), move: null }];
+        for (let i = 0; i < historyMoves.length; i++) {
+            const m = historyMoves[i];
+            chess.move(m);
+            positions.push({
+                index: i + 1,
+                fen: chess.fen(),
+                turn: chess.turn(),
+                move: { san: m.san, from: m.from, to: m.to, color: m.color, piece: m.piece }
+            });
+        }
+        return positions;
+    } catch (e) {
+        return [];
+    }
+}
+
+/**
+ * Trích xuất danh sách câu đố chiến thuật cá nhân từ IndexedDB cache
+ * Dựa trên các nước đi Blunder hoặc Miss trong lịch sử đấu của người dùng
+ * @param {Array} [loadedGamesList] Danh sách loadedGames truyền vào (tùy chọn)
+ * @returns {Promise<Array<object>>} Danh sách câu đố cá nhân
+ */
+async function extractPersonalPuzzles(loadedGamesList = null) {
+    let analyses = [];
+    if (typeof getAllCachedAnalyses === 'function') {
+        try {
+            analyses = await getAllCachedAnalyses();
+        } catch (e) {
+            console.warn('Lỗi đọc cache cho Personal Puzzles:', e);
+        }
+    } else if (typeof window !== 'undefined' && typeof window.getAllCachedAnalyses === 'function') {
+        try {
+            analyses = await window.getAllCachedAnalyses();
+        } catch (e) { }
+    }
+
+    const games = Array.isArray(loadedGamesList)
+        ? loadedGamesList
+        : (typeof loadedGames !== 'undefined' && Array.isArray(loadedGames)
+            ? loadedGames
+            : (typeof window !== 'undefined' && typeof window.getLoadedGames === 'function' ? window.getLoadedGames() : []));
+
+    const puzzles = [];
+    const seenFens = new Set();
+
+    for (const record of analyses) {
+        if (!record || !record.positions || !Array.isArray(record.positions)) continue;
+
+        const matchedGame = games.find(g => g.url === record.gameUrl) || null;
+
+        // Xác định màu quân của người dùng
+        let userColor = record.userColor || (record.stats && record.stats.userColor) || null;
+        if (!userColor && matchedGame) {
+            userColor = (typeof getCurrentUserColor === 'function')
+                ? getCurrentUserColor(matchedGame)
+                : (typeof window !== 'undefined' && typeof window.getCurrentUserColor === 'function'
+                    ? window.getCurrentUserColor(matchedGame)
+                    : (matchedGame.userColor || 'w'));
+        }
+        if (!userColor) userColor = 'w';
+
+        // Lấy tên đối thủ
+        let opponentName = 'Stockfish';
+        let gameDate = '';
+        if (matchedGame) {
+            opponentName = matchedGame.opponentUsername
+                || (userColor === 'w' ? (matchedGame.black?.username || 'Black') : (matchedGame.white?.username || 'White'));
+            gameDate = matchedGame.dateStr || '';
+        } else if (record.stats && record.stats.opponentUsername) {
+            opponentName = record.stats.opponentUsername;
+        }
+
+        // Tái tạo thế cờ nếu bản ghi cũ chỉ có eval/classification mà thiếu fen
+        let fullPositions = record.positions;
+        if ((!fullPositions[0] || !fullPositions[0].fen) && matchedGame && matchedGame.pgn) {
+            const reconstructed = reconstructPositionsFromPgn(matchedGame.pgn);
+            if (reconstructed.length > 0) {
+                fullPositions = reconstructed.map(p => {
+                    const cachedPos = record.positions[p.index];
+                    return {
+                        ...p,
+                        eval: cachedPos?.eval || p.eval,
+                        classification: cachedPos?.classification || p.classification
+                    };
+                });
+            }
+        }
+
+        // Quét từng nước đi để tìm Blunder / Miss
+        for (let i = 1; i < fullPositions.length; i++) {
+            const currPos = fullPositions[i];
+            const prevPos = fullPositions[i - 1];
+
+            if (!currPos || !prevPos || !prevPos.fen || !currPos.move) continue;
+
+            // Nước đi này phải do người dùng đi
+            const moveColor = currPos.move.color || prevPos.turn;
+            if (moveColor !== userColor) continue;
+
+            const cls = currPos.classification;
+            if (!cls) continue;
+
+            const isBlunderOrMiss = (cls.category === 'Blunder' || cls.category === 'Miss' || (cls.winLoss !== undefined && cls.winLoss >= 18));
+            if (!isBlunderOrMiss) continue;
+
+            // Thế cờ trước đó phải có bestmove hợp lệ
+            const bestMoveUci = prevPos.eval && prevPos.eval.bestmove;
+            if (!bestMoveUci || bestMoveUci === '(none)' || bestMoveUci.length < 4) continue;
+
+            // Loại bỏ trùng lặp theo FEN
+            if (seenFens.has(prevPos.fen)) continue;
+            seenFens.add(prevPos.fen);
+
+            const userBlunderUci = (currPos.move.from && currPos.move.to)
+                ? (currPos.move.from + currPos.move.to + (currPos.move.promotion || ''))
+                : null;
+
+            puzzles.push({
+                id: `puzzle_${record.gameUrl || 'game'}_${i}`,
+                fen: prevPos.fen,
+                turn: prevPos.turn || userColor,
+                bestMoveUci: bestMoveUci,
+                pv: (prevPos.eval.pv && prevPos.eval.pv.length > 0) ? prevPos.eval.pv : [bestMoveUci],
+                userBlunderSan: currPos.move.san || '?',
+                userBlunderUci: userBlunderUci,
+                opponentName: opponentName,
+                gameUrl: record.gameUrl || '',
+                gameDate: gameDate,
+                category: cls.category || 'Blunder',
+                winLoss: cls.winLoss || 0,
+                moveNumber: Math.ceil(i / 2)
+            });
+        }
+    }
+
+    return puzzles;
+}
+
 // Khởi tạo khi DOM sẵn sàng
 if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') {
@@ -539,6 +695,7 @@ if (typeof window !== 'undefined') {
     window.openLifetimeStatsModal = openLifetimeStatsModal;
     window.closeLifetimeStatsModal = closeLifetimeStatsModal;
     window.initLifetimeStatsUI = initLifetimeStatsUI;
+    window.extractPersonalPuzzles = extractPersonalPuzzles;
 }
 
 // Xuất cho môi trường Node.js testing
@@ -549,7 +706,8 @@ if (typeof module !== 'undefined' && module.exports) {
         renderLifetimeStatsModal,
         openLifetimeStatsModal,
         closeLifetimeStatsModal,
-        initLifetimeStatsUI
+        initLifetimeStatsUI,
+        extractPersonalPuzzles
     };
 }
 

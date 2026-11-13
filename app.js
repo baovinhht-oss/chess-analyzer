@@ -282,8 +282,59 @@ const TRANSLATIONS = {
         bot_moves_count: '{0} nước',
         bot_check_user: 'Bạn đang bị chiếu tướng!',
         bot_check_bot: 'Bot đang bị chiếu tướng!',
+        select_bot_elo_title: 'Chọn mức độ Elo của Bot',
+        bot_elo_800: 'Tập sự (~800 Elo)',
+        bot_elo_1200: 'Trung cấp (~1200 Elo)',
+        bot_elo_1600: 'Nâng cao (~1600 Elo)',
+        bot_elo_2000: 'Cao thủ (~2000 Elo)',
+        bot_elo_2400: 'Kiện tướng (~2400 Elo)',
+        custom_import_btn: 'Nhập PGN / FEN',
+        custom_import_btn_title: 'Nhập biên bản PGN hoặc thế cờ FEN thủ công',
+        custom_import_title: 'Nhập PGN / FEN thủ công',
+        custom_import_subtitle: 'Dán biên bản ván cờ PGN đầy đủ hoặc chuỗi thế cờ FEN để phân tích hoặc đấu với Bot',
+        custom_import_input_label: 'Biên bản PGN hoặc chuỗi FEN:',
+        custom_import_placeholder: 'Dán biên bản PGN đầy đủ hoặc chuỗi thế cờ FEN vào đây...',
+        custom_import_color_label: 'Góc nhìn / Màu quân của bạn:',
+        custom_color_auto: 'Tự động (Theo PGN / FEN)',
+        custom_color_white: 'Trắng (White)',
+        custom_color_black: 'Đen (Black)',
+        custom_import_submit: 'Nạp & Phân tích',
+        cancel_btn: 'Hủy',
+        custom_import_error_empty: 'Vui lòng nhập biên bản PGN hoặc chuỗi thế cờ FEN.',
+        custom_import_error_invalid: 'Định dạng PGN hoặc FEN không hợp lệ. Vui lòng kiểm tra lại cú pháp.',
+        custom_import_success_fen: 'Đã nạp thế cờ FEN thành công!',
+        custom_import_success_pgn: 'Đã nạp ván cờ PGN thành công!',
         live_engine_analyzing: 'Đang phân tích',
         live_engine_done: 'Hoàn tất',
+
+        // Personal Puzzles
+        personal_puzzles_btn: 'Giải đố',
+        personal_puzzles_btn_title: 'Kho giải đố cá nhân từ các sai lầm của bạn',
+        personal_puzzles_title: 'Kho giải đố cá nhân',
+        personal_puzzles_subtitle: 'Rèn luyện chiến thuật từ chính những sai lầm trong ván đấu của bạn',
+        puzzle_streak_lbl: 'Chuỗi:',
+        puzzle_record_lbl: 'Kỷ lục:',
+        puzzle_you_played: 'Bạn đã đi:',
+        puzzle_blunder_desc: '(Nước sai lầm nghiêm trọng)',
+        puzzle_miss_desc: '(Bỏ lỡ cơ hội)',
+        puzzle_white_turn: 'Lượt Trắng đi',
+        puzzle_black_turn: 'Lượt Đen đi',
+        puzzle_initial_prompt: 'Tìm nước đi tốt nhất thay thế cho nước sai lầm trước đó của bạn!',
+        puzzle_success_msg: '🎉 Tuyệt vời! Bạn đã tìm ra nước đi tối ưu!',
+        puzzle_opponent_reply: '🎉 Hoàn thành câu đố! Đối thủ đã đi đáp trả và bạn hoàn toàn kiểm soát thế trận.',
+        puzzle_wrong_msg: '❌ Nước đi chưa tối ưu! Hãy quan sát kỹ thế cờ và thử lại.',
+        puzzle_repeated_blunder: '⚠️ Cẩn thận! Đây chính là nước sai lầm bạn từng đi trong ván cờ này! Hãy thử nước khác.',
+        puzzle_btn_hint: 'Gợi ý quân cờ',
+        puzzle_hint_msg: '💡 Gợi ý: Hãy quan sát kỹ quân cờ tại ô {0}!',
+        puzzle_btn_solution: 'Xem đáp án',
+        puzzle_solution_msg: 'Đáp án tối ưu là: {0}. Hãy ghi nhớ thế cờ này!',
+        puzzle_btn_skip: 'Bỏ qua',
+        puzzle_btn_next: 'Câu tiếp theo',
+        puzzle_counter_format: 'Câu đố {0} / {1}',
+        puzzle_btn_review_game: 'Mở ván cờ này',
+        puzzle_empty_title: 'Chưa có câu đố nào',
+        puzzle_empty_desc: 'Kho câu đố sẽ tự động thu thập từ các nước đi sai lầm (Blunder / Miss) trong các ván cờ đã phân tích. Hãy tải và phân tích vài ván cờ để bắt đầu luyện tập!',
+        puzzle_btn_open_games: 'Mở danh sách ván đấu',
 
         // Game Over Banner & King Badges
         game_over_victory: 'Chiến thắng xuất sắc!',
@@ -614,8 +665,59 @@ const TRANSLATIONS = {
         bot_moves_count: '{0} moves',
         bot_check_user: 'You are in check!',
         bot_check_bot: 'Bot is in check!',
+        select_bot_elo_title: 'Select Bot Elo Level',
+        bot_elo_800: 'Novice (~800 Elo)',
+        bot_elo_1200: 'Intermediate (~1200 Elo)',
+        bot_elo_1600: 'Advanced (~1600 Elo)',
+        bot_elo_2000: 'Master (~2000 Elo)',
+        bot_elo_2400: 'Grandmaster (~2400 Elo)',
+        custom_import_btn: 'Import PGN / FEN',
+        custom_import_btn_title: 'Import custom PGN game or FEN position',
+        custom_import_title: 'Import PGN / FEN',
+        custom_import_subtitle: 'Paste a full PGN game notation or a FEN position string to analyze or play vs Bot',
+        custom_import_input_label: 'PGN notation or FEN string:',
+        custom_import_placeholder: 'Paste full PGN game notation or FEN string here...',
+        custom_import_color_label: 'Your viewpoint / piece color:',
+        custom_color_auto: 'Auto (From PGN / FEN)',
+        custom_color_white: 'White',
+        custom_color_black: 'Black',
+        custom_import_submit: 'Load & Analyze',
+        cancel_btn: 'Cancel',
+        custom_import_error_empty: 'Please enter a PGN game notation or a FEN string.',
+        custom_import_error_invalid: 'Invalid PGN or FEN format. Please check the notation syntax.',
+        custom_import_success_fen: 'FEN position loaded successfully!',
+        custom_import_success_pgn: 'PGN game loaded successfully!',
         live_engine_analyzing: 'Analyzing',
         live_engine_done: 'Done',
+
+        // Personal Puzzles
+        personal_puzzles_btn: 'Puzzles',
+        personal_puzzles_btn_title: 'Personal puzzle generator from your mistakes',
+        personal_puzzles_title: 'Personal Puzzles',
+        personal_puzzles_subtitle: 'Tactical training from your own in-game blunders and misses',
+        puzzle_streak_lbl: 'Streak:',
+        puzzle_record_lbl: 'Best:',
+        puzzle_you_played: 'You played:',
+        puzzle_blunder_desc: '(Severe blunder)',
+        puzzle_miss_desc: '(Missed opportunity)',
+        puzzle_white_turn: 'White to move',
+        puzzle_black_turn: 'Black to move',
+        puzzle_initial_prompt: 'Find the best move replacing your previous blunder!',
+        puzzle_success_msg: '🎉 Brilliant! You found the optimal move!',
+        puzzle_opponent_reply: '🎉 Puzzle complete! Opponent responded and you have the advantage.',
+        puzzle_wrong_msg: '❌ Not the best move! Take another look and try again.',
+        puzzle_repeated_blunder: '⚠️ Careful! This is the exact blunder you played in this game! Try another move.',
+        puzzle_btn_hint: 'Piece Hint',
+        puzzle_hint_msg: '💡 Hint: Look closely at the piece on square {0}!',
+        puzzle_btn_solution: 'Show Solution',
+        puzzle_solution_msg: 'The optimal move is: {0}. Remember this pattern!',
+        puzzle_btn_skip: 'Skip',
+        puzzle_btn_next: 'Next Puzzle',
+        puzzle_counter_format: 'Puzzle {0} of {1}',
+        puzzle_btn_review_game: 'Review this game',
+        puzzle_empty_title: 'No Personal Puzzles Yet',
+        puzzle_empty_desc: 'Personal puzzles are generated automatically from blunders and misses in your analyzed games. Analyze some games to start training!',
+        puzzle_btn_open_games: 'Open Games Drawer',
 
         // Game Over Banner & King Badges
         game_over_victory: 'Victory!',
@@ -781,6 +883,13 @@ function applyLanguage(lang) {
         const key = el.getAttribute('data-i18n-title');
         if (key) {
             el.setAttribute('title', t(key));
+        }
+    });
+
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (key) {
+            el.setAttribute('placeholder', t(key));
         }
     });
 
@@ -2076,6 +2185,7 @@ function initSettingsModal() {
             if (cacheStatusBadge) cacheStatusBadge.classList.add('hidden');
             if (btnReanalyze) btnReanalyze.classList.add('hidden');
             await updateSettingsCacheStats();
+            updatePersonalPuzzlesBadge();
             showStatus(t('clear_cache_success'), 'info');
         });
     }
@@ -2106,6 +2216,749 @@ function initSettingsModal() {
                 localStorage.removeItem('chess_analyzer_settings');
             } catch (e) { }
             location.reload();
+        });
+    }
+}
+
+function openCustomImportModal() {
+    const modal = document.getElementById('custom-import-modal');
+    const input = document.getElementById('custom-pgn-fen-input');
+    const errorEl = document.getElementById('custom-import-error');
+    const colorEl = document.getElementById('select-custom-color');
+    if (!modal) return;
+    if (input) input.value = '';
+    if (colorEl) colorEl.value = 'auto';
+    if (errorEl) {
+        errorEl.textContent = '';
+        errorEl.classList.add('hidden');
+    }
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        if (input) input.focus();
+    }, 60);
+}
+
+function closeCustomImportModal() {
+    const modal = document.getElementById('custom-import-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function handleCustomImportSubmit() {
+    const inputEl = document.getElementById('custom-pgn-fen-input');
+    const errorEl = document.getElementById('custom-import-error');
+    const colorEl = document.getElementById('select-custom-color');
+    if (!inputEl) return;
+    const text = inputEl.value.trim();
+    if (!text) {
+        if (errorEl) {
+            errorEl.textContent = t('custom_import_error_empty');
+            errorEl.classList.remove('hidden');
+        }
+        return;
+    }
+
+    const chess = new Chess();
+    const chosenColor = colorEl ? colorEl.value : 'auto';
+
+    // 1. Kiểm tra nếu là thế cờ FEN
+    let normalizedFen = text;
+    const fenParts = text.split(/\s+/);
+    if (fenParts.length === 1 && fenParts[0].split('/').length === 8) {
+        normalizedFen = `${fenParts[0]} w - - 0 1`;
+    } else if (fenParts.length === 4) {
+        normalizedFen = `${text} 0 1`;
+    } else if (fenParts.length === 5) {
+        normalizedFen = `${text} 1`;
+    }
+
+    const fenValidation = chess.validate_fen(normalizedFen);
+    if (fenValidation && fenValidation.valid) {
+        try {
+            chess.load(normalizedFen);
+        } catch (e) {
+            if (errorEl) {
+                errorEl.textContent = `${t('custom_import_error_invalid')} (${e.message || ''})`;
+                errorEl.classList.remove('hidden');
+            }
+            return;
+        }
+
+        const fenTurn = chess.turn();
+        const userColor = chosenColor === 'auto' ? fenTurn : chosenColor;
+        const userName = (typeof getAppUsername === 'function' ? getAppUsername() : 'You');
+
+        const customFenGame = {
+            url: 'custom://fen/' + Date.now(),
+            isCustomFen: true,
+            fen: normalizedFen,
+            pgn: '',
+            userColor: userColor,
+            userUsername: userName,
+            userRating: '?',
+            opponentUsername: 'Stockfish',
+            opponentRating: '?',
+            resultType: 'draw',
+            resultLabel: 'FEN',
+            rawResult: 'agreed',
+            timeClass: 'custom',
+            dateStr: new Date().toLocaleDateString(currentLang === 'en' ? 'en-US' : 'vi-VN'),
+            endTime: Math.floor(Date.now() / 1000),
+            white: { username: (userColor === 'w' ? userName : 'Stockfish'), rating: '?' },
+            black: { username: (userColor === 'b' ? userName : 'Stockfish'), rating: '?' }
+        };
+
+        loadedGames.unshift(customFenGame);
+        applyGameListFilters();
+        closeCustomImportModal();
+        closeGameDrawer();
+
+        showStatus(t('custom_import_success_fen'), 'info');
+        selectGame(customFenGame);
+        return;
+    }
+
+    // 2. Kiểm tra nếu là biên bản PGN
+    let pgnLoaded = false;
+    try {
+        pgnLoaded = chess.load_pgn(text, { sloppy: true });
+    } catch (err) {
+        pgnLoaded = false;
+    }
+
+    if (pgnLoaded && chess.history().length > 0) {
+        const headers = chess.header() || {};
+        const whiteUsername = headers.White || 'White';
+        const blackUsername = headers.Black || 'Black';
+        const whiteRating = headers.WhiteElo || headers.WhiteUSCF || '?';
+        const blackRating = headers.BlackElo || headers.BlackUSCF || '?';
+        const rawResult = headers.Result || '*';
+        const dateHeader = headers.Date || new Date().toISOString().slice(0, 10);
+
+        let determinedUserColor = 'w';
+        const appUser = typeof getAppUsername === 'function' ? getAppUsername().toLowerCase() : '';
+        if (chosenColor === 'w' || chosenColor === 'b') {
+            determinedUserColor = chosenColor;
+        } else if (appUser && blackUsername.toLowerCase() === appUser) {
+            determinedUserColor = 'b';
+        }
+
+        let resultType = 'draw';
+        if (rawResult === '1-0') {
+            resultType = (determinedUserColor === 'w') ? 'win' : 'loss';
+        } else if (rawResult === '0-1') {
+            resultType = (determinedUserColor === 'b') ? 'win' : 'loss';
+        }
+
+        const customPgnGame = {
+            url: 'custom://pgn/' + Date.now(),
+            pgn: text,
+            userColor: determinedUserColor,
+            userUsername: determinedUserColor === 'w' ? whiteUsername : blackUsername,
+            userRating: determinedUserColor === 'w' ? whiteRating : blackRating,
+            opponentUsername: determinedUserColor === 'w' ? blackUsername : whiteUsername,
+            opponentRating: determinedUserColor === 'w' ? blackRating : whiteRating,
+            resultType: resultType,
+            resultLabel: rawResult,
+            rawResult: rawResult,
+            timeClass: headers.TimeControl ? 'custom' : 'rapid',
+            dateStr: dateHeader,
+            endTime: Math.floor(Date.now() / 1000),
+            white: { username: whiteUsername, rating: whiteRating },
+            black: { username: blackUsername, rating: blackRating }
+        };
+
+        loadedGames.unshift(customPgnGame);
+        applyGameListFilters();
+        closeCustomImportModal();
+        closeGameDrawer();
+
+        showStatus(t('custom_import_success_pgn'), 'info');
+        selectGame(customPgnGame);
+        return;
+    }
+
+    // 3. Nếu không hợp lệ
+    if (errorEl) {
+        errorEl.textContent = t('custom_import_error_invalid');
+        errorEl.classList.remove('hidden');
+    }
+}
+
+function initCustomImportModal() {
+    const btnOpen = document.getElementById('btn-open-custom-import');
+    if (btnOpen) btnOpen.addEventListener('click', openCustomImportModal);
+    const btnClose = document.getElementById('btn-close-custom-import-modal');
+    if (btnClose) btnClose.addEventListener('click', closeCustomImportModal);
+    const btnCancel = document.getElementById('btn-cancel-custom-import');
+    if (btnCancel) btnCancel.addEventListener('click', closeCustomImportModal);
+    const btnSubmit = document.getElementById('btn-submit-custom-import');
+    if (btnSubmit) btnSubmit.addEventListener('click', handleCustomImportSubmit);
+
+    const modalEl = document.getElementById('custom-import-modal');
+    if (modalEl) {
+        modalEl.addEventListener('click', (e) => {
+            if (e.target === modalEl) closeCustomImportModal();
+        });
+    }
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalEl && !modalEl.classList.contains('hidden')) {
+            closeCustomImportModal();
+        }
+    });
+    const textareaEl = document.getElementById('custom-pgn-fen-input');
+    if (textareaEl) {
+        textareaEl.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                handleCustomImportSubmit();
+            }
+        });
+    }
+}
+
+// =========================================================
+// KHO GIẢI ĐỐ CÁ NHÂN (PERSONAL PUZZLE GENERATOR)
+// =========================================================
+let puzzleBoard = null;
+let currentPuzzle = null;
+let currentPuzzleChess = null;
+let personalPuzzlesList = [];
+let currentPuzzleIndex = 0;
+let isPuzzleSolved = false;
+let puzzleStreak = 0;
+let puzzleMaxStreak = 0;
+let puzzleSelectedSquare = null;
+
+function getStoredPuzzleStreak() {
+    try {
+        puzzleStreak = Number(localStorage.getItem('chess_puzzle_streak')) || 0;
+        puzzleMaxStreak = Number(localStorage.getItem('chess_puzzle_max_streak')) || 0;
+    } catch (e) {
+        puzzleStreak = 0;
+        puzzleMaxStreak = 0;
+    }
+}
+
+function updatePuzzleStreakUI() {
+    const streakEl = document.getElementById('puzzle-streak-count');
+    const maxEl = document.getElementById('puzzle-streak-max');
+    if (streakEl) streakEl.textContent = String(puzzleStreak);
+    if (maxEl) maxEl.textContent = String(puzzleMaxStreak);
+}
+
+async function updatePersonalPuzzlesBadge() {
+    const badgeEl = document.getElementById('personal-puzzles-badge');
+    if (!badgeEl) return;
+    try {
+        const extractor = (typeof extractPersonalPuzzles === 'function')
+            ? extractPersonalPuzzles
+            : (typeof window !== 'undefined' && typeof window.extractPersonalPuzzles === 'function' ? window.extractPersonalPuzzles : null);
+        if (!extractor) return;
+        const puzzles = await extractor(typeof loadedGames !== 'undefined' ? loadedGames : null);
+        const count = puzzles ? puzzles.length : 0;
+        if (count > 0) {
+            badgeEl.textContent = count > 99 ? '99+' : String(count);
+            badgeEl.classList.remove('hidden');
+        } else {
+            badgeEl.textContent = '0';
+            badgeEl.classList.add('hidden');
+        }
+    } catch (e) {
+        console.warn('Lỗi cập nhật badge câu đố:', e);
+    }
+}
+
+async function openPersonalPuzzlesModal() {
+    const modal = document.getElementById('personal-puzzle-modal');
+    if (!modal) return;
+
+    // Ngăn chặn xung đột với các chế độ đang chạy
+    if (isBotGameActive && typeof exitBotGame === 'function') exitBotGame();
+    if (typeof isInTrialBranch === 'function' && isInTrialBranch() && typeof exitTrialBranch === 'function') exitTrialBranch();
+    stopAutoplay();
+    if (isAnalyzing && stockfishEngine) stockfishEngine.stop();
+
+    getStoredPuzzleStreak();
+    updatePuzzleStreakUI();
+
+    modal.classList.remove('hidden');
+
+    const extractor = (typeof extractPersonalPuzzles === 'function')
+        ? extractPersonalPuzzles
+        : (typeof window !== 'undefined' && typeof window.extractPersonalPuzzles === 'function' ? window.extractPersonalPuzzles : null);
+
+    if (extractor) {
+        try {
+            personalPuzzlesList = await extractor(typeof loadedGames !== 'undefined' ? loadedGames : null);
+        } catch (e) {
+            personalPuzzlesList = [];
+        }
+    }
+
+    const activeContainer = document.getElementById('puzzle-active-container');
+    const emptyContainer = document.getElementById('puzzle-empty-container');
+
+    if (!personalPuzzlesList || personalPuzzlesList.length === 0) {
+        if (activeContainer) activeContainer.classList.add('hidden');
+        if (emptyContainer) emptyContainer.classList.remove('hidden');
+        updatePersonalPuzzlesBadge();
+        return;
+    }
+
+    if (activeContainer) activeContainer.classList.remove('hidden');
+    if (emptyContainer) emptyContainer.classList.add('hidden');
+
+    currentPuzzleIndex = 0;
+    loadCurrentPuzzle();
+    updatePersonalPuzzlesBadge();
+}
+
+function closePersonalPuzzlesModal() {
+    const modal = document.getElementById('personal-puzzle-modal');
+    if (modal) modal.classList.add('hidden');
+    clearPuzzleBoardHighlights();
+    clearPuzzleArrows();
+    isPuzzleSolved = false;
+    puzzleSelectedSquare = null;
+}
+
+function loadCurrentPuzzle() {
+    if (!personalPuzzlesList || !personalPuzzlesList.length) return;
+    if (currentPuzzleIndex < 0) currentPuzzleIndex = 0;
+    if (currentPuzzleIndex >= personalPuzzlesList.length) currentPuzzleIndex = 0;
+
+    const puzzle = personalPuzzlesList[currentPuzzleIndex];
+    currentPuzzle = puzzle;
+    isPuzzleSolved = false;
+    puzzleSelectedSquare = null;
+    currentPuzzleChess = new Chess(puzzle.fen);
+
+    const userOrientation = puzzle.turn === 'b' ? 'black' : 'white';
+
+    const boardEl = document.getElementById('puzzle-board');
+    if (boardEl) {
+        if (!puzzleBoard) {
+            puzzleBoard = Chessboard('puzzle-board', {
+                position: puzzle.fen,
+                orientation: userOrientation,
+                draggable: true,
+                moveSpeed: currentAnimationSpeed || 200,
+                snapbackSpeed: 70,
+                snapSpeed: 70,
+                onDragStart: handlePuzzleDragStart,
+                onDrop: handlePuzzleDrop,
+                onSnapEnd: handlePuzzleSnapEnd,
+                pieceTheme: (code) => getPieceThemeUrl(code)
+            });
+            initPuzzleClickToMove();
+        } else {
+            puzzleBoard.orientation(userOrientation);
+            puzzleBoard.position(puzzle.fen, false);
+        }
+    }
+
+    setTimeout(() => {
+        if (puzzleBoard && typeof puzzleBoard.resize === 'function') puzzleBoard.resize();
+    }, 60);
+
+    clearPuzzleBoardHighlights();
+    clearPuzzleArrows();
+    updatePuzzleUI(puzzle);
+}
+
+function updatePuzzleUI(puzzle) {
+    if (!puzzle) return;
+
+    // Source Card
+    const catEl = document.getElementById('puzzle-source-cat');
+    if (catEl) {
+        catEl.textContent = puzzle.category;
+        catEl.className = `puzzle-source-tag ${puzzle.category === 'Miss' ? 'tag-miss' : 'tag-blunder'}`;
+    }
+
+    const dateEl = document.getElementById('puzzle-source-date');
+    if (dateEl) dateEl.textContent = puzzle.gameDate || '';
+
+    const playersEl = document.getElementById('puzzle-source-players');
+    if (playersEl) {
+        const oppLabel = puzzle.opponentName || 'Opponent';
+        playersEl.textContent = `vs ${oppLabel} (Nước ${puzzle.moveNumber || 1})`;
+    }
+
+    const blunderSanEl = document.getElementById('puzzle-blunder-san');
+    if (blunderSanEl) blunderSanEl.textContent = puzzle.userBlunderSan || '--';
+
+    const blunderDescEl = document.getElementById('puzzle-blunder-desc');
+    if (blunderDescEl) {
+        blunderDescEl.textContent = puzzle.category === 'Miss' ? t('puzzle_miss_desc') : t('puzzle_blunder_desc');
+    }
+
+    // Turn Banner
+    const turnDot = document.getElementById('puzzle-turn-dot');
+    const turnText = document.getElementById('puzzle-turn-text');
+    if (turnDot) {
+        turnDot.className = `puzzle-turn-dot ${puzzle.turn === 'b' ? 'black-turn' : ''}`;
+    }
+    if (turnText) {
+        turnText.textContent = puzzle.turn === 'b' ? t('puzzle_black_turn') : t('puzzle_white_turn');
+    }
+
+    // Feedback
+    const cardEl = document.getElementById('puzzle-feedback-card');
+    if (cardEl) cardEl.className = 'puzzle-feedback-card';
+
+    const msgEl = document.getElementById('puzzle-status-message');
+    if (msgEl) msgEl.textContent = t('puzzle_initial_prompt');
+
+    // Nút câu tiếp theo
+    const btnNext = document.getElementById('btn-next-puzzle');
+    if (btnNext) btnNext.classList.add('hidden');
+
+    // Counter
+    const counterEl = document.getElementById('puzzle-counter-text');
+    if (counterEl) {
+        counterEl.textContent = t('puzzle_counter_format', currentPuzzleIndex + 1, personalPuzzlesList.length);
+    }
+}
+
+function highlightPuzzleSquare(square, className) {
+    const boardEl = document.getElementById('puzzle-board');
+    if (!boardEl || !square) return;
+    const sqEl = boardEl.querySelector(`.square-${square}`);
+    if (sqEl) sqEl.classList.add(className);
+}
+
+function clearPuzzleBoardHighlights() {
+    const boardEl = document.getElementById('puzzle-board');
+    if (!boardEl) return;
+    boardEl.querySelectorAll('.puzzle-sq-correct, .puzzle-sq-hint, .puzzle-sq-selected').forEach(el => {
+        el.classList.remove('puzzle-sq-correct', 'puzzle-sq-hint', 'puzzle-sq-selected');
+    });
+}
+
+function renderPuzzleArrow(from, to, color = '#81b64c') {
+    const svg = document.getElementById('puzzle-arrow-overlay');
+    if (!svg || !currentPuzzle) return;
+    const orientation = currentPuzzle.turn === 'b' ? 'black' : 'white';
+    const builder = (typeof buildArrowSvgString === 'function')
+        ? buildArrowSvgString
+        : (typeof window !== 'undefined' && typeof window.buildArrowSvgString === 'function' ? window.buildArrowSvgString : null);
+    if (builder) {
+        svg.innerHTML = builder(from, to, color, { width: 12, opacity: 0.9, className: 'puzzle-arrow' }, orientation);
+    }
+}
+
+function clearPuzzleArrows() {
+    const svg = document.getElementById('puzzle-arrow-overlay');
+    if (svg) svg.innerHTML = '';
+}
+
+function isMoveMatchingPuzzleBest(playedUci, validMove) {
+    if (!currentPuzzle || !currentPuzzle.bestMoveUci) return false;
+
+    const bestUci = currentPuzzle.bestMoveUci.toLowerCase();
+    const played = playedUci.toLowerCase();
+    if (played.slice(0, 4) === bestUci.slice(0, 4)) {
+        if (bestUci.length > 4) {
+            return played.length > 4 ? played.charAt(4) === bestUci.charAt(4) : true;
+        }
+        return true;
+    }
+
+    try {
+        const testChess = new Chess(currentPuzzle.fen);
+        testChess.move({ from: validMove.from, to: validMove.to, promotion: validMove.promotion || 'q' });
+        if (testChess.in_checkmate()) return true;
+    } catch (e) { }
+
+    return false;
+}
+
+function handlePuzzleSuccess(validMove, from, to) {
+    isPuzzleSolved = true;
+    clearPuzzleArrows();
+    clearPuzzleBoardHighlights();
+    highlightPuzzleSquare(from, 'puzzle-sq-correct');
+    highlightPuzzleSquare(to, 'puzzle-sq-correct');
+
+    if (validMove.captured) {
+        SoundManager.playCapture();
+    } else {
+        SoundManager.playMove();
+    }
+
+    puzzleStreak++;
+    if (puzzleStreak > puzzleMaxStreak) {
+        puzzleMaxStreak = puzzleStreak;
+    }
+    try {
+        localStorage.setItem('chess_puzzle_streak', String(puzzleStreak));
+        localStorage.setItem('chess_puzzle_max_streak', String(puzzleMaxStreak));
+    } catch (e) { }
+    updatePuzzleStreakUI();
+
+    const btnNext = document.getElementById('btn-next-puzzle');
+    if (btnNext) btnNext.classList.remove('hidden');
+
+    const msgEl = document.getElementById('puzzle-status-message');
+    const cardEl = document.getElementById('puzzle-feedback-card');
+    if (cardEl) cardEl.className = 'puzzle-feedback-card card-success';
+    if (msgEl) msgEl.textContent = t('puzzle_success_msg');
+
+    if (currentPuzzle.pv && currentPuzzle.pv.length > 1) {
+        const oppUci = currentPuzzle.pv[1];
+        setTimeout(() => {
+            if (!isPuzzleSolved || !currentPuzzleChess) return;
+            const oppFrom = oppUci.substring(0, 2);
+            const oppTo = oppUci.substring(2, 4);
+            const oppPromo = oppUci.length > 4 ? oppUci.charAt(4) : 'q';
+            const oppMove = currentPuzzleChess.move({ from: oppFrom, to: oppTo, promotion: oppPromo });
+            if (oppMove) {
+                if (puzzleBoard) puzzleBoard.position(currentPuzzleChess.fen(), true);
+                if (oppMove.captured) SoundManager.playCapture();
+                else SoundManager.playMove();
+                highlightPuzzleSquare(oppFrom, 'puzzle-sq-selected');
+                highlightPuzzleSquare(oppTo, 'puzzle-sq-selected');
+                if (msgEl) msgEl.textContent = t('puzzle_opponent_reply');
+            }
+        }, 500);
+    }
+}
+
+function handlePuzzleFailure(validMove, from, to) {
+    puzzleStreak = 0;
+    try {
+        localStorage.setItem('chess_puzzle_streak', '0');
+    } catch (e) { }
+    updatePuzzleStreakUI();
+
+    const playedUci = from + to + (validMove.promotion || '');
+    const isBlunderRepeated = (currentPuzzle.userBlunderUci && playedUci.slice(0, 4) === currentPuzzle.userBlunderUci.slice(0, 4))
+        || (validMove.san && validMove.san.replace(/[+#!?]/g, '') === currentPuzzle.userBlunderSan.replace(/[+#!?]/g, ''));
+
+    const msgEl = document.getElementById('puzzle-status-message');
+    const cardEl = document.getElementById('puzzle-feedback-card');
+    if (cardEl) cardEl.className = 'puzzle-feedback-card card-wrong';
+    if (msgEl) {
+        msgEl.textContent = isBlunderRepeated ? t('puzzle_repeated_blunder') : t('puzzle_wrong_msg');
+    }
+
+    SoundManager.playMove();
+}
+
+function handlePuzzleDragStart(source, piece) {
+    if (isPuzzleSolved || !currentPuzzle) return false;
+    const pieceColor = piece.charAt(0);
+    if (pieceColor !== currentPuzzle.turn) return false;
+    clearPuzzleBoardHighlights();
+    return true;
+}
+
+function handlePuzzleDrop(source, target) {
+    if (source === target || !currentPuzzle || !currentPuzzleChess) return;
+
+    const moveAttempt = { from: source, to: target, promotion: 'q' };
+    const validMove = currentPuzzleChess.move(moveAttempt);
+    if (!validMove) return 'snapback';
+
+    currentPuzzleChess.undo();
+    const playedUci = source + target + (validMove.promotion || '');
+    const isCorrect = isMoveMatchingPuzzleBest(playedUci, validMove);
+
+    if (isCorrect) {
+        currentPuzzleChess.move(validMove);
+        puzzleBoard.position(currentPuzzleChess.fen(), false);
+        handlePuzzleSuccess(validMove, source, target);
+    } else {
+        handlePuzzleFailure(validMove, source, target);
+        return 'snapback';
+    }
+}
+
+function handlePuzzleSnapEnd() {
+    if (puzzleBoard && currentPuzzleChess) {
+        puzzleBoard.position(currentPuzzleChess.fen());
+    }
+}
+
+function initPuzzleClickToMove() {
+    const boardEl = document.getElementById('puzzle-board');
+    if (!boardEl) return;
+
+    boardEl.addEventListener('click', (e) => {
+        if (isPuzzleSolved || !currentPuzzle || !currentPuzzleChess) return;
+        const squareEl = e.target.closest('[class*="square-"]');
+        if (!squareEl) return;
+
+        const match = squareEl.className.match(/square-([a-h][1-8])/);
+        if (!match) return;
+        const clickedSquare = match[1];
+
+        if (!puzzleSelectedSquare) {
+            const piece = currentPuzzleChess.get(clickedSquare);
+            if (piece && piece.color === currentPuzzle.turn) {
+                puzzleSelectedSquare = clickedSquare;
+                clearPuzzleBoardHighlights();
+                highlightPuzzleSquare(clickedSquare, 'puzzle-sq-selected');
+            }
+            return;
+        }
+
+        if (puzzleSelectedSquare === clickedSquare) {
+            puzzleSelectedSquare = null;
+            clearPuzzleBoardHighlights();
+            return;
+        }
+
+        const targetPiece = currentPuzzleChess.get(clickedSquare);
+        if (targetPiece && targetPiece.color === currentPuzzle.turn) {
+            puzzleSelectedSquare = clickedSquare;
+            clearPuzzleBoardHighlights();
+            highlightPuzzleSquare(clickedSquare, 'puzzle-sq-selected');
+            return;
+        }
+
+        const from = puzzleSelectedSquare;
+        const to = clickedSquare;
+        puzzleSelectedSquare = null;
+        clearPuzzleBoardHighlights();
+
+        const moveAttempt = { from, to, promotion: 'q' };
+        const validMove = currentPuzzleChess.move(moveAttempt);
+        if (!validMove) return;
+
+        currentPuzzleChess.undo();
+        const playedUci = from + to + (validMove.promotion || '');
+        const isCorrect = isMoveMatchingPuzzleBest(playedUci, validMove);
+
+        if (isCorrect) {
+            currentPuzzleChess.move(validMove);
+            puzzleBoard.position(currentPuzzleChess.fen(), true);
+            handlePuzzleSuccess(validMove, from, to);
+        } else {
+            handlePuzzleFailure(validMove, from, to);
+        }
+    });
+}
+
+function handlePuzzleHint() {
+    if (isPuzzleSolved || !currentPuzzle || !currentPuzzle.bestMoveUci) return;
+    const fromSquare = currentPuzzle.bestMoveUci.substring(0, 2);
+    clearPuzzleBoardHighlights();
+    highlightPuzzleSquare(fromSquare, 'puzzle-sq-hint');
+    const msgEl = document.getElementById('puzzle-status-message');
+    if (msgEl) {
+        msgEl.textContent = t('puzzle_hint_msg', fromSquare.toUpperCase());
+    }
+}
+
+function handlePuzzleSolution() {
+    if (!currentPuzzle || !currentPuzzle.bestMoveUci) return;
+    puzzleStreak = 0;
+    try { localStorage.setItem('chess_puzzle_streak', '0'); } catch (e) { }
+    updatePuzzleStreakUI();
+
+    isPuzzleSolved = true;
+    clearPuzzleArrows();
+    clearPuzzleBoardHighlights();
+
+    const from = currentPuzzle.bestMoveUci.substring(0, 2);
+    const to = currentPuzzle.bestMoveUci.substring(2, 4);
+    const promo = currentPuzzle.bestMoveUci.length > 4 ? currentPuzzle.bestMoveUci.charAt(4) : 'q';
+
+    renderPuzzleArrow(from, to, '#81b64c');
+    highlightPuzzleSquare(from, 'puzzle-sq-correct');
+    highlightPuzzleSquare(to, 'puzzle-sq-correct');
+
+    let san = currentPuzzle.bestMoveUci;
+    try {
+        const temp = new Chess(currentPuzzle.fen);
+        const m = temp.move({ from, to, promotion: promo });
+        if (m) san = m.san;
+    } catch (e) { }
+
+    const msgEl = document.getElementById('puzzle-status-message');
+    const cardEl = document.getElementById('puzzle-feedback-card');
+    if (cardEl) cardEl.className = 'puzzle-feedback-card card-solution';
+    if (msgEl) msgEl.textContent = t('puzzle_solution_msg', san);
+
+    const btnNext = document.getElementById('btn-next-puzzle');
+    if (btnNext) btnNext.classList.remove('hidden');
+
+    setTimeout(() => {
+        if (!currentPuzzleChess) return;
+        const validMove = currentPuzzleChess.move({ from, to, promotion: promo });
+        if (validMove && puzzleBoard) {
+            puzzleBoard.position(currentPuzzleChess.fen(), true);
+            if (validMove.captured) SoundManager.playCapture();
+            else SoundManager.playMove();
+        }
+    }, 400);
+}
+
+function handleNextPuzzle() {
+    if (!personalPuzzlesList || !personalPuzzlesList.length) return;
+    currentPuzzleIndex = (currentPuzzleIndex + 1) % personalPuzzlesList.length;
+    loadCurrentPuzzle();
+}
+
+function handleSkipPuzzle() {
+    if (!personalPuzzlesList || !personalPuzzlesList.length) return;
+    currentPuzzleIndex = (currentPuzzleIndex + 1) % personalPuzzlesList.length;
+    loadCurrentPuzzle();
+}
+
+function handlePuzzleReviewGame() {
+    if (!currentPuzzle || !currentPuzzle.gameUrl) return;
+    const targetGame = loadedGames.find(g => g.url === currentPuzzle.gameUrl);
+    closePersonalPuzzlesModal();
+    if (targetGame) {
+        selectGame(targetGame);
+    } else if (currentPuzzle.gameUrl.startsWith('http')) {
+        window.open(currentPuzzle.gameUrl, '_blank');
+    }
+}
+
+function initPersonalPuzzlesUI() {
+    const btnOpen = document.getElementById('btn-personal-puzzles');
+    if (btnOpen) btnOpen.addEventListener('click', openPersonalPuzzlesModal);
+
+    const btnClose = document.getElementById('btn-close-puzzle-modal');
+    if (btnClose) btnClose.addEventListener('click', closePersonalPuzzlesModal);
+
+    const modalEl = document.getElementById('personal-puzzle-modal');
+    if (modalEl) {
+        modalEl.addEventListener('click', (e) => {
+            if (e.target === modalEl) closePersonalPuzzlesModal();
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalEl && !modalEl.classList.contains('hidden')) {
+            closePersonalPuzzlesModal();
+        }
+    });
+
+    const btnHint = document.getElementById('btn-puzzle-hint');
+    if (btnHint) btnHint.addEventListener('click', handlePuzzleHint);
+
+    const btnSolution = document.getElementById('btn-puzzle-solution');
+    if (btnSolution) btnSolution.addEventListener('click', handlePuzzleSolution);
+
+    const btnNext = document.getElementById('btn-next-puzzle');
+    if (btnNext) btnNext.addEventListener('click', handleNextPuzzle);
+
+    const btnSkip = document.getElementById('btn-puzzle-skip');
+    if (btnSkip) btnSkip.addEventListener('click', handleSkipPuzzle);
+
+    const btnReview = document.getElementById('btn-puzzle-review-game');
+    if (btnReview) btnReview.addEventListener('click', handlePuzzleReviewGame);
+
+    const btnDrawerOpen = document.getElementById('btn-puzzle-open-drawer');
+    if (btnDrawerOpen) {
+        btnDrawerOpen.addEventListener('click', () => {
+            closePersonalPuzzlesModal();
+            openGameDrawer();
         });
     }
 }
@@ -2162,6 +3015,10 @@ function initCustomizationControls() {
     }
 
     initSettingsModal();
+    initCustomImportModal();
+    initBotEloSelector();
+    initPersonalPuzzlesUI();
+    updatePersonalPuzzlesBadge();
 }
 
 let lastBoardMouseDownButton = 0;
@@ -2543,7 +3400,7 @@ function formatClockDisplay(totalSec) {
 
 function buildPositionsFromPGN(pgn) {
     const chess = new Chess();
-    if (!chess.load_pgn(pgn)) throw new Error('Không thể đọc được biên bản PGN của ván cờ này.');
+    if (!chess.load_pgn(pgn, { sloppy: true })) throw new Error('Không thể đọc được biên bản PGN của ván cờ này.');
     const historyMoves = chess.history({ verbose: true });
     chess.reset();
     const tcMatch = pgn.match(/\[TimeControl\s+"([^"]+)"\]/);
@@ -3453,6 +4310,42 @@ function updateBotGameUI() {
     }
 }
 
+function getBotSkillConfig() {
+    const eloSelect = document.getElementById('select-bot-elo');
+    let eloVal = 1200;
+    if (eloSelect) {
+        eloVal = Number(eloSelect.value) || 1200;
+    } else {
+        try {
+            eloVal = Number(localStorage.getItem('chess_bot_elo')) || 1200;
+        } catch (e) { }
+    }
+    const configMap = {
+        800: { skillLevel: 2, depth: 5 },
+        1200: { skillLevel: 6, depth: 8 },
+        1600: { skillLevel: 11, depth: 11 },
+        2000: { skillLevel: 16, depth: 14 },
+        2400: { skillLevel: 20, depth: 16 }
+    };
+    return configMap[eloVal] || { skillLevel: 6, depth: 8 };
+}
+
+function initBotEloSelector() {
+    const eloSelect = document.getElementById('select-bot-elo');
+    if (!eloSelect) return;
+    try {
+        const saved = localStorage.getItem('chess_bot_elo');
+        if (saved && eloSelect.querySelector(`option[value="${saved}"]`)) {
+            eloSelect.value = saved;
+        }
+    } catch (e) { }
+    eloSelect.addEventListener('change', () => {
+        try {
+            localStorage.setItem('chess_bot_elo', eloSelect.value);
+        } catch (e) { }
+    });
+}
+
 async function executeBotMoveSafe() {
     const currentFen = getCurrentBoardFen();
     const tempChess = new Chess(currentFen);
@@ -3473,8 +4366,9 @@ async function executeBotMoveSafe() {
     updateBotGameUI();
 
     try {
-        // 3. Cho Bot suy nghĩ ở độ sâu 10 (nhanh, đủ thông minh để chạy chiếu)
-        const result = await stockfishEngine.evaluatePosition(currentFen, 10, null, true);
+        // 3. Cho Bot suy nghĩ theo mức độ Elo đã chọn
+        const botConfig = getBotSkillConfig();
+        const result = await stockfishEngine.evaluatePosition(currentFen, botConfig.depth, null, true, 0, botConfig.skillLevel);
         let botMoveUci = result?.bestmove;
 
         if (!botMoveUci || botMoveUci === '(none)') {
@@ -4837,6 +5731,7 @@ async function analyzeCurrentGame(game, startIndex = 0) {
         if (typeof saveGameAnalysisCache === 'function') {
             await saveGameAnalysisCache(game.url, currentDepth, gamePositions, finalStats, game.userColor);
             analyzedGameUrls.add(game.url); applyGameListFilters();
+            updatePersonalPuzzlesBadge();
         }
 
         if (cacheStatusBadge) cacheStatusBadge.classList.remove('hidden');
@@ -5104,9 +5999,11 @@ function renderGameList(games) {
         const timeClassSafe = (game.timeClass || 'rapid').toLowerCase();
         const isAnalyzed = analyzedGameUrls.has(game.url);
 
-        const res = (typeof parseChessComResult === 'function')
-            ? parseChessComResult(game.rawResult || game.resultLabel, currentLang)
-            : { label: game.resultLabel, type: game.resultType };
+        const res = (game.isCustomFen)
+            ? { label: 'FEN', type: 'draw' }
+            : ((typeof parseChessComResult === 'function')
+                ? parseChessComResult(game.rawResult || game.resultLabel, currentLang)
+                : { label: game.resultLabel, type: game.resultType });
 
         let resultIcon = '';
         if (game.resultType === 'win') resultIcon = '<svg class="result-icon" width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 6l3 3 5-6"/></svg>';
@@ -5178,11 +6075,20 @@ async function selectGame(gameOrIndex, keepDrawerOpen = false) {
         const whiteLabel = t('white_player_lbl');
         const blackLabel = t('black_player_lbl');
         if (gamePlayersInfo) gamePlayersInfo.innerHTML = `<strong>⬜ ${whiteLabel}:</strong> ${escapeHTML(whitePlayer)} &nbsp;|&nbsp; <strong>⬛ ${blackLabel}:</strong> ${escapeHTML(blackPlayer)}`;
-        const res = (typeof parseChessComResult === 'function')
-            ? parseChessComResult(game.rawResult || game.resultLabel, currentLang)
-            : { label: game.resultLabel, type: game.resultType };
-        if (gameResultBadge) { gameResultBadge.className = `badge-result badge-${game.resultType}`; gameResultBadge.textContent = res.label; }
-        if (btnOpenChessCom && game.url) btnOpenChessCom.href = game.url;
+        const res = (game.isCustomFen)
+            ? { label: 'FEN', type: 'draw' }
+            : ((typeof parseChessComResult === 'function')
+                ? parseChessComResult(game.rawResult || game.resultLabel, currentLang)
+                : { label: game.resultLabel, type: game.resultType });
+        if (gameResultBadge) { gameResultBadge.className = `badge-result badge-${res.type || game.resultType}`; gameResultBadge.textContent = res.label; }
+        if (btnOpenChessCom) {
+            if (game.url && !game.url.startsWith('custom://')) {
+                btnOpenChessCom.href = game.url;
+                btnOpenChessCom.classList.remove('hidden');
+            } else {
+                btnOpenChessCom.classList.add('hidden');
+            }
+        }
 
         isAnalyzing = false; isAnalysisPaused = false; stockfishEngine.stop(); stopElapsedTimer();
         const userOrientation = (userColor === 'b') ? 'black' : 'white';
@@ -5195,7 +6101,33 @@ async function selectGame(gameOrIndex, keepDrawerOpen = false) {
             initChessboard('white');
         }
         if (typeof board.resize === 'function') board.resize();
-        stopAutoplay(); gamePositions = buildPositionsFromPGN(game.pgn);
+        stopAutoplay();
+        if (game.isCustomFen) {
+            gamePositions = [{
+                index: 0,
+                fen: game.fen,
+                turn: new Chess(game.fen).turn(),
+                move: null,
+                eval: null,
+                classification: null,
+                timeSpentSec: null,
+                timeSpentStr: null,
+                whiteClock: null,
+                blackClock: null
+            }];
+            if (board) {
+                board.orientation(userOrientation);
+                board.position(game.fen, false);
+                updateEvalBarOrientation(userOrientation);
+            }
+            renderMoveList();
+            drawEvalChart();
+            renderKeyMovesList();
+            goToMove(0, false, false, false);
+            triggerLiveAnalysis(game.fen);
+            return;
+        }
+        gamePositions = buildPositionsFromPGN(game.pgn);
         renderMoveList(); drawEvalChart(); renderKeyMovesList(); goToMove(0);
 
         let cachedData = null;
@@ -5900,6 +6832,12 @@ if (typeof window !== 'undefined') {
     window.initCustomizationControls = initCustomizationControls;
     window.openSettingsModal = openSettingsModal;
     window.closeSettingsModal = closeSettingsModal;
+    window.openCustomImportModal = openCustomImportModal;
+    window.closeCustomImportModal = closeCustomImportModal;
+    window.handleCustomImportSubmit = handleCustomImportSubmit;
+    window.openPersonalPuzzlesModal = openPersonalPuzzlesModal;
+    window.closePersonalPuzzlesModal = closePersonalPuzzlesModal;
+    window.updatePersonalPuzzlesBadge = updatePersonalPuzzlesBadge;
     window.applyAppTheme = applyAppTheme;
     window.applyBoardTheme = applyBoardTheme;
     window.applyPieceTheme = applyPieceTheme;
@@ -5929,6 +6867,12 @@ if (typeof module !== 'undefined' && module.exports) {
         initCustomizationControls,
         openSettingsModal,
         closeSettingsModal,
+        openCustomImportModal,
+        closeCustomImportModal,
+        handleCustomImportSubmit,
+        openPersonalPuzzlesModal,
+        closePersonalPuzzlesModal,
+        updatePersonalPuzzlesBadge,
         applyAppTheme,
         applyBoardTheme,
         applyPieceTheme,

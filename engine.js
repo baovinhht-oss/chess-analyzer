@@ -188,10 +188,14 @@ class StockfishEngine {
         });
     }
 
-    async evaluatePosition(fen, depth = 16, onProgress = null, clearHash = false, moveTime = 0) {
+    async evaluatePosition(fen, depth = 16, onProgress = null, clearHash = false, moveTime = 0, skillLevel = 20) {
         if (!this.worker || !this.isReady) await this.init();
 
         const actualDepth = depth ? Math.max(1, depth) : 16;
+        const parsedSkill = Number(skillLevel);
+        const actualSkillLevel = (!isNaN(parsedSkill))
+            ? Math.max(0, Math.min(20, Math.round(parsedSkill)))
+            : 20;
         const chess = new Chess(fen);
         const turn = chess.turn();
 
@@ -229,8 +233,17 @@ class StockfishEngine {
                 let lastCp = 0; let lastMate = null; let lastPv = []; let lastDepth = 0; let lastBestmove = null;
                 const mySearchId = ++this.activeSearchId;
 
-                this.currentReject = reject;
+                this.currentReject = (err) => {
+                    if (actualSkillLevel !== 20 && this.worker) {
+                        try { this.worker.postMessage('setoption name Skill Level value 20'); } catch (e) { }
+                    }
+                    reject(err);
+                };
                 this.worker.postMessage('setoption name MultiPV value 1');
+
+                if (actualSkillLevel !== 20) {
+                    this.worker.postMessage(`setoption name Skill Level value ${actualSkillLevel}`);
+                }
 
                 if (clearHash) {
                     this.worker.postMessage('setoption name Clear Hash value true');
@@ -272,6 +285,9 @@ class StockfishEngine {
                     if (line.startsWith('bestmove ')) {
                         if (mySearchId !== this.activeSearchId || !this.isSearchActive) return;
                         this.isSearchActive = false;
+                        if (actualSkillLevel !== 20 && this.worker) {
+                            try { this.worker.postMessage('setoption name Skill Level value 20'); } catch (e) { }
+                        }
                         const parts = line.split(/\s+/);
                         const bestmove = (parts[1] && parts[1] !== '(none)') ? parts[1] : (lastBestmove || null);
 
