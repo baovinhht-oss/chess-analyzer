@@ -82,7 +82,7 @@ async function getGameAnalysisCache(gameUrl, depth) {
 /**
  * Lưu kết quả phân tích ván cờ vào IndexedDB
  */
-async function saveGameAnalysisCache(gameUrl, depth, positions, stats) {
+async function saveGameAnalysisCache(gameUrl, depth, positions, stats, userColor = null) {
     try {
         const db = await openCacheDB();
         return new Promise((resolve, reject) => {
@@ -101,6 +101,7 @@ async function saveGameAnalysisCache(gameUrl, depth, positions, stats) {
                 id: key,
                 gameUrl: gameUrl,
                 depth: depth,
+                userColor: userColor || (stats && stats.userColor) || null,
                 analyzedAt: new Date().toISOString(),
                 positions: cleanPositions,
                 stats: stats

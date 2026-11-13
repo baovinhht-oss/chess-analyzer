@@ -119,7 +119,8 @@ async function fetchMonthlyGames(username = (typeof CHESSCOM_USERNAME !== 'undef
 
         // Đổi end_time (Unix timestamp tính bằng giây) sang ngày/tháng/năm dễ đọc
         const dateObj = new Date(game.end_time * 1000);
-        const dateStr = dateObj.toLocaleDateString('vi-VN', {
+        const locale = (typeof currentLang !== 'undefined' && currentLang === 'en') ? 'en-US' : 'vi-VN';
+        const dateStr = dateObj.toLocaleDateString(locale, {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
@@ -131,6 +132,7 @@ async function fetchMonthlyGames(username = (typeof CHESSCOM_USERNAME !== 'undef
             id: index,
             url: game.url,
             pgn: game.pgn,
+            endTime: game.end_time,
             timeClass: game.time_class, // rapid, blitz, bullet...
             userColor: isWhite ? 'w' : 'b',
             userColorText: isWhite ? 'Trắng' : 'Đen',

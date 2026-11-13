@@ -112,8 +112,18 @@ function calculateLifetimeStats(options = {}) {
     const cacheByUrl = new Map();
     for (const item of analyses) {
         if (!item || typeof item !== 'object') continue;
-        if (item.gameUrl) cacheByUrl.set(item.gameUrl, item);
-        if (item.id) cacheByUrl.set(item.id, item);
+        if (item.gameUrl) {
+            const prev = cacheByUrl.get(item.gameUrl);
+            if (!prev || (item.depth || 0) >= (prev.depth || 0)) {
+                cacheByUrl.set(item.gameUrl, item);
+            }
+        }
+        if (item.id && !item.gameUrl) {
+            const prev = cacheByUrl.get(item.id);
+            if (!prev || (item.depth || 0) >= (prev.depth || 0)) {
+                cacheByUrl.set(item.id, item);
+            }
+        }
     }
 
     const badges = {
@@ -173,15 +183,24 @@ function calculateLifetimeStats(options = {}) {
 
     // Nếu có cache trong IndexedDB của ván ngoài danh sách loadedGames (hoặc khi loadedGames chưa tải)
     if (games.length === 0) {
-        for (const item of analyses) {
+        for (const item of cacheByUrl.values()) {
             if (!item || !item.stats || typeof item.stats !== 'object') continue;
-            for (const color of ['w', 'b']) {
-                const sideStats = item.stats[color];
+            // Chỉ cộng dồn thống kê nước đi & độ chính xác của người chơi khi xác định được userColor
+            const targetColor = item.userColor || item.stats.userColor;
+            if (targetColor && (targetColor === 'w' || targetColor === 'b')) {
+                const sideStats = item.stats[targetColor];
                 if (sideStats && typeof sideStats === 'object') {
                     const acc = Number(sideStats.avgAccuracy ?? sideStats.accuracy);
                     if (Number.isFinite(acc) && acc > 0) {
                         userAccSum += acc;
                         userAccCount++;
+                        if (targetColor === 'w') {
+                            whiteAccSum += acc;
+                            whiteAccCount++;
+                        } else {
+                            blackAccSum += acc;
+                            blackAccCount++;
+                        }
                     }
                     if (sideStats.counts && typeof sideStats.counts === 'object') {
                         for (const cat of Object.keys(badges)) {

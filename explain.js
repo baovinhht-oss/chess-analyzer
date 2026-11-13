@@ -45,96 +45,96 @@ function getChessConstructor() {
 const COMMENT_TEMPLATES = {
     vi: {
         Brilliant: [
-            'Tuyệt đỉnh! Một pha thí quân chói sáng mang dáng dấp của một Đại kiện tướng. Bạn đã nhìn thấy một viễn cảnh sâu sắc mà đối thủ không thể ngờ tới!',
-            'Thần sầu quỷ khốc! Pha hy sinh quân quả cảm xé toang phòng tuyến đối phương, biến thế cờ thành một kiệt tác tấn công!',
-            'Đẳng cấp Grandmaster! Bạn dâng tặng quân cờ để đổi lấy quyền kiểm soát tuyệt đối và thế công vũ bão!'
+            'Tuyệt đỉnh! Một pha thí quân chói sáng mang dáng dấp của một Đại kiện tướng. {{Actor}} đã nhìn thấy một viễn cảnh sâu sắc mà {{other}} không thể ngờ tới!',
+            'Thần sầu quỷ khốc! Pha hy sinh quân quả cảm xé toang phòng tuyến {{other}}, biến thế cờ thành một kiệt tác tấn công!',
+            'Đẳng cấp Grandmaster! {{Actor}} dâng tặng quân cờ để đổi lấy quyền kiểm soát tuyệt đối và thế công vũ bão!'
         ],
         Great: [
-            'Tuyệt hay! Nhãn quan chiến thuật tuyệt vời. Đây là nước cờ duy nhất cứu vãn tình thế và lật ngược thế cờ.',
-            'Đỉnh cao bản lĩnh! Bạn đã tìm ra chìa khóa then chốt duy nhất trong mê cung chiến thuật hiểm nghèo.',
+            'Tuyệt hay! Nhãn quan chiến thuật tuyệt vời. Đây là nước cờ then chốt giúp {{actor}} cứu vãn tình thế và lật ngược thế cờ.',
+            'Đỉnh cao bản lĩnh! {{Actor}} đã tìm ra chìa khóa then chốt duy nhất trong mê cung chiến thuật hiểm nghèo.',
             'Cực kỳ chuẩn xác! Nước cờ then chốt duy nhất giúp giữ vững ưu thế và xoay chuyển toàn bộ cục diện ván đấu.'
         ],
         Book: [
-            'Bài bản như sách giáo khoa! Bạn đang triển khai quân theo đúng lý thuyết khai cuộc kinh điển.',
+            'Bài bản như sách giáo khoa! {{Actor}} đang triển khai quân theo đúng lý thuyết khai cuộc kinh điển.',
             'Khai cuộc mẫu mực! Nước đi chuẩn lý thuyết giúp quân cờ chiếm lĩnh vị trí lý tưởng ngay từ đầu.'
         ],
         Best: [
-            'Lựa chọn hoàn hảo! Đây chính xác là những gì cỗ máy cờ vua mạnh nhất đề xuất. Bạn đang kiểm soát thế trận rất tốt.',
-            'Chuẩn xác tuyệt đối! Nước đi tối ưu nhất giúp duy trì quyền chủ động và bóp nghẹt đối thủ.',
-            'Không thể hoàn hảo hơn! Bạn đang đi những nước cờ với nhãn quan sắc bén của một cỗ máy hàng đầu.'
+            'Lựa chọn hoàn hảo! Đây chính xác là những gì cỗ máy cờ vua mạnh nhất đề xuất. {{Actor}} đang kiểm soát thế trận rất tốt.',
+            'Chuẩn xác tuyệt đối! Nước đi tối ưu nhất giúp duy trì quyền chủ động và gây sức ép tối đa lên {{other}}.',
+            'Không thể hoàn hảo hơn! Nước cờ thể hiện nhãn quan sắc bén của một cỗ máy hàng đầu.'
         ],
         Excellent: [
-            'Nước đi xuất sắc! Bạn đang tạo ra áp lực lớn và đặt quân cờ vào vị trí chiến lược cực đẹp.',
+            'Nước đi xuất sắc! {{Actor}} đang tạo ra áp lực lớn và đặt quân cờ vào vị trí chiến lược cực đẹp.',
             'Rất sắc sảo! Nước đi gần như tối ưu, mở rộng không gian và tăng cường tính liên kết toàn đội hình.',
-            'Rất hay! Bạn đang làm chủ nhịp độ trận đấu và dồn ép đối thủ vào thế bị động.'
+            'Rất hay! {{Actor}} đang làm chủ nhịp độ trận đấu và dồn ép {{other}} vào thế bị động.'
         ],
         Good: [
             'Nước đi tốt! Giữ vững đội hình và tiếp tục kế hoạch chiến lược đã định.',
-            'Chắc chắn và vững vàng! Bạn đang bảo toàn cấu trúc thế trận và kiên nhẫn chờ đón thời cơ.'
+            'Chắc chắn và vững vàng! {{Actor}} đang bảo toàn cấu trúc thế trận và kiên nhẫn chờ đón thời cơ.'
         ],
         Inaccuracy: [
-            'Chưa phải là tối ưu. Nước đi này hơi thụ động và nhường lại một chút quyền chủ động cho đối thủ.',
-            'Hơi chệch hướng! Bạn đã bỏ lỡ một phương án linh hoạt hơn, tạo khoảng thở cho đối phương củng cố phòng ngự.'
+            'Chưa phải là tối ưu. Nước đi này hơi thụ động và nhường lại một chút quyền chủ động cho {{other}}.',
+            'Hơi chệch hướng! {{Actor}} đã bỏ lỡ một phương án linh hoạt hơn, tạo khoảng thở cho {{other}} củng cố phòng ngự.'
         ],
         Mistake: [
-            'Một quyết định vội vàng! Nước đi này đã làm suy yếu cấu trúc phòng ngự và mở ra cơ hội phản công cho đối thủ.',
-            'Sai lầm đáng tiếc! Bạn đã để lộ điểm yếu về không gian, đối phương có thể chớp lấy thời cơ ngay lập tức.'
+            'Một quyết định vội vàng! Nước đi này đã làm suy yếu cấu trúc phòng ngự và mở ra cơ hội phản công cho {{other}}.',
+            'Sai lầm đáng tiếc! {{Actor}} đã để lộ điểm yếu về không gian, {{other}} có thể chớp lấy thời cơ ngay lập tức.'
         ],
         Miss: [
-            'Tiếc quá, bạn vừa bỏ lỡ một cơ hội vàng! Một đòn trừng phạt quyết định đã vuột khỏi tầm tay.',
-            'Bỏ lỡ thời cơ! Bạn đã có thể gia tăng cách biệt mênh mông hoặc tung đòn kết liễu trận đấu ngay tại đây.'
+            'Bỏ lỡ cơ hội vàng! Một đòn trừng phạt quyết định vừa vuột khỏi tầm tay của {{actor}}.',
+            'Bỏ lỡ thời cơ! {{Actor}} đã có thể gia tăng cách biệt rõ rệt hoặc tung đòn kết liễu trận đấu ngay tại đây.'
         ],
         Blunder: [
-            'Trời ơi, một sai lầm chí mạng! Bạn đã để lộ điểm yếu chết người khiến thế trận sụp đổ. Hãy cẩn thận hơn!',
-            'Cú sốc lớn! Nước đi tai hại này dâng không lợi thế và khiến bạn tổn thất lực lượng nặng nề. Hãy bình tĩnh lại!',
-            'Báo động đỏ! Một pha xử lý mất tập trung khiến toàn bộ công sức trước đó đứng trước bờ vực sụp đổ.'
+            'Sai lầm chí mạng! {{Actor}} đã để lộ sơ hở nghiêm trọng khiến thế trận rơi vào nguy hiểm.',
+            'Cú sảy chân lớn! Nước đi này dâng tặng lợi thế lớn cho {{other}} và khiến {{actor}} đối mặt tổn thất lực lượng nặng nề.',
+            'Báo động lớn! Một pha xử lý sơ hở khiến cục diện ván cờ đảo chiều hoàn toàn.'
         ]
     },
     en: {
         Brilliant: [
-            'Brilliant move! A breathtaking piece sacrifice worthy of a Grandmaster. You foresaw a deep tactical truth that blindsided the opponent!',
+            'Brilliant move! A breathtaking piece sacrifice worthy of a Grandmaster. {{Actor}} foresaw a deep tactical truth that blindsided {{other}}!',
             'Absolute genius! A courageous sacrifice that tears open enemy lines and turns the game into a masterpiece of attacking chess!',
-            'Grandmaster level! You gave up material to claim total board dominance and an unstoppable initiative!'
+            'Grandmaster level! Material was offered to claim total board dominance and an unstoppable initiative!'
         ],
         Great: [
-            'Great move! Outstanding tactical vision. This was the only move to preserve your advantage and turn the tables.',
-            'Sheer resilience! You navigated through a tactical minefield to find the single saving move on the board.',
-            'Pinpoint precision! The only critical continuation that holds the game together under severe pressure.'
+            'Great move! Outstanding tactical vision. This was the only move to preserve the advantage and turn the tables.',
+            'Sheer resilience! {{Actor}} navigated through a tactical minefield to find the single saving move on the board.',
+            'Pinpoint precision! The only critical continuation that holds the position together under severe pressure.'
         ],
         Book: [
             'Textbook opening play! Following classical theory with textbook discipline.',
             'Pure opening mastery! Developing seamlessly along proven master lines.'
         ],
         Best: [
-            'Flawless choice! Exactly what the strongest chess engine commands. You are in total command of the position.',
+            'Flawless choice! Exactly what the strongest chess engine commands. {{Actor}} is in command of the position.',
             'Absolute precision! The best move on the board, maintaining maximum pressure and suffocating counterplay.',
-            'Top engine pick! You are navigating this position with razor-sharp engine precision.'
+            'Top engine pick! Navigating this position with razor-sharp engine precision.'
         ],
         Excellent: [
-            'Excellent move! You are ramping up the pressure and planting your pieces on gorgeous strategic outposts.',
-            'Sharp and proactive! Almost the top engine choice, carving out space and tightening your coordination.',
-            'Impressive play! Dictating the tempo and forcing your opponent to dance to your tune.'
+            'Excellent move! Ramping up the pressure and planting pieces on gorgeous strategic outposts.',
+            'Sharp and proactive! Almost the top engine choice, carving out space and tightening coordination.',
+            'Impressive play! Dictating the tempo and putting pressure on {{other}}.'
         ],
         Good: [
-            'Solid move! Maintaining healthy structure and staying true to your game plan.',
-            'Sturdy and reliable! Keeping your forces compact and waiting for the right moment to strike.'
+            'Solid move! Maintaining healthy structure and staying true to the game plan.',
+            'Sturdy and reliable! Keeping forces compact and waiting for the right moment to strike.'
         ],
         Inaccuracy: [
-            'Suboptimal move. A bit too passive, letting your grip loosen and handing the initiative back to your opponent.',
-            'Slightly off the mark! There were more ambitious alternatives available that keep your opponent on the ropes.'
+            'Suboptimal move. A bit too passive, letting the grip loosen and handing initiative to {{other}}.',
+            'Slightly off the mark! There were more ambitious alternatives available that keep {{other}} on the ropes.'
         ],
         Mistake: [
-            'A hasty decision! This move weakens your defensive pawn structure and gives your opponent a golden counterchance.',
-            'Costly slip! You ceded critical board space and gave away your strategic upper hand.'
+            'A hasty decision! This move weakens the defensive structure and gives {{other}} a golden counterchance.',
+            'Costly slip! {{Actor}} ceded critical board space and gave away the strategic upper hand.'
         ],
         Miss: [
-            'Ouch! You missed a golden opportunity to land a knockout punch or seize a decisive advantage!',
-            'Missed win! A crushing tactical sequence was right there for the taking, but it slipped away.'
+            'Missed opportunity! A decisive sequence slipped away from {{actor}} here.',
+            'Missed win! A crushing tactical sequence was right there for the taking, but it went unplayed.'
         ],
         Blunder: [
-            'Oh no, a catastrophic blunder! You left a lethal vulnerability that can cause your entire position to collapse. Stay alert!',
-            'Disaster strikes! This move hands over massive material or a crushing attack on a silver platter.',
-            'Red alert! A severe lapse in concentration that turns a promising position upside down.'
+            'A catastrophic blunder! A lethal vulnerability was opened that puts the position in grave danger.',
+            'Disaster strikes! This move hands over massive material or a crushing attack to {{other}}.',
+            'Severe mistake! A lapse in concentration that turns a promising position completely upside down.'
         ]
     }
 };
@@ -152,22 +152,17 @@ function getCoachCommentText(san, category, moveIndex = 1, isUserMove = true, la
     const templates = dict[category] || dict.Good;
     const rawTemplate = templates[moveIndex % templates.length];
 
-    if (lang === 'en') {
-        const subject = isUserMove ? 'you' : 'your opponent';
-        const subjectCap = isUserMove ? 'You' : 'Your opponent';
-        const adjustedTemplate = rawTemplate
-            .replace(/your opponent/g, subject)
-            .replace(/Your opponent/g, subjectCap)
-            .replace(/\byou\b/g, subject)
-            .replace(/\bYou\b/g, subjectCap);
-        return `${san}: ${adjustedTemplate}`;
-    }
+    const isEn = (lang === 'en');
+    const actor = isEn ? (isUserMove ? 'you' : 'your opponent') : (isUserMove ? 'bạn' : 'đối thủ');
+    const Actor = isEn ? (isUserMove ? 'You' : 'Your opponent') : (isUserMove ? 'Bạn' : 'Đối thủ');
+    const other = isEn ? (isUserMove ? 'your opponent' : 'you') : (isUserMove ? 'đối thủ' : 'bạn');
+    const Other = isEn ? (isUserMove ? 'Your opponent' : 'You') : (isUserMove ? 'Đối thủ' : 'Bạn');
 
-    const subject = isUserMove ? 'bạn' : 'đối thủ';
-    const subjectCap = isUserMove ? 'Bạn' : 'Đối thủ';
     const adjustedTemplate = rawTemplate
-        .replace(/bạn/g, subject)
-        .replace(/Bạn/g, subjectCap);
+        .replace(/\{\{Actor\}\}/g, Actor)
+        .replace(/\{\{actor\}\}/g, actor)
+        .replace(/\{\{Other\}\}/g, Other)
+        .replace(/\{\{other\}\}/g, other);
 
     return `${san}: ${adjustedTemplate}`;
 }
@@ -667,8 +662,13 @@ function getCoachTip(currPos, isUserMove, lang = 'vi') {
             : `"Mã ở biên là Mã bỏ đi!" Khi đứng ở rìa bàn cờ, quân Mã chỉ kiểm soát được tối đa 4 ô và mất nửa sức mạnh. Hãy đặt Mã vào các tiền đồn trung tâm (Outpost d4, e4, d5, e5) được Tốt bảo vệ — nó sẽ trở thành một con quái vật bóp nghẹt toàn bộ trận địa của đối thủ!`;
     }
 
-    // 2. Sai lầm / Mất quân (The 3-second blundercatcher)
+    // 2. Sai lầm / Mất quân (The 3-second blundercatcher / capitalizing on mistakes)
     if (category === 'Blunder' || category === 'Mistake') {
+        if (!isUserMove) {
+            return isEn
+                ? `Notice your opponent's mistake: When they slip under pressure, stay calm. Look closely for what they left undefended and strike at their weakest point!`
+                : `Hãy quan sát sơ hở của đối thủ: Khi đối phương đi sai, đừng vội vàng. Hãy nhìn xem họ vừa để lỏng ô nào hoặc quân nào mất bảo vệ để tung đòn trừng phạt chuẩn xác!`;
+        }
         return isEn
             ? `Before releasing your move, pause for 3 life-saving seconds: 1. "Is my destination square truly safe from enemy fire?" and 2. "What is my opponent threatening with their last move?". This single mental checkpoint stops 90% of painful blunders!`
             : `Trước mỗi lần hạ cờ, hãy hít sâu 3 giây và tự hỏi 2 câu sinh tử: 1. "Ô mình sắp hạ quân có bị ai ngắm bắn không?" và 2. "Đối thủ vừa đi nước đó để đe dọa ăn quân nào của mình?". Chỉ 3 giây này thôi sẽ cứu bạn khỏi 90% các ván thua tức tưởi và tăng ngay 200 Elo!`;
@@ -676,6 +676,11 @@ function getCoachTip(currPos, isUserMove, lang = 'vi') {
 
     // 3. Khai cuộc (moveNumber <= 10)
     if (moveNum <= 10 && (category === 'Inaccuracy' || category === 'Mistake' || category === 'Blunder')) {
+        if (!isUserMove) {
+            return isEn
+                ? `Your opponent violated basic opening principles here. Focus on rapid piece development, King safety, and dominating the center to punish their premature play.`
+                : `Đối thủ vừa vi phạm nguyên tắc khai cuộc cơ bản. Hãy tập trung phát triển quân nhanh, nhập thành an toàn và làm chủ trung tâm để trừng phạt nước đi sớm này!`;
+        }
         return isEn
             ? `The 3 golden opening laws: 1. Stake out the center with pawns (e4/d4), 2. Rapidly develop Knights and Bishops toward the center, 3. Castle early to tuck your King away. Never move the same piece repeatedly or unleash your Queen into early danger!`
             : `3 nguyên tắc vàng khai cuộc cho mọi kỳ thủ: 1. Chiếm đóng trung tâm bằng Tốt (e4/d4), 2. Phát triển Mã và Tượng ra trận, 3. Nhập thành thật sớm để bảo vệ Vua. Tuyệt đối không đi một quân nhiều lần hay rút Hậu ra trận quá sớm khi quân khác còn đang ngủ!`;
@@ -704,6 +709,11 @@ function getCoachTip(currPos, isUserMove, lang = 'vi') {
 
     // 7. Nước đi xuất sắc / Tầm nhìn kiện tướng
     if (category === 'Brilliant' || category === 'Great' || category === 'Best') {
+        if (!isUserMove) {
+            return isEn
+                ? `Your opponent found a high-level resource here. Keep your defense resilient, avoid panic, and look for practical counter-chances!`
+                : `Đối thủ vừa tìm ra một nước cờ chất lượng cao. Hãy giữ bình tĩnh, gia cố hàng phòng thủ và kiên nhẫn chờ thời cơ phản công!`;
+        }
         return isEn
             ? `World-class vision! You are weaving together tempo, space, and lethal piece synergy. Maintain this razor-sharp momentum and squeeze the life out of your opponent's defense!`
             : `Tầm nhìn thượng thừa! Bạn đang kết hợp hài hòa giữa nhịp độ (Tempo), không gian (Space) và đòn phối hợp. Hãy tiếp tục duy trì trạng thái tập trung đỉnh cao này để nghiền nát đối thủ!`;

@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- CSS thư viện chessboard.js -->
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous" referrerpolicy="no-referrer">
 
     <!-- CSS ứng dụng -->
     <link rel="stylesheet" href="style.css">
@@ -445,7 +445,7 @@
                                     <strong data-i18n="bot_mode_title">Đang đấu với Bot (Stockfish)</strong>
                                 </div>
                                 <div class="bot-header-controls">
-                                    <button id="btn-bot-undo" class="btn-bot-undo" title="Đi lùi lại 1 lượt đấu (Lùi 2 nước)" data-i18n="btn_bot_undo">
+                                    <button id="btn-bot-undo" class="btn-bot-undo" title="Đi lùi lại 1 lượt đấu (Lùi 2 nước)" data-i18n-title="btn_bot_undo">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M3 7v6h6"></path>
                                             <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path>
@@ -523,6 +523,7 @@
                                     <thead>
                                         <tr>
                                             <th id="th-white-name">⬜ Trắng</th>
+                                            <th id="th-stat-metric"></th>
                                             <th id="th-black-name">⬛ Đen</th>
                                         </tr>
                                     </thead>
@@ -1130,9 +1131,9 @@
     </div>
 
     <!-- NẠP THƯ VIỆN BÊN NGOÀI QUA CDN (GIỮ NGUYÊN THỨ TỰ) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" integrity="sha384-aH7F59TKSh8OEAivbclch9UUnWn/Uy8AQlYYKzpVaQkAp8W6IF2VocW/knEeRwT0" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <!-- NẠP CÁC FILE JAVASCRIPT ỨNG DỤNG (GIỮ NGUYÊN THỨ TỰ) -->
     <script src="config.js"></script>

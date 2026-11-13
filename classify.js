@@ -40,40 +40,23 @@ function calculateWinPercentage(cp) {
 }
 
 /**
- * Tính độ chính xác (Accuracy %) của một nước đi dựa trên chênh lệch Win Percentage và hạng mục nước cờ.
- * Đảm bảo các nước Blunder bị kéo tụt điểm nghiêm trọng, không thể có Accuracy >90% khi có nhiều Blunder.
- * @param {number} winLoss - Độ sụt giảm xác suất thắng (Win%_Trước - Win%_Sau)
- * @param {string} [category] - Hạng mục nước đi (Best, Excellent, Good, Inaccuracy, Mistake, Miss, Blunder)
- * @param {number} [cpLoss] - Độ sụt giảm centipawn
- * @returns {number} Độ chính xác của nước đi (0 - 100%)
+ * Continuous Accuracy curve (Chess.com / Lichess standard):
+ * Acc = 103.1668 * exp(-0.04354 * winLoss) - 3.1669
+ * Eliminates artificial step-function cliffs across classification thresholds.
  */
 function calculateMoveAccuracy(winLoss, category = null, cpLoss = 0) {
     const loss = Math.max(0, Number(winLoss) || 0);
 
-    // Công thức tính Accuracy từ Win% loss (chênh lệch Xác suất Thắng):
-    let acc = 100 - (loss * 2.2);
-    if (loss > 5) {
-        acc -= Math.pow(loss - 5, 1.25) * 0.85;
+    if (loss <= 0.1 || category === 'Brilliant' || category === 'Book' || category === 'Best') {
+        return 100.0;
     }
 
-    // Rào chắn phân hạng (Caps & Floors) theo chuẩn Chess.com:
-    // Đảm bảo Blunder kéo tụt Accuracy cực mạnh (không thể có chuyện Accuracy >90% khi có nhiều Blunder)
-    if (category === 'Best' || category === 'Book' || category === 'Brilliant' || category === 'Great') {
-        acc = Math.max(98, acc);
-    } else if (category === 'Excellent') {
-        acc = Math.min(98, Math.max(88, acc));
-    } else if (category === 'Good') {
-        acc = Math.min(88, Math.max(68, acc));
-    } else if (category === 'Inaccuracy') {
-        acc = Math.min(68, Math.max(40, acc));
-    } else if (category === 'Mistake') {
-        acc = Math.min(40, Math.max(15, acc));
+    let acc = 103.1668 * Math.exp(-0.04354 * loss) - 3.1669;
+
+    if (category === 'Blunder') {
+        acc = Math.min(acc, Math.max(0, 25 - Math.max(0, loss - 20) * 0.45));
     } else if (category === 'Miss') {
-        acc = Math.min(30, Math.max(5, acc));
-    } else if (category === 'Blunder') {
-        // Blunder luôn bị phạt cực nặng: tối đa 15%, giảm dần về 0% theo lượng cpLoss
-        const blunderScore = Math.max(0, 15 - Math.max(0, cpLoss - 250) / 50);
-        acc = Math.min(blunderScore, acc);
+        acc = Math.min(acc, Math.max(5, 45 - Math.max(0, loss - 15) * 0.5));
     }
 
     return Math.max(0, Math.min(100, Math.round(acc * 10) / 10));
@@ -90,16 +73,26 @@ function calculateMoveAccuracy(winLoss, category = null, cpLoss = 0) {
  * @returns {Object} Kết quả phân loại chi tiết
  */
 function evaluateMoveQuality(evalBefore, evalAfter, moverColor, playedUci, bestUci, moveIndex = null, moveContext = null) {
+    if (!evalBefore || !evalAfter) return null;
+
     const toWhitePerspectiveFn = (typeof toWhitePerspective === 'function')
         ? toWhitePerspective
         : (raw, turn) => {
             const mult = (turn === 'w') ? 1 : -1;
-            return { cpWhite: (raw?.cp || 0) * mult, mateWhite: (raw?.mate !== null && raw?.mate !== undefined) ? raw.mate * mult : null };
+            if (raw && raw.mate === 0) {
+                const winnerSign = (turn === 'w') ? -1 : 1;
+                return { cpWhite: winnerSign * 10000, mateWhite: 0 };
+            }
+            if (raw && raw.mate !== null && raw.mate !== undefined) {
+                const mateW = raw.mate * mult;
+                return { cpWhite: mateW > 0 ? 10000 : -10000, mateWhite: mateW };
+            }
+            return { cpWhite: (raw?.cp || 0) * mult, mateWhite: null };
         };
 
-    const whiteBefore = (evalBefore && evalBefore.cpWhite !== undefined) ? evalBefore : toWhitePerspectiveFn(evalBefore, moverColor);
+    const whiteBefore = (evalBefore.cpWhite !== undefined) ? evalBefore : toWhitePerspectiveFn(evalBefore, moverColor);
     const nextTurn = moverColor === 'w' ? 'b' : 'w';
-    const whiteAfter = (evalAfter && evalAfter.cpWhite !== undefined) ? evalAfter : toWhitePerspectiveFn(evalAfter, nextTurn);
+    const whiteAfter = (evalAfter.cpWhite !== undefined) ? evalAfter : toWhitePerspectiveFn(evalAfter, nextTurn);
 
     const sign = (moverColor === 'w') ? 1 : -1;
     const cpMoverBefore = (whiteBefore.cpWhite || 0) * sign;
@@ -108,122 +101,85 @@ function evaluateMoveQuality(evalBefore, evalAfter, moverColor, playedUci, bestU
     const mateMoverBefore = (whiteBefore.mateWhite !== null && whiteBefore.mateWhite !== undefined) ? (whiteBefore.mateWhite * sign) : null;
     const mateMoverAfter = (whiteAfter.mateWhite !== null && whiteAfter.mateWhite !== undefined) ? (whiteAfter.mateWhite * sign) : null;
 
-    const isGettingMatedAfter = (mateMoverAfter !== null && mateMoverAfter < 0) || (cpMoverAfter <= -9000);
-    const wasGettingMatedBefore = (mateMoverBefore !== null && mateMoverBefore < 0) || (cpMoverBefore <= -9000);
+    const deliveredCheckmate = (mateMoverAfter === 0 && cpMoverAfter > 0);
+    const wasGettingMatedBefore = (mateMoverBefore !== null && mateMoverBefore < 0);
+    const isGettingMatedAfter = (mateMoverAfter !== null && mateMoverAfter < 0) || (mateMoverAfter === 0 && cpMoverAfter < 0);
     const hadMateBefore = (mateMoverBefore !== null && mateMoverBefore > 0);
-    const hasMateAfter = (mateMoverAfter !== null && mateMoverAfter > 0);
+    const hasMateAfter = deliveredCheckmate || (mateMoverAfter !== null && mateMoverAfter > 0);
 
     let cpLoss = Math.max(0, cpMoverBefore - cpMoverAfter);
-
-    // 1. Blunder Mate: Nước đi khiến bản thân rơi vào thế bị chiếu hết
     const isBlunderedMate = (!wasGettingMatedBefore && isGettingMatedAfter);
-    if (isBlunderedMate) {
-        cpLoss = Math.max(cpLoss, 10000);
-    }
+    if (isBlunderedMate) cpLoss = Math.max(cpLoss, 10000);
 
-    // 2. Accelerated Mate: Đang bị chiếu hết nhưng đi nước làm tăng tốc độ bị chiếu (ví dụ từ M5 -> M1)
     let isAcceleratedMate = false;
     if (wasGettingMatedBefore && isGettingMatedAfter && mateMoverBefore !== null && mateMoverAfter !== null) {
-        if (Math.abs(mateMoverAfter) < Math.abs(mateMoverBefore)) {
+        if (mateMoverAfter === 0 || Math.abs(mateMoverAfter) < Math.abs(mateMoverBefore)) {
             isAcceleratedMate = true;
             cpLoss = Math.max(cpLoss, 5000);
         }
     }
 
-    // 3. Chuyển đổi Centipawn (cp) sang Win Percentage (WP) trước khi phân loại (Expected Points Model):
-    // const winPercent = (cp) => 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * cp)) - 1);
-    const winPercent = (cp) => 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * cp)) - 1);
-
-    let winBefore = 50.0;
-    if (hadMateBefore) {
-        winBefore = 100.0;
-    } else if (wasGettingMatedBefore) {
-        winBefore = 0.0;
-    } else {
-        winBefore = winPercent(cpMoverBefore);
-    }
-
-    let winAfter = 50.0;
-    if (hasMateAfter) {
-        winAfter = 100.0;
-    } else if (isGettingMatedAfter) {
-        winAfter = 0.0;
-    } else {
-        winAfter = winPercent(cpMoverAfter);
-    }
-
+    const winBefore = hadMateBefore ? 100.0 : (wasGettingMatedBefore ? 0.0 : calculateWinPercentage(cpMoverBefore));
+    const winAfter = hasMateAfter ? 100.0 : (isGettingMatedAfter ? 0.0 : calculateWinPercentage(cpMoverAfter));
     const winLoss = Math.max(0, winBefore - winAfter);
 
-    // 4. Miss (Bỏ lỡ): Xảy ra khi trước đó đang có lợi thế thắng rất lớn (CP >= 300 hoặc có thế chiếu hết thắng)
-    // nhưng nước đi làm rơi mất lợi thế đó về gần cân bằng hoặc thua, mà không hẳn là Blundered Mate
-    const hadHugeAdvantage = hadMateBefore || (winBefore >= 90.0) || (cpMoverBefore >= 300);
-    const lostHugeAdvantage = (winAfter < 65.0) && (winLoss >= 20.0);
-    const isMissedMate = (hadMateBefore && !hasMateAfter && winAfter < 80.0);
-    const isMiss = !isBlunderedMate && !isAcceleratedMate && hadHugeAdvantage && (lostHugeAdvantage || isMissedMate);
+    const cleanPlayed = playedUci ? playedUci.trim().toLowerCase() : '';
+    const cleanBest = bestUci ? bestUci.trim().toLowerCase() : '';
+    const isEngineBest = Boolean(cleanPlayed && cleanBest && cleanPlayed === cleanBest);
 
-    const isEngineBest = Boolean(playedUci && bestUci && playedUci === bestUci);
-
-    // 5. Great (!): Nước đi chuẩn xác (Best Move) trừng phạt sai lầm của đối thủ, 
-    // ăn quân chiến thuật quan trọng, hoặc giữ vững ưu thế trong thế cờ phức tạp.
     let isGreat = false;
-    if (isEngineBest && !isBlunderedMate && !isAcceleratedMate && (moveIndex === null || moveIndex > 10)) {
-        // A. Kiểm tra sự dịch chuyển thế trận từ trước khi đối thủ đi (evalPrevPrev -> evalBefore)
+    if ((isEngineBest || deliveredCheckmate) && !isBlunderedMate && !isAcceleratedMate && (moveIndex === null || moveIndex > 6)) {
         let opponentGaveChance = false;
+        let swingGain = 0;
         if (moveContext && moveContext.evalPrevPrev) {
-            const prevTurn = moverColor; // Lượt ở i-2 chính là của moverColor
             const whitePrevPrev = (moveContext.evalPrevPrev.cpWhite !== undefined)
                 ? moveContext.evalPrevPrev
-                : toWhitePerspectiveFn(moveContext.evalPrevPrev, prevTurn);
-            const cpMoverPrevPrev = (whitePrevPrev.cpWhite || 0) * sign;
-            const winPrevPrev = winPercent(cpMoverPrevPrev);
-            const swingGain = winBefore - winPrevPrev;
-            // Đối thủ vừa đi sai giúp tỷ lệ thắng của ta tăng >= 12% (và ta đã đi đúng bestUci để chớp thời cơ)
-            if (swingGain >= 12.0 && winAfter >= 45.0) {
+                : toWhitePerspectiveFn(moveContext.evalPrevPrev, moverColor);
+            const winPrevPrev = calculateWinPercentage((whitePrevPrev.cpWhite || 0) * sign);
+            swingGain = winBefore - winPrevPrev;
+            if (swingGain >= 15.0 && winAfter >= 45.0 && winAfter <= 92.0) {
                 opponentGaveChance = true;
             }
         }
-
-        // B. Kiểm tra tính chất chiến thuật của nước đi (ăn quân giá trị >= Mã/Tượng, hoặc đòn thoát hiểm/chiếu)
         const moveObj = moveContext && moveContext.move ? moveContext.move : null;
-        const capturedPiece = moveObj && moveObj.captured ? moveObj.captured.toLowerCase() : null;
-        const isHighValueCapture = Boolean(capturedPiece && ['q', 'r', 'b', 'n'].includes(capturedPiece));
-        const isTacticalCheck = Boolean(moveObj && moveObj.san && moveObj.san.includes('+'));
+        const isRecapture = Boolean(moveObj && moveObj.captured && swingGain < 15.0);
+        const foundHiddenMate = (hasMateAfter && !hadMateBefore && cpMoverBefore < 500);
+        const rescuedBadPosition = (winBefore < 45.0 && winAfter >= 48.0 && !isRecapture);
 
-        // C. Pha ăn quân/chiếu chiến thuật quyết định ở thế cờ giằng co hoặc vừa lật kèo
-        const isCrucialTacticalBest = (isHighValueCapture || isTacticalCheck) && 
-            (winAfter >= 52.0 && winBefore <= 88.0) && (winLoss <= 0.5);
-
-        // D. Horizon effect hoặc tìm ra đường chiếu hết
-        const isDeepHorizonGain = (cpMoverAfter - cpMoverBefore >= 60) || 
-            (hasMateAfter && !hadMateBefore);
-
-        isGreat = opponentGaveChance || isCrucialTacticalBest || isDeepHorizonGain;
+        isGreat = opponentGaveChance || foundHiddenMate || rescuedBadPosition;
     }
 
-    // 6. Book (📖): Nằm trong 10 ply đầu (moveIndex <= 10) và winLoss rất thấp
-    const isBook = (moveIndex !== null && moveIndex !== undefined && moveIndex <= 10 && winLoss <= 1.0);
+    const isBook = (
+        moveIndex !== null &&
+        moveIndex !== undefined &&
+        moveIndex <= 10 &&
+        winLoss <= 1.0 &&
+        winBefore >= 38.0 &&
+        winBefore <= 62.0 &&
+        Math.abs(cpMoverBefore) <= 120 &&
+        !isGreat
+    );
 
-    // 7. PHÂN LOẠI THEO CHUẨN EXPECTED POINTS MODEL (WIN LOSS):
-    // - Best (★): Nước đi tốt nhất của engine (hoặc chênh lệch win% < 0.5%)
-    // - Excellent (👍): Sụt giảm win% từ 0.5% đến 2%
-    // - Good (✔️): Sụt giảm win% từ 2% đến 5%
-    // - Inaccuracy (?!): Sụt giảm win% từ 5% đến 10%
-    // - Mistake (?): Sụt giảm win% từ 10% đến 20%
-    // - Blunder (??): Sụt giảm win% > 20%
+    const hadWinningChance = hadMateBefore || (winBefore >= 82.0 && cpMoverBefore >= 350);
+    const stayedNotLosing = !isGettingMatedAfter && winAfter >= 40.0;
+    const isMissedMate = (hadMateBefore && !hasMateAfter && winAfter < 95.0);
+    const isLostWinningEdge = (winBefore - winAfter >= 18.0 && winAfter < 68.0);
+    const isMiss = !isBlunderedMate && !isAcceleratedMate && hadWinningChance && stayedNotLosing && (isMissedMate || isLostWinningEdge);
+
     let categoryKey = 'Good';
 
     if (isBlunderedMate || isAcceleratedMate) {
         categoryKey = 'Blunder';
+    } else if (isGettingMatedAfter && !isEngineBest && !wasGettingMatedBefore) {
+        categoryKey = 'Blunder';
+    } else if (isEngineBest || deliveredCheckmate || winLoss < 0.5) {
+        categoryKey = isGreat ? 'Great' : (isBook ? 'Book' : 'Best');
     } else if (isMiss) {
         categoryKey = 'Miss';
-    } else if (isGreat) {
-        categoryKey = 'Great';
     } else if (isBook) {
         categoryKey = 'Book';
-    } else if (isGettingMatedAfter && !isEngineBest) {
-        categoryKey = 'Blunder';
-    } else if (isEngineBest || winLoss < 0.5) {
-        categoryKey = 'Best';
+    } else if (cpMoverAfter >= 500 && !hadMateBefore) {
+        categoryKey = (winLoss <= 5.0) ? 'Excellent' : 'Good';
     } else if (winLoss <= 2.0) {
         categoryKey = 'Excellent';
     } else if (winLoss <= 5.0) {
@@ -236,18 +192,17 @@ function evaluateMoveQuality(evalBefore, evalAfter, moverColor, playedUci, bestU
         categoryKey = 'Blunder';
     }
 
-    // 8. Tính Accuracy cho nước đi
     const moveAccuracy = calculateMoveAccuracy(winLoss, categoryKey, cpLoss);
 
     return {
         category: categoryKey,
         info: MOVE_CATEGORIES[categoryKey],
-        winBefore: Number(winBefore.toFixed(2)),
-        winAfter: Number(winAfter.toFixed(2)),
+        winBefore,
+        winAfter,
         winLoss: Number(winLoss.toFixed(2)),
-        cpLoss: cpLoss,
+        cpLoss,
         accuracy: moveAccuracy,
-        isEngineBest: isEngineBest
+        isEngineBest
     };
 }
 
@@ -266,76 +221,49 @@ function detectBrilliant(pos, prevPos) {
     if (!prevPos || !prevPos.eval) return false;
 
     const cls = pos.classification;
-
-    // Không tính các nước mở đầu sách giáo khoa
     if (cls.category === 'Book') return false;
 
     const moverColor = pos.move.color;
     const sign = (moverColor === 'w') ? 1 : -1;
 
-    // 1. Kiểm tra đánh giá TRƯỚC nước đi (prevPos):
-    // ĐIỀU KIỆN: KHÔNG ở trạng thái thua trước đó
     const whiteCpBefore = (prevPos.eval.cpWhite !== undefined)
         ? prevPos.eval.cpWhite
-        : ((prevPos.eval.cp || 0) * (prevPos.turn === 'w' ? 1 : -1));
+        : ((prevPos.eval.cp || 0) * (moverColor === 'w' ? 1 : -1));
     const moverCpBefore = whiteCpBefore * sign;
     const mateMoverBefore = (prevPos.eval.mateWhite !== null && prevPos.eval.mateWhite !== undefined)
         ? (prevPos.eval.mateWhite * sign)
         : null;
 
-    const wasGettingMatedBefore = (mateMoverBefore !== null && mateMoverBefore < 0);
-    // Nếu trước đó đang bị chiếu hết hoặc điểm số âm nặng (thua rõ rệt, cp < -100):
-    if (wasGettingMatedBefore || moverCpBefore < -100) return false;
+    if ((mateMoverBefore !== null && mateMoverBefore < 0) || moverCpBefore < -120 || moverCpBefore > 500) {
+        return false;
+    }
 
-    // 2. Kiểm tra đánh giá SAU nước đi (pos):
-    // ĐIỀU KIỆN: Điểm số đánh giá sau đó của Stockfish vẫn GIỮ NGUYÊN hoặc TỐT HƠN
     const whiteCpAfter = (pos.eval.cpWhite !== undefined)
         ? pos.eval.cpWhite
-        : ((pos.eval.cp || 0) * (pos.turn === 'w' ? 1 : -1));
+        : ((pos.eval.cp || 0) * (moverColor === 'w' ? -1 : 1));
     const moverCpAfter = whiteCpAfter * sign;
     const mateMoverAfter = (pos.eval.mateWhite !== null && pos.eval.mateWhite !== undefined)
         ? (pos.eval.mateWhite * sign)
         : null;
 
-    const isGettingMatedAfter = (mateMoverAfter !== null && mateMoverAfter < 0);
-    const hasMateAfter = (mateMoverAfter !== null && mateMoverAfter > 0);
+    if (mateMoverAfter !== null && mateMoverAfter < 0) return false;
+    const hasMateAfter = (mateMoverAfter === 0 && moverCpAfter > 0) || (mateMoverAfter !== null && mateMoverAfter > 0);
 
-    // Không thể là Brilliant nếu sau nước đi rơi vào thế bị chiếu hết
-    if (isGettingMatedAfter) return false;
+    if (!hasMateAfter && (moverCpAfter < moverCpBefore - 30 || moverCpAfter < -80)) return false;
+    if (cls.winLoss !== undefined && cls.winLoss > 0.8) return false;
+    if (cls.winAfter !== undefined && cls.winAfter < 48.0) return false;
 
-    // Điểm số sau nước đi phải giữ nguyên hoặc tốt hơn (cho phép sai số engine depth tối đa 5 cp)
-    // Hoặc đem lại thế chiếu hết thắng (hasMateAfter)
-    const evalMaintainedOrBetter = hasMateAfter || (moverCpAfter >= moverCpBefore - 5);
-    if (!evalMaintainedOrBetter) return false;
-
-    // Sau nước đi, thế cờ phải không thua (moverCpAfter >= -50)
-    if (moverCpAfter < -50) return false;
-
-    // Xác suất thắng không được sụt giảm quá 0.5%
-    if (cls.winLoss !== undefined && cls.winLoss > 0.5) return false;
-    if (cls.cpLoss !== undefined && cls.cpLoss > 5) return false;
-    if (cls.winAfter !== undefined && cls.winAfter < 50.0) return false;
-
-    // Phải là nước đi tốt nhất hoặc thuộc nhóm Best của Engine
-    const isTopChoice = Boolean(cls.isEngineBest || cls.category === 'Best' || (cls.winLoss !== undefined && cls.winLoss < 0.5));
+    const isTopChoice = Boolean(cls.isEngineBest || cls.category === 'Best' || cls.category === 'Great' || (cls.winLoss !== undefined && cls.winLoss < 0.5));
     if (!isTopChoice) return false;
 
-    // 3. ĐIỀU KIỆN HY SINH QUÂN (SACRIFICE) NGHIÊM NGẶT:
-    // Tuyệt đối không gán Brilliant cho các nước đổi Hậu hay ăn quân thông thường.
-    const pieceValues = { q: 9, r: 5, b: 3, n: 3, p: 1, k: 0 };
+    const pieceValues = { q: 9, r: 5, b: 3, n: 3, p: 1, k: 100 };
     const movedPiece = (pos.move.piece || '').toLowerCase();
     const movedVal = pieceValues[movedPiece] || 0;
     const capturedPiece = pos.move.captured ? pos.move.captured.toLowerCase() : null;
     const capturedVal = capturedPiece ? (pieceValues[capturedPiece] || 0) : 0;
 
-    // Vua không bao giờ là quân hy sinh
     if (movedPiece === 'k') return false;
-
-    // TUYỆT ĐỐI LOẠI TRỪ: Nước ăn quân bình thường hoặc đổi quân (capturedVal >= movedVal)
-    // Ví dụ: Đổi Hậu (QxQ 9 vs 9), đổi Xe (RxR 5 vs 5), đổi Mã/Tượng (3 vs 3), ăn hơn quân (PxQ, NxQ, RxQ...)
-    if (capturedPiece && capturedVal >= movedVal) {
-        return false;
-    }
+    if (capturedPiece && capturedVal >= movedVal) return false;
 
     const fenAfter = pos.fen || (pos.move && pos.move.fen) || null;
     const ChessConstructor = (typeof Chess !== 'undefined') ? Chess : (typeof window !== 'undefined' ? window.Chess : null);
@@ -345,54 +273,53 @@ function detectBrilliant(pos, prevPos) {
         const cAfter = new ChessConstructor(fenAfter);
         const oppMoves = cAfter.moves({ verbose: true });
 
-        // Trường hợp 1: Quân vừa đi là quân bị hy sinh (Knight, Bishop, Rook, Queen: movedVal >= 3)
         if (movedVal >= 3) {
             const toSq = pos.move.to;
             const attacksOnPiece = oppMoves.filter(m => m.to === toSq);
 
             if (attacksOnPiece.length > 0) {
-                const minAttackerVal = Math.min(...attacksOnPiece.map(m => pieceValues[m.piece] || 0));
+                const minAttackerVal = Math.min(...attacksOnPiece.map(m => pieceValues[m.piece] || 100));
+                if (minAttackerVal < movedVal) return true;
 
-                // 1.1: Đối phương có thể ăn bằng quân giá trị nhỏ hơn (ví dụ Tốt ăn Hậu/Xe/Mã/Tượng, hoặc Mã/Tượng ăn Hậu)
-                // Đây chắc chắn là hy sinh material
-                if (minAttackerVal < movedVal) {
-                    return true;
-                }
-
-                // 1.2: Đi quân vào ô bị tấn công MÀ KHÔNG CÓ BẢO VỆ (unprotected / hanging piece)
-                // Khi đối phương ăn, ta không có nước ăn lại nào (recaptures.length === 0)
                 for (const oppCapture of attacksOnPiece) {
-                    const cSim = new ChessConstructor(fenAfter);
-                    const validOppMove = cSim.move(oppCapture);
-                    if (validOppMove) {
-                        const ourRecaptures = cSim.moves({ verbose: true }).filter(m => m.to === toSq);
-                        if (ourRecaptures.length === 0) {
-                            return true;
-                        }
+                    const m = cAfter.move(oppCapture);
+                    if (m) {
+                        const ourRecaptures = cAfter.moves({ verbose: true }).filter(r => r.to === toSq);
+                        cAfter.undo();
+                        if (ourRecaptures.length === 0) return true;
                     }
                 }
             }
         }
 
-        // Trường hợp 2: Hy sinh quân khác (Discovered Sacrifice / Deflection):
-        // Nước đi bỏ mặc một quân giá trị cao khác (Xe, Hậu, Mã, Tượng >= 3) cho đối phương ăn
-        const oppCapturesOther = oppMoves.filter(m => m.captured && (pieceValues[m.captured] || 0) >= 3 && m.to !== pos.move.to);
-        for (const oppCap of oppCapturesOther) {
-            const oppPieceVal = pieceValues[oppCap.piece] || 0;
-            const targetPieceVal = pieceValues[oppCap.captured] || 0;
+        const fenBefore = pos.fenBefore || prevPos.fen || null;
+        let previouslyHangingSquares = new Set();
+        const rawOppCapturesOther = oppMoves.filter(m => m.captured && (pieceValues[m.captured] || 0) >= 3 && m.to !== pos.move.to);
 
-            // Bỏ mặc quân bị ăn bởi quân giá trị nhỏ hơn
-            if (oppPieceVal < targetPieceVal) {
-                return true;
+        if (fenBefore && rawOppCapturesOther.length > 0) {
+            const cBefore = new ChessConstructor(fenBefore);
+            const parts = fenBefore.split(' ');
+            parts[1] = moverColor === 'w' ? 'b' : 'w';
+            parts[3] = '-';
+            if (cBefore.load(parts.join(' '))) {
+                cBefore.moves({ verbose: true })
+                    .filter(m => m.captured)
+                    .forEach(m => previouslyHangingSquares.add(m.to));
             }
+        }
 
-            // Hoặc quân đó bị bỏ mặc hoàn toàn không có bảo vệ
-            const cSim = new ChessConstructor(fenAfter);
-            if (cSim.move(oppCap)) {
-                const recaptures = cSim.moves({ verbose: true }).filter(m => m.to === oppCap.to);
-                if (recaptures.length === 0) {
-                    return true;
-                }
+        const oppCapturesOther = rawOppCapturesOther.filter(m => !previouslyHangingSquares.has(m.to));
+
+        for (const oppCap of oppCapturesOther) {
+            const oppPieceVal = pieceValues[oppCap.piece] || 100;
+            const targetPieceVal = pieceValues[oppCap.captured] || 0;
+            if (oppPieceVal < targetPieceVal) return true;
+
+            const m = cAfter.move(oppCap);
+            if (m) {
+                const recaptures = cAfter.moves({ verbose: true }).filter(r => r.to === oppCap.to);
+                cAfter.undo();
+                if (recaptures.length === 0) return true;
             }
         }
     } catch (e) {
@@ -443,13 +370,19 @@ function classifyAllMovesAndStats(positions) {
         }
     };
 
+    if (!Array.isArray(positions) || positions.length <= 1) {
+        return stats;
+    }
+
     for (let i = 1; i < positions.length; i++) {
         const prevPos = positions[i - 1];
         const currPos = positions[i];
 
-        if (!prevPos.eval || !currPos.eval) continue;
+        if (!prevPos || !currPos || !currPos.move || !prevPos.eval || !currPos.eval) continue;
 
         const moverColor = currPos.move.color;
+        if (!stats[moverColor]) continue;
+
         const playedUci = currPos.move.uci;
         const bestUci = prevPos.eval.bestmove;
 
@@ -458,9 +391,10 @@ function classifyAllMovesAndStats(positions) {
             evalPrevPrev: evalPrevPrev,
             move: currPos.move
         });
+
+        if (!result) continue;
         currPos.classification = result;
 
-        // Tích hợp kiểm tra Brilliant trực tiếp
         if (detectBrilliant(currPos, prevPos)) {
             currPos.classification.isBrilliant = true;
             currPos.classification.category = 'Brilliant';
@@ -478,8 +412,14 @@ function classifyAllMovesAndStats(positions) {
     ['w', 'b'].forEach(color => {
         const arr = stats[color].accuracies;
         if (arr.length > 0) {
-            const sum = arr.reduce((a, b) => a + b, 0);
-            stats[color].avgAccuracy = Number((sum / arr.length).toFixed(1));
+            let weightedSum = 0;
+            let totalWeight = 0;
+            for (const acc of arr) {
+                const weight = acc < 50 ? 2.0 : (acc < 80 ? 1.4 : 1.0);
+                weightedSum += acc * weight;
+                totalWeight += weight;
+            }
+            stats[color].avgAccuracy = Number((weightedSum / totalWeight).toFixed(1));
         } else {
             stats[color].avgAccuracy = 0;
         }

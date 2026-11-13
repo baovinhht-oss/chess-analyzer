@@ -762,9 +762,6 @@ input:focus-visible {
     white-space: nowrap;
     flex-shrink: 0;
 }
-    margin-left: 4px;
-    font-size: 12.5px;
-}
 
 .cap-line {
     display: flex;

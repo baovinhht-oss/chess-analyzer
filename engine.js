@@ -13,6 +13,8 @@ class StockfishEngine {
     constructor() {
         this.worker = null;
         this.isReady = false;
+        this.initPromise = null;
+        this.activeSearchId = 0;
         this.currentCallback = null;
         this.currentReject = null;
         this.isSearchActive = false;
@@ -21,8 +23,9 @@ class StockfishEngine {
 
     async init() {
         if (this.worker && this.isReady) return;
+        if (this.initPromise) return this.initPromise;
 
-        return new Promise((resolve, reject) => {
+        this.initPromise = new Promise((resolve, reject) => {
             let fallbackAttempted = false;
 
             const setupWorker = (w, allowFallback = true) => {
@@ -87,12 +90,17 @@ class StockfishEngine {
                     }
                 })();
             }
+        }).finally(() => {
+            this.initPromise = null;
         });
+
+        return this.initPromise;
     }
 
     async ensureIdle() {
         if (!this.worker || !this.isReady) return;
         this.isSearchActive = false;
+        this.activeSearchId++;
         return new Promise((resolve) => {
             let timeout = null;
             const wasSearching = !!this.currentReject;
@@ -135,11 +143,11 @@ class StockfishEngine {
             timeout = setTimeout(() => {
                 cleanup();
                 resolve();
-            }, 300);
+            }, 800);
         });
     }
 
-    async evaluatePosition(fen, depth = 16, onProgress = null, clearHash = false, moveTime = 180) {
+    async evaluatePosition(fen, depth = 16, onProgress = null, clearHash = false, moveTime = 0) {
         if (!this.worker || !this.isReady) await this.init();
         await this.ensureIdle();
 
@@ -169,11 +177,14 @@ class StockfishEngine {
 
         return new Promise((resolve, reject) => {
             let lastCp = 0; let lastMate = null; let lastPv = []; let lastDepth = 0; let lastBestmove = null;
+            const mySearchId = ++this.activeSearchId;
 
             this.currentReject = reject;
             this.worker.postMessage('setoption name MultiPV value 1');
 
             this.currentCallback = (line) => {
+                if (mySearchId !== this.activeSearchId || !this.isSearchActive) return;
+
                 if (line.startsWith('info ') && line.includes(' score ')) {
                     const depthMatch = line.match(/depth (\d+)/);
                     if (depthMatch) lastDepth = parseInt(depthMatch[1], 10);
@@ -205,7 +216,7 @@ class StockfishEngine {
                 }
 
                 if (line.startsWith('bestmove ')) {
-                    if (!this.isSearchActive) return; // Bỏ qua bestmove tàn dư từ lệnh stop của phiên trước
+                    if (mySearchId !== this.activeSearchId || !this.isSearchActive) return;
                     this.isSearchActive = false;
                     const parts = line.split(/\s+/);
                     const bestmove = (parts[1] && parts[1] !== '(none)') ? parts[1] : (lastBestmove || null);
@@ -251,12 +262,15 @@ class StockfishEngine {
 
         return new Promise((resolve, reject) => {
             const pvMap = new Map();
+            const mySearchId = ++this.activeSearchId;
             this.currentReject = (err) => { if (this.worker) this.worker.postMessage('setoption name MultiPV value 1'); reject(err); };
 
             this.worker.postMessage('setoption name Clear Hash'); // Tẩy não trước khi gọi Hint
             this.worker.postMessage(`setoption name MultiPV value ${actualLines}`);
 
             this.currentCallback = (line) => {
+                if (mySearchId !== this.activeSearchId || !this.isSearchActive) return;
+
                 if (line.startsWith('info ') && line.includes('multipv ') && line.includes(' score ')) {
                     const mpMatch = line.match(/\bmultipv\s+(\d+)/);
                     const cpMatch = line.match(/\bscore\s+cp\s+(-?\d+)/);
@@ -274,7 +288,7 @@ class StockfishEngine {
                     }
                 }
                 if (line.startsWith('bestmove ')) {
-                    if (!this.isSearchActive) return; // Bỏ qua bestmove tàn dư từ lệnh stop của phiên trước
+                    if (mySearchId !== this.activeSearchId || !this.isSearchActive) return;
                     this.isSearchActive = false;
                     this.worker.postMessage('setoption name MultiPV value 1');
                     this.currentCallback = null; this.currentReject = null;
@@ -300,13 +314,14 @@ class StockfishEngine {
 
     stop() {
         this.isSearchActive = false;
+        this.activeSearchId++;
         if (this.worker && this.isReady) {
             this.worker.postMessage('stop');
             this.worker.postMessage('setoption name MultiPV value 1');
             if (this.currentReject) {
                 const rejectFn = this.currentReject;
                 this.currentReject = null; this.currentCallback = null;
-                rejectFn(new Error('ENGINE_STOPPED'));
+                try { rejectFn(new Error('ENGINE_STOPPED')); } catch (e) { }
             } else { this.currentCallback = null; }
         }
     }

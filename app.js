@@ -348,7 +348,25 @@ const TRANSLATIONS = {
         settings_clear_cache_btn: 'Xóa bộ nhớ phân tích',
         settings_reset_label: 'Khôi phục cài đặt gốc',
         settings_reset_desc: 'Đưa toàn bộ tùy biến giao diện, font chữ, bàn cờ, âm thanh và engine về mặc định ban đầu',
-        settings_reset_btn: 'Khôi phục mặc định'
+        settings_reset_btn: 'Khôi phục mặc định',
+
+        btn_loading: 'Đang tải...',
+        progress_analyzing_format: 'Đang phân tích... {0}/{1}',
+        progress_paused_format: 'Đã tạm dừng tại {0}/{1} thế cờ',
+        progress_done_format: 'Đã phân tích xong {0}/{1} thế cờ',
+        progress_cached_format: 'Đã lưu - tải từ bộ nhớ (Độ sâu {0})',
+        btn_pause_analysis: 'Dừng phân tích',
+        btn_resume_analysis: 'Phân tích tiếp',
+        btn_calculating: 'Đang tính...',
+        live_engine_off: 'Đã tắt',
+        live_engine_off_format: 'Tắt / {0}',
+        mistakes_detail_placeholder: '(-- sai lầm, -- bỏ lỡ, -- nặng)',
+        trial_counter_format: 'Thử: {0}/{1} (từ nước {2})',
+        player_you_suffix: '(Bạn)',
+        future_month_error: 'Không thể xem tháng trong tương lai.',
+        future_month_error_format: 'Tháng {0}/{1} nằm trong tương lai, không thể tải danh sách ván cờ.',
+        analysis_in_progress: 'Đang phân tích ván cờ, vui lòng chờ.',
+        clear_cache_success: 'Đã xóa toàn bộ bộ nhớ phân tích thành công.'
     },
     en: {
         page_title: 'Chess Analyzer',
@@ -648,7 +666,25 @@ const TRANSLATIONS = {
         settings_clear_cache_btn: 'Clear Analysis Cache',
         settings_reset_label: 'Restore Factory Defaults',
         settings_reset_desc: 'Reset all appearance, font, board, sound, and engine settings to defaults',
-        settings_reset_btn: 'Restore Defaults'
+        settings_reset_btn: 'Restore Defaults',
+
+        btn_loading: 'Loading...',
+        progress_analyzing_format: 'Analyzing... {0}/{1}',
+        progress_paused_format: 'Paused at position {0}/{1}',
+        progress_done_format: 'Analysis completed for {0}/{1} positions',
+        progress_cached_format: 'Loaded from cache (Depth {0})',
+        btn_pause_analysis: 'Pause Analysis',
+        btn_resume_analysis: 'Resume Analysis',
+        btn_calculating: 'Calculating...',
+        live_engine_off: 'Off',
+        live_engine_off_format: 'Off / {0}',
+        mistakes_detail_placeholder: '(-- mistakes, -- misses, -- blunders)',
+        trial_counter_format: 'Trial: {0}/{1} (from move {2})',
+        player_you_suffix: '(You)',
+        future_month_error: 'Cannot view future months.',
+        future_month_error_format: 'Month {0}/{1} is in the future, cannot load games.',
+        analysis_in_progress: 'Game analysis is in progress, please wait.',
+        clear_cache_success: 'Analysis cache cleared successfully.'
     }
 };
 
@@ -699,6 +735,13 @@ function applyLanguage(lang) {
         }
     });
 
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (key) {
+            el.setAttribute('title', t(key));
+        }
+    });
+
     updateThemeButtonText();
 
     if (typeof loadedGames !== 'undefined' && selectedGameIndex !== null && loadedGames[selectedGameIndex]) {
@@ -710,8 +753,8 @@ function applyLanguage(lang) {
         if (gamePlayersInfo) {
             const whitePlayer = g.userColor === 'w' ? `${g.userUsername} (${g.userRating})` : `${g.opponentUsername} (${g.opponentRating})`;
             const blackPlayer = g.userColor === 'b' ? `${g.userUsername} (${g.userRating})` : `${g.opponentUsername} (${g.opponentRating})`;
-            const whiteLabel = currentLang === 'en' ? 'White' : 'Trắng';
-            const blackLabel = currentLang === 'en' ? 'Black' : 'Đen';
+            const whiteLabel = t('white_player_lbl');
+            const blackLabel = t('black_player_lbl');
             gamePlayersInfo.innerHTML = `<strong>⬜ ${whiteLabel}:</strong> ${escapeHTML(whitePlayer)} &nbsp;|&nbsp; <strong>⬛ ${blackLabel}:</strong> ${escapeHTML(blackPlayer)}`;
         }
         const gameResultBadge = document.getElementById('game-result-badge');
@@ -1125,7 +1168,7 @@ function goToNextMonth() {
     month += 1;
     if (month > 12) { month = 1; year += 1; }
     if (isFutureMonth(year, month)) {
-        showStatus('Không thể xem tháng trong tương lai.', 'info');
+        showStatus(t('future_month_error'), 'info');
         updateMonthNavButtons();
         return;
     }
@@ -1825,7 +1868,7 @@ function initSettingsModal() {
             if (cacheStatusBadge) cacheStatusBadge.classList.add('hidden');
             if (btnReanalyze) btnReanalyze.classList.add('hidden');
             await updateSettingsCacheStats();
-            showStatus('Đã xóa toàn bộ bộ nhớ phân tích thành công.', 'info');
+            showStatus(t('clear_cache_success'), 'info');
         });
     }
 
@@ -2113,7 +2156,7 @@ function handleDrop(source, target) {
     }
     const moveRes = chess.move({ from: source, to: target });
     if (!moveRes) { SoundManager.playIllegal(); return 'snapback'; }
-    setTimeout(() => { handlePlayerMove(source, target); }, 10);
+    handlePlayerMove(source, target);
 }
 
 function handleSnapEnd() { clearSquareMoveHighlights(); if (board) board.position(getCurrentBoardFen(), false); }
@@ -2253,7 +2296,7 @@ function updateBoardToTrialCurrent() {
     if (pos.move) highlightActualMove(pos.move);
 
     const curBranchMove = trialBranch.currentIndex + 1; const totalBranchMoves = trialBranch.positions.length;
-    moveCounterSpan.textContent = `Thử: ${curBranchMove}/${totalBranchMoves} (từ nước ${trialBranch.baseMoveIndex})`;
+    moveCounterSpan.textContent = t('trial_counter_format', curBranchMove, totalBranchMoves, trialBranch.baseMoveIndex);
 
     btnStart.disabled = false; btnPrev.disabled = false; btnNext.disabled = (trialBranch.currentIndex === totalBranchMoves - 1);
     btnEnd.disabled = (trialBranch.currentIndex === totalBranchMoves - 1); if (btnPlay) btnPlay.disabled = true;
@@ -2312,8 +2355,8 @@ function updateCoachPanelForTrial() {
         if (coachMoveTitle) {
             const dotClass = isBrill ? 'dot dot-brilliant' : 'dot';
             const iconHtml = isBrill
-                ? `<span class="${dotClass}"></span><span class="move-title-san">${pos.move.san}</span> <span style="color:var(--brill);font-weight:800;">!!</span> <span class="chip">${effectiveLabel} · ${t('trial_move')}</span>`
-                : `<span class="dot" style="background:var(--${effectiveVarName});"></span><span class="move-title-san">${pos.move.san}</span> <span class="chip">${effectiveLabel} · ${t('trial_move')}</span>`;
+                ? `<span class="${dotClass}"></span><span class="move-title-san">${escapeHTML(pos.move.san)}</span> <span style="color:var(--brill);font-weight:800;">!!</span> <span class="chip">${escapeHTML(effectiveLabel)} · ${t('trial_move')}</span>`
+                : `<span class="dot" style="background:var(--${effectiveVarName});"></span><span class="move-title-san">${escapeHTML(pos.move.san)}</span> <span class="chip">${escapeHTML(effectiveLabel)} · ${t('trial_move')}</span>`;
             coachMoveTitle.innerHTML = iconHtml;
         }
 
@@ -2341,7 +2384,7 @@ function updateCoachPanelForTrial() {
         coachPanel.style.borderColor = '#f59e0b'; coachCommentText.style.color = '#b45309';
         coachCommentText.textContent = `${pos.move.san}: ${t('waiting_stockfish')}`;
         coachPosDesc.textContent = t('trial_pos_desc', trialBranch.baseMoveIndex);
-        if (coachMoveTitle) coachMoveTitle.innerHTML = `<span class="dot" style="background:var(--warn);"></span><span class="move-title-san">${pos.move.san}</span> <span class="chip">${t('trial_move')} · ${t('analyzing')}</span>`;
+        if (coachMoveTitle) coachMoveTitle.innerHTML = `<span class="dot" style="background:var(--warn);"></span><span class="move-title-san">${escapeHTML(pos.move.san)}</span> <span class="chip">${t('trial_move')} · ${t('analyzing')}</span>`;
         if (currentWinProb) currentWinProb.textContent = formatWinProbability(pos.eval, userColor);
         coachEvalBadge.textContent = '...'; coachEvalBadge.className = 'coach-eval-badge'; btnCoachBest.classList.add('hidden');
     }
@@ -2389,7 +2432,7 @@ function buildTrialBranchRowElement() {
                 : (typeof getCategoryName === 'function' ? getCategoryName(cat, currentLang) : (pos.classification.info ? pos.classification.info.viName : cat));
             badgeHtml = ` <span class="move-class-badge badge-${catClass}" title="${catName} (${textSym})">${symbol}</span>`;
         }
-        cell.innerHTML = `${prefix}${pos.move.san}${badgeHtml}`;
+        cell.innerHTML = `${prefix}${escapeHTML(pos.move.san)}${badgeHtml}`;
         if (isInTrialBranch() && trialBranch.currentIndex === bIdx) cell.classList.add('active');
         cell.addEventListener('click', () => { stopAutoplay(); trialBranch.isViewingBranch = true; trialBranch.currentIndex = bIdx; updateBoardToTrialCurrent(); });
         movesWrap.appendChild(cell);
@@ -3004,10 +3047,10 @@ function drawBestMoveOnBoard(bestUci, categoryOverride, validationFen = null) {
         const piece = currentChess.get(fromSquare);
 
         // 2. Đồng bộ hóa mũi tên với Stockfish:
-        // Nếu activeTurn === 'w' mà nước đi trong bestmove lại là của quân đen (hoặc ngược lại), ép engine phân tích lại FEN
+        // Nếu activeTurn === 'w' mà nước đi trong bestmove lại là của quân đen (hoặc ngược lại), chỉ ép re-eval nếu là FEN hiện tại
         if (!piece || piece.color !== activeTurn) {
-            console.warn(`[BestMoveArrow] Mũi tên ${bestUci} không khớp với lượt đi (${activeTurn}) của FEN (${currentFen}). Ép engine phân tích lại.`);
-            if (typeof triggerLiveAnalysis === 'function') {
+            console.warn(`[BestMoveArrow] Mũi tên ${bestUci} không khớp với lượt đi (${activeTurn}) của FEN (${currentFen}).`);
+            if (currentFen === getCurrentBoardFen() && !isAnalyzing && typeof triggerLiveAnalysis === 'function') {
                 triggerLiveAnalysis(currentFen, true);
             }
             return;
@@ -3018,7 +3061,7 @@ function drawBestMoveOnBoard(bestUci, categoryOverride, validationFen = null) {
         const isLegal = legalMoves.some(m => m.from === fromSquare && m.to === toSquare);
         if (!isLegal) {
             console.warn(`[BestMoveArrow] Nước đi ${bestUci} không phải nước đi hợp lệ cho lượt hiện tại (${activeTurn}).`);
-            if (typeof triggerLiveAnalysis === 'function') {
+            if (currentFen === getCurrentBoardFen() && !isAnalyzing && typeof triggerLiveAnalysis === 'function') {
                 triggerLiveAnalysis(currentFen, true);
             }
             return;
@@ -3264,7 +3307,7 @@ function updatePlayersDisplay() {
     const materialData = calculateMaterialAndCaptured(currentFen);
 
     if (playerTopAvatar) playerTopAvatar.textContent = topPlayer.avatar;
-    if (playerTopName) playerTopName.textContent = topPlayer.name + (topPlayer.isUser ? ' (Bạn)' : '');
+    if (playerTopName) playerTopName.textContent = topPlayer.name + (topPlayer.isUser ? ` ${t('player_you_suffix')}` : '');
     if (playerTopRating) playerTopRating.textContent = `(${topPlayer.rating})`;
     const inTrial = (typeof isInTrialBranch === 'function') && isInTrialBranch();
     const currentPos = inTrial ? null : ((gamePositions && gamePositions[currentMoveIndex]) ? gamePositions[currentMoveIndex] : null);
@@ -3279,7 +3322,7 @@ function updatePlayersDisplay() {
         if (topAdvantage > 0) { playerTopAdvantage.textContent = `+${topAdvantage}`; playerTopAdvantage.classList.remove('hidden'); } else playerTopAdvantage.classList.add('hidden');
     }
     if (playerBottomAvatar) playerBottomAvatar.textContent = bottomPlayer.avatar;
-    if (playerBottomName) playerBottomName.textContent = bottomPlayer.name + (bottomPlayer.isUser ? ' (Bạn)' : '');
+    if (playerBottomName) playerBottomName.textContent = bottomPlayer.name + (bottomPlayer.isUser ? ` ${t('player_you_suffix')}` : '');
     if (playerBottomRating) playerBottomRating.textContent = `(${bottomPlayer.rating})`;
     if (playerBottomClock) {
         const bottomClock = currentPos ? (bottomPlayer.color === 'w' ? currentPos.whiteClock : currentPos.blackClock) : null;
@@ -3338,7 +3381,7 @@ function updateCoachPanel() {
         coachPanel.style.borderColor = 'var(--line)'; coachCommentText.style.color = 'var(--ink)';
         coachCommentText.textContent = `${currentPos.move.san}: ${t('waiting_stockfish')}`;
         coachPosDesc.textContent = t('calculating_eval'); coachEvalBadge.textContent = '...';
-        if (coachMoveTitle) coachMoveTitle.innerHTML = `<span class="dot" style="background:var(--warn);"></span><span class="move-title-san">${currentPos.move.san}</span> <span class="chip">${t('analyzing')}</span>`;
+        if (coachMoveTitle) coachMoveTitle.innerHTML = `<span class="dot" style="background:var(--warn);"></span><span class="move-title-san">${escapeHTML(currentPos.move.san)}</span> <span class="chip">${t('analyzing')}</span>`;
         if (currentWinProb) currentWinProb.textContent = '--%';
         btnCoachBest.classList.add('hidden'); btnCoachExplain.disabled = true; btnCoachExplain.textContent = t('btn_explain'); coachExplainBox.classList.add('hidden');
         if (btnCoachHint) { btnCoachHint.disabled = false; btnCoachHint.classList.toggle('active', isShowingHints); btnCoachHint.textContent = isShowingHints ? t('btn_close_hints') : t('btn_hints_lbl'); }
@@ -3362,8 +3405,8 @@ function updateCoachPanel() {
     if (coachMoveTitle) {
         const moverLabel = isUserMove ? t('you_played') : t('opponent_played');
         const dotClass = isBrilliant ? 'dot dot-brilliant' : 'dot';
-        const iconHtml = isBrilliant ? `<span class="${dotClass}"></span><span class="move-title-san">${currentPos.move.san}</span> <span style="color:var(--brill);font-weight:800;">!!</span> <span class="chip">${effectiveLabel} · ${moverLabel}</span>`
-            : `<span class="dot" style="background:var(--${effectiveVarName});"></span><span class="move-title-san">${currentPos.move.san}</span> <span class="chip">${effectiveLabel} · ${moverLabel}</span>`;
+        const iconHtml = isBrilliant ? `<span class="${dotClass}"></span><span class="move-title-san">${escapeHTML(currentPos.move.san)}</span> <span style="color:var(--brill);font-weight:800;">!!</span> <span class="chip">${escapeHTML(effectiveLabel)} · ${moverLabel}</span>`
+            : `<span class="dot" style="background:var(--${effectiveVarName});"></span><span class="move-title-san">${escapeHTML(currentPos.move.san)}</span> <span class="chip">${escapeHTML(effectiveLabel)} · ${moverLabel}</span>`;
         coachMoveTitle.innerHTML = iconHtml;
     }
     if (currentWinProb) currentWinProb.textContent = formatWinProbability(currentPos.eval, userColor);
@@ -3373,7 +3416,7 @@ function updateCoachPanel() {
     coachPosDesc.textContent = getPositionDescriptionText(currentPos.eval, currentLang, userColor);
 
     const targetPos = (currentMoveIndex > 0 && prevPos) ? prevPos : currentPos;
-    const targetFen = targetPos ? targetPos.fen : currentFen;
+    const targetFen = targetPos ? targetPos.fen : getCurrentBoardFen();
     let isTargetTerminal = false;
     if (typeof Chess === 'function' && targetFen) {
         const c = new Chess(targetFen);
@@ -3443,16 +3486,16 @@ function renderMoveList() {
         const whiteCell = document.createElement('div'); whiteCell.className = 'move-cell';
         if (!isInTrialBranch() && whitePos.index === currentMoveIndex) whiteCell.classList.add('active');
         whiteCell.dataset.moveIndex = whitePos.index;
-        const whiteTimeHtml = whitePos.timeSpentStr ? `<span class="move-time-spent" title="${t('thinking_time', whitePos.timeSpentStr)}">${whitePos.timeSpentStr}</span>` : '';
-        whiteCell.innerHTML = `<span class="move-san">${whitePos.move.san}</span>${whiteTimeHtml}<span class="move-badges-wrap" id="move-badge-${whitePos.index}">${buildMoveCellBadgeHtml(whitePos)}</span>`;
+        const whiteTimeHtml = whitePos.timeSpentStr ? `<span class="move-time-spent" title="${t('thinking_time', escapeHTML(whitePos.timeSpentStr))}">${escapeHTML(whitePos.timeSpentStr)}</span>` : '';
+        whiteCell.innerHTML = `<span class="move-san">${escapeHTML(whitePos.move.san)}</span>${whiteTimeHtml}<span class="move-badges-wrap" id="move-badge-${whitePos.index}">${buildMoveCellBadgeHtml(whitePos)}</span>`;
         whiteCell.addEventListener('click', () => { stopAutoplay(); goToMove(whitePos.index); }); row.appendChild(whiteCell);
 
         if (blackPos) {
             const blackCell = document.createElement('div'); blackCell.className = 'move-cell';
             if (!isInTrialBranch() && blackPos.index === currentMoveIndex) blackCell.classList.add('active');
             blackCell.dataset.moveIndex = blackPos.index;
-            const blackTimeHtml = blackPos.timeSpentStr ? `<span class="move-time-spent" title="${t('thinking_time', blackPos.timeSpentStr)}">${blackPos.timeSpentStr}</span>` : '';
-            blackCell.innerHTML = `<span class="move-san">${blackPos.move.san}</span>${blackTimeHtml}<span class="move-badges-wrap" id="move-badge-${blackPos.index}">${buildMoveCellBadgeHtml(blackPos)}</span>`;
+            const blackTimeHtml = blackPos.timeSpentStr ? `<span class="move-time-spent" title="${t('thinking_time', escapeHTML(blackPos.timeSpentStr))}">${escapeHTML(blackPos.timeSpentStr)}</span>` : '';
+            blackCell.innerHTML = `<span class="move-san">${escapeHTML(blackPos.move.san)}</span>${blackTimeHtml}<span class="move-badges-wrap" id="move-badge-${blackPos.index}">${buildMoveCellBadgeHtml(blackPos)}</span>`;
             blackCell.addEventListener('click', () => { stopAutoplay(); goToMove(blackPos.index); }); row.appendChild(blackCell);
         } else { row.appendChild(document.createElement('div')); }
         moveListContainer.appendChild(row);
@@ -3765,13 +3808,14 @@ function stopElapsedTimer() { clearInterval(analysisTimerInterval); updateElapse
  * HÀM ĐẠI NHẤT THỐNG LÕI: Phân tích 1 thế cờ (Dùng chung cho CẢ VÁN GỐC và NHÁNH ĐI THỬ)
  * Xóa sổ hoàn toàn sự bất đồng bộ giữa các chế độ.
  */
-async function evaluateAndClassifyPosition(pos, isTrial, clearHash = false, moveTime = 180) {
-    const targetDepth = (isTrial || (isLiveEngineEnabled && !isAnalyzing)) 
-        ? currentLiveDepth 
-        : (currentDepth || 16);
-    const targetMoveTime = (isTrial || (isLiveEngineEnabled && !isAnalyzing))
-        ? 200
-        : (moveTime !== undefined && moveTime !== null ? moveTime : (currentMoveTime || 180));
+async function evaluateAndClassifyPosition(pos, isTrial, clearHash = false, moveTime = null) {
+    const isLiveMode = isTrial || (isLiveEngineEnabled && !isAnalyzing);
+    const targetDepth = isLiveMode ? currentLiveDepth : (currentDepth || 16);
+    // For full Game Review (!isTrial && isAnalyzing), pass 0 so Stockfish completes the selected depth.
+    // For Live Engine / Trial, respect user's currentMoveTime (or explicit moveTime).
+    const targetMoveTime = isLiveMode
+        ? (moveTime !== null ? moveTime : Math.max(currentMoveTime || 180, 250))
+        : (moveTime !== null ? moveTime : 0);
 
     if (!isTrial) updateLiveEngineUIAnalyzing(targetDepth);
     else updateCoachPanelForTrial();
@@ -3800,6 +3844,7 @@ async function evaluateAndClassifyPosition(pos, isTrial, clearHash = false, move
 
     const whiteScore = toWhitePerspective(rawResult, pos.turn);
     pos.eval = {
+        depth: rawResult.depth || targetDepth,
         cp: rawResult.cp, mate: rawResult.mate, bestmove: rawResult.bestmove, pv: rawResult.pv,
         cpWhite: whiteScore.cpWhite, mateWhite: whiteScore.mateWhite
     };
@@ -3868,6 +3913,10 @@ async function triggerLiveAnalysis(fen, forceReeval = false) {
     if (typeof isBotGameActive !== 'undefined' && isBotGameActive) return;
     const inTrial = isInTrialBranch();
 
+    if (inTrial && isAnalyzing && !isAnalysisPaused) {
+        if (typeof pauseAnalysis === 'function') pauseAnalysis();
+    }
+
     if (!isLiveEngineEnabled && !inTrial) {
         updateLiveEngineUIOff();
         return;
@@ -3924,12 +3973,12 @@ async function analyzeCurrentGame(game, startIndex = 0) {
 
     isAnalyzing = true; isAnalysisPaused = false;
     progressBox.classList.remove('hidden', 'done', 'paused');
-    progressText.textContent = `Đang phân tích... ${startIndex}/${totalPositions}`;
+    progressText.textContent = t('progress_analyzing_format', startIndex, totalPositions);
 
     if (btnPauseAnalysis) {
         btnPauseAnalysis.classList.remove('hidden', 'btn-resume');
         btnPauseAnalysis.classList.add('btn-pause');
-        btnPauseAnalysis.textContent = 'Dừng phân tích';
+        btnPauseAnalysis.textContent = t('btn_pause_analysis');
     }
 
     try {
@@ -3951,7 +4000,7 @@ async function analyzeCurrentGame(game, startIndex = 0) {
 
             const completed = i + 1; lastCompletedIndex = completed;
             const percent = Math.round((completed / totalPositions) * 100);
-            progressText.textContent = `Đang phân tích... ${completed}/${totalPositions}`;
+            progressText.textContent = t('progress_analyzing_format', completed, totalPositions);
             progressPercent.textContent = `${percent}%`; progressFill.style.width = `${percent}%`;
         }
 
@@ -3963,14 +4012,14 @@ async function analyzeCurrentGame(game, startIndex = 0) {
         updateCoachPanel(); updateEvalBar(); drawEvalChart(); renderKeyMovesList();
 
         if (typeof saveGameAnalysisCache === 'function') {
-            await saveGameAnalysisCache(game.url, currentDepth, gamePositions, finalStats);
+            await saveGameAnalysisCache(game.url, currentDepth, gamePositions, finalStats, game.userColor);
             analyzedGameUrls.add(game.url); applyGameListFilters();
         }
 
         if (cacheStatusBadge) cacheStatusBadge.classList.remove('hidden');
         if (btnReanalyze) btnReanalyze.classList.remove('hidden');
         progressBox.classList.remove('paused'); progressBox.classList.add('done');
-        progressText.textContent = `Đã phân tích xong ${totalPositions}/${totalPositions} thế cờ`;
+        progressText.textContent = t('progress_done_format', totalPositions, totalPositions);
 
         // Giải phóng hash table Stockfish giữa các ván để đảm bảo không rò rỉ RAM khi phân tích batch liên tục
         if (typeof stockfishEngine.clearHash === 'function') {
@@ -3987,7 +4036,14 @@ async function analyzeCurrentGame(game, startIndex = 0) {
         if (typeof stockfishEngine.clearHash === 'function') {
             stockfishEngine.clearHash();
         }
-        if (error && (error.message === 'ENGINE_STOPPED' || error.message === 'ENGINE_INTERRUPTED')) return;
+        if (error && (error.message === 'ENGINE_STOPPED' || error.message === 'ENGINE_INTERRUPTED')) {
+            if (!isAnalysisPaused && currentSession === analysisSessionId) {
+                isAnalyzing = false;
+                stopElapsedTimer();
+                if (btnPauseAnalysis) btnPauseAnalysis.classList.add('hidden');
+            }
+            return;
+        }
         isAnalyzing = false; stopElapsedTimer();
         if (btnPauseAnalysis) btnPauseAnalysis.classList.add('hidden');
         showStatus(error.message, 'error'); progressBox.classList.add('hidden');
@@ -4110,13 +4166,13 @@ async function analyzeNextUnanalyzedGame() {
 function pauseAnalysis() {
     if (!isAnalyzing || isAnalysisPaused) return;
     isAnalysisPaused = true; stockfishEngine.stop(); pauseElapsedTimer();
-    if (btnPauseAnalysis) { btnPauseAnalysis.textContent = 'Phân tích tiếp'; btnPauseAnalysis.classList.add('btn-resume'); btnPauseAnalysis.classList.remove('btn-pause'); }
-    progressBox.classList.add('paused'); progressText.textContent = `Đã tạm dừng tại ${lastCompletedIndex}/${gamePositions.length} thế cờ`; drawEvalChart();
+    if (btnPauseAnalysis) { btnPauseAnalysis.textContent = t('btn_resume_analysis'); btnPauseAnalysis.classList.add('btn-resume'); btnPauseAnalysis.classList.remove('btn-pause'); }
+    progressBox.classList.add('paused'); progressText.textContent = t('progress_paused_format', lastCompletedIndex, gamePositions.length); drawEvalChart();
 }
 function resumeAnalysis() {
     if (!isAnalysisPaused || selectedGameIndex === null) return;
     isAnalysisPaused = false;
-    if (btnPauseAnalysis) { btnPauseAnalysis.textContent = 'Dừng phân tích'; btnPauseAnalysis.classList.remove('btn-resume'); btnPauseAnalysis.classList.add('btn-pause'); }
+    if (btnPauseAnalysis) { btnPauseAnalysis.textContent = t('btn_pause_analysis'); btnPauseAnalysis.classList.remove('btn-resume'); btnPauseAnalysis.classList.add('btn-pause'); }
     progressBox.classList.remove('paused'); analyzeCurrentGame(loadedGames[selectedGameIndex], lastCompletedIndex);
 }
 function applyCachedAnalysis(cachedData, game) {
@@ -4147,20 +4203,20 @@ function applyCachedAnalysis(cachedData, game) {
     if (btnReanalyze) btnReanalyze.classList.remove('hidden');
     progressBox.classList.remove('hidden', 'paused');
     progressBox.classList.add('done');
-    progressText.textContent = `Đã lưu - tải từ bộ nhớ (Độ sâu ${cachedData.depth || currentDepth})`;
+    progressText.textContent = t('progress_cached_format', cachedData.depth || currentDepth);
     progressPercent.textContent = '100%';
     progressFill.style.width = '100%';
-    if (analysisElapsedTime) analysisElapsedTime.textContent = 'Đã lưu';
+    if (analysisElapsedTime) analysisElapsedTime.textContent = t('cache_saved');
     drawEvalChart();
     renderKeyMovesList();
     goToMove(currentMoveIndex);
 }
 
 function updateLiveEngineUIOff() {
-    if (liveEngineStatusBadge) { liveEngineStatusBadge.className = 'live-status-badge off'; liveEngineStatusBadge.textContent = 'Đã tắt'; }
+    if (liveEngineStatusBadge) { liveEngineStatusBadge.className = 'live-status-badge off'; liveEngineStatusBadge.textContent = t('live_engine_off'); }
     if (liveEvalText) { liveEvalText.textContent = '--'; liveEvalText.className = 'live-result-val score-neutral'; }
     if (liveBestMoveText) liveBestMoveText.textContent = '--';
-    if (liveDepthText) liveDepthText.textContent = `Tắt / ${currentLiveDepth}`;
+    if (liveDepthText) liveDepthText.textContent = t('live_engine_off_format', currentLiveDepth);
 }
 function updateLiveEngineUIAnalyzing(targetDepth) {
     if (liveEngineStatusBadge) { liveEngineStatusBadge.className = 'live-status-badge running'; liveEngineStatusBadge.textContent = t('live_engine_analyzing'); }
@@ -4241,7 +4297,19 @@ function renderGameList(games) {
         else if (timeClassSafe === 'bullet') timeIcon = '<svg class="time-icon" width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2c-3 0-5 3-5 7a5 5 0 0 0 10 0c0-4-2-7-5-7z"/></svg>';
         else timeIcon = '<svg class="time-icon" width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="10" height="9" rx="1"/><path d="M8 2v3"/></svg>';
 
-        item.innerHTML = `<div class="game-item-header"><div class="game-player-info"><span class="color-square ${colorClass}"></span><span class="opponent-name">${escapeHTML(game.opponentUsername)}</span><span class="opponent-rating">(${escapeHTML(game.opponentRating)})</span></div><span class="game-date">${escapeHTML(game.dateStr)}</span></div><div class="game-item-meta"><div class="game-item-tags"><span class="time-class-badge time-${timeClassSafe}">${timeIcon} ${escapeHTML(formatTimeClass(game.timeClass, currentLang))}</span>${isAnalyzed ? `<span class="badge-analyzed">${t('badge_analyzed')}</span>` : ''}</div><span class="badge-result ${badgeClass}">${resultIcon} ${escapeHTML(res.label)}</span></div>`;
+        let displayDate = game.dateStr;
+        if (game.endTime) {
+            const locale = (currentLang === 'en') ? 'en-US' : 'vi-VN';
+            displayDate = new Date(game.endTime * 1000).toLocaleDateString(locale, {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        item.innerHTML = `<div class="game-item-header"><div class="game-player-info"><span class="color-square ${colorClass}"></span><span class="opponent-name">${escapeHTML(game.opponentUsername)}</span><span class="opponent-rating">(${escapeHTML(game.opponentRating)})</span></div><span class="game-date">${escapeHTML(displayDate)}</span></div><div class="game-item-meta"><div class="game-item-tags"><span class="time-class-badge time-${timeClassSafe}">${timeIcon} ${escapeHTML(formatTimeClass(game.timeClass, currentLang))}</span>${isAnalyzed ? `<span class="badge-analyzed">${t('badge_analyzed')}</span>` : ''}</div><span class="badge-result ${badgeClass}">${resultIcon} ${escapeHTML(res.label)}</span></div>`;
         item.addEventListener('click', () => selectGame(game));
         gameListContainer.appendChild(item);
     });
@@ -4254,7 +4322,10 @@ function applyGameListFilters() {
     renderGameList(result);
 }
 
+let selectGameToken = 0;
+
 async function selectGame(gameOrIndex, keepDrawerOpen = false) {
+    const myToken = ++selectGameToken;
     if (!keepDrawerOpen && !isBatchAnalyzing) closeGameDrawer();
     let index, game;
     if (typeof gameOrIndex === 'number') { index = gameOrIndex; game = loadedGames[index]; } else { game = gameOrIndex; index = loadedGames.indexOf(game); }
@@ -4268,7 +4339,7 @@ async function selectGame(gameOrIndex, keepDrawerOpen = false) {
         selectedSquareForMove = null; clearSquareMoveHighlights(); isShowingBestMove = true; isShowingExplain = false;
         if (kpiOpening) kpiOpening.textContent = (typeof extractOpeningNameFromPGN === 'function') ? extractOpeningNameFromPGN(game.pgn) : '--';
         document.getElementById('kpi-user-accuracy').textContent = '--%'; document.getElementById('kpi-opp-accuracy').textContent = '--%';
-        document.getElementById('kpi-user-mistakes').textContent = '--'; document.getElementById('kpi-user-mistakes-detail').textContent = '(-- sai lầm, -- sai lầm nặng)';
+        document.getElementById('kpi-user-mistakes').textContent = '--'; document.getElementById('kpi-user-mistakes-detail').textContent = t('mistakes_detail_placeholder');
         const kpiPerfRatingEl = document.getElementById('kpi-performance-rating');
         const kpiPerfDiffEl = document.getElementById('kpi-perf-diff');
         const kpiPerfCompEl = document.getElementById('kpi-perf-comparison');
@@ -4282,8 +4353,8 @@ async function selectGame(gameOrIndex, keepDrawerOpen = false) {
         const userColor = getCurrentUserColor(game);
         const whitePlayer = userColor === 'w' ? `${game.userUsername || 'bazu25022005'} (${game.userRating || '?'})` : `${game.opponentUsername || 'Opponent'} (${game.opponentRating || '?'})`;
         const blackPlayer = userColor === 'b' ? `${game.userUsername || 'bazu25022005'} (${game.userRating || '?'})` : `${game.opponentUsername || 'Opponent'} (${game.opponentRating || '?'})`;
-        const whiteLabel = currentLang === 'en' ? 'White' : 'Trắng';
-        const blackLabel = currentLang === 'en' ? 'Black' : 'Đen';
+        const whiteLabel = t('white_player_lbl');
+        const blackLabel = t('black_player_lbl');
         if (gamePlayersInfo) gamePlayersInfo.innerHTML = `<strong>⬜ ${whiteLabel}:</strong> ${escapeHTML(whitePlayer)} &nbsp;|&nbsp; <strong>⬛ ${blackLabel}:</strong> ${escapeHTML(blackPlayer)}`;
         const res = (typeof parseChessComResult === 'function')
             ? parseChessComResult(game.rawResult || game.resultLabel, currentLang)
@@ -4307,6 +4378,7 @@ async function selectGame(gameOrIndex, keepDrawerOpen = false) {
 
         let cachedData = null;
         if (typeof getGameAnalysisCache === 'function') cachedData = await getGameAnalysisCache(game.url, currentDepth);
+        if (myToken !== selectGameToken) return;
         if (cachedData && cachedData.positions && cachedData.positions.length) {
             applyCachedAnalysis(cachedData, game);
             analyzedGameUrls.add(game.url);
@@ -4321,7 +4393,14 @@ async function selectGame(gameOrIndex, keepDrawerOpen = false) {
             if (btnReanalyze) btnReanalyze.classList.add('hidden');
             analyzeCurrentGame(game, 0);
         }
-    } catch (error) { showStatus(error.message, 'error'); }
+    } catch (error) {
+        showStatus(error.message, 'error');
+        if (isBatchAnalyzing) {
+            setTimeout(() => {
+                analyzeNextUnanalyzedGame();
+            }, 300);
+        }
+    }
 }
 
 /**
@@ -4359,11 +4438,23 @@ async function renderWelcomeDashboard(games) {
             ? parseChessComResult(latestGame.rawResult || latestGame.resultLabel, currentLang)
             : { label: latestGame.resultLabel, type: latestGame.resultType };
 
+        let heroDate = latestGame.dateStr || '';
+        if (latestGame.endTime) {
+            const locale = (currentLang === 'en') ? 'en-US' : 'vi-VN';
+            heroDate = new Date(latestGame.endTime * 1000).toLocaleDateString(locale, {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
         heroMetaEl.innerHTML = `
-            <span class="dot ${latestGame.userColor}"></span>
+            <span class="dot ${escapeHTML(latestGame.userColor)}"></span>
             <span class="tg">${escapeHTML(capTimeClass)}</span>
-            <span class="res ${resInfo.type}">${escapeHTML(resInfo.label)}</span>
-            <span class="mute">${escapeHTML(latestGame.dateStr || '')}</span>
+            <span class="res ${escapeHTML(resInfo.type)}">${escapeHTML(resInfo.label)}</span>
+            <span class="mute">${escapeHTML(heroDate)}</span>
         `;
     }
     if (heroAnalyzeBtn) {
@@ -4490,11 +4581,11 @@ async function renderWelcomeDashboard(games) {
 
             return `
                 <div class="r welcome-game-row" data-index="${idx}">
-                    <span class="dot ${g.userColor}"></span>
-                    <b>vs ${escapeHTML(g.opponentUsername)} <span class="opponent-rating">(${g.opponentRating || '?'})</span></b>
+                    <span class="dot ${escapeHTML(g.userColor)}"></span>
+                    <b>vs ${escapeHTML(g.opponentUsername)} <span class="opponent-rating">(${escapeHTML(g.opponentRating || '?')})</span></b>
                     <span class="tc"><span class="tg">${escapeHTML(capTimeClass)}</span></span>
-                    <span class="rs res ${resInfo.type}">${escapeHTML(resInfo.label)}</span>
-                    <button type="button" class="${actionBtnClass}" data-index="${idx}">${actionBtnText}</button>
+                    <span class="rs res ${escapeHTML(resInfo.type)}">${escapeHTML(resInfo.label)}</span>
+                    <button type="button" class="${actionBtnClass}" data-index="${idx}">${escapeHTML(actionBtnText)}</button>
                 </div>
             `;
         }).join('');
@@ -4524,8 +4615,8 @@ async function handleFetchGames() {
 
     const username = (typeof getAppUsername === 'function' ? getAppUsername() : (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : 'bazu25022005'));
     const year = parseInt(yearInput.value, 10); const month = monthSelect.value;
-    if (isFutureMonth(year, month)) { showStatus(`Tháng ${month}/${year} nằm trong tương lai, không thể tải danh sách ván cờ.`, 'error'); updateMonthNavButtons(); return; }
-    btnFetch.disabled = true; btnFetch.textContent = 'Đang tải...'; showStatus(`Đang tải danh sách ván cờ...`, 'info');
+    if (isFutureMonth(year, month)) { showStatus(t('future_month_error_format', month, year), 'error'); updateMonthNavButtons(); return; }
+    btnFetch.disabled = true; btnFetch.textContent = t('btn_loading'); showStatus(t('loading_games'), 'info');
     try {
         loadedGames = await fetchMonthlyGames(username, year, month);
         if (typeof getAllCachedGameUrls === 'function') analyzedGameUrls = await getAllCachedGameUrls(currentDepth);
@@ -4533,10 +4624,10 @@ async function handleFetchGames() {
         await renderWelcomeDashboard(loadedGames);
         hideStatus();
     } catch (error) {
-        loadedGames = []; gameCountSpan.textContent = '0'; gameListContainer.innerHTML = `<p class="empty-text">Không có dữ liệu hiển thị.</p>`;
+        loadedGames = []; gameCountSpan.textContent = '0'; gameListContainer.innerHTML = `<p class="empty-text">${t('no_games_found')}</p>`;
         await renderWelcomeDashboard([]);
         showStatus(error.message, 'error');
-    } finally { btnFetch.disabled = false; btnFetch.textContent = 'Tải'; }
+    } finally { btnFetch.disabled = false; btnFetch.textContent = t('fetch_btn'); }
 }
 
 btnStart.addEventListener('click', handleStartMove);
@@ -4548,8 +4639,23 @@ btnFlip.addEventListener('click', () => {
     if (!board) return; board.flip(); const currentOrientation = board.orientation();
     updateEvalBarOrientation(currentOrientation); updatePlayersDisplay();
     clearBoardHighlightsAndArrows();
-    const currentPos = gamePositions[currentMoveIndex];
-    if (currentPos && currentPos.move) highlightActualMove(currentPos.move);
+
+    if (typeof isBotGameActive !== 'undefined' && isBotGameActive) {
+        if (typeof botMovesHistory !== 'undefined' && botMovesHistory.length > 0) {
+            const lastBotMove = botMovesHistory[botMovesHistory.length - 1];
+            if (lastBotMove) highlightActualMove(lastBotMove);
+        }
+        if (botGameChess && botGameChess.in_check() && typeof highlightCheckSquare === 'function') {
+            highlightCheckSquare(botGameChess.turn());
+        }
+    } else if (typeof isInTrialBranch === 'function' && isInTrialBranch()) {
+        const trialPos = trialBranch.positions[trialBranch.currentIndex];
+        if (trialPos && trialPos.move) highlightActualMove(trialPos.move);
+    } else {
+        const currentPos = gamePositions[currentMoveIndex];
+        if (currentPos && currentPos.move) highlightActualMove(currentPos.move);
+    }
+
     updateCurrentMoveArrow();
     if (typeof redrawArrows === 'function') redrawArrows(currentOrientation);
 });
@@ -4582,8 +4688,9 @@ btnCoachBest.addEventListener('click', () => {
         updateCoachPanelForTrial();
         return;
     }
+    const currentPos = gamePositions[currentMoveIndex];
     const prevPos = currentMoveIndex > 0 ? gamePositions[currentMoveIndex - 1] : null;
-    const targetPos = (currentMoveIndex > 0 && prevPos) ? prevPos : gamePositions[currentMoveIndex];
+    const targetPos = (currentMoveIndex > 0 && prevPos) ? prevPos : currentPos;
     if (!targetPos || !targetPos.eval || !targetPos.eval.bestmove) return;
     if (isShowingHints) {
         isShowingHints = false;
@@ -4613,7 +4720,7 @@ function renderHintsList(fen, results) {
         }
         else if (whiteEval.cpWhite !== null) { const pawns = (whiteEval.cpWhite / 100).toFixed(2); scoreText = whiteEval.cpWhite > 0 ? `+${pawns}` : `${pawns}`; scoreClass = (whiteEval.cpWhite >= 0) ? 'score-white-fav' : 'score-black-fav'; }
         const itemEl = document.createElement('div'); itemEl.className = 'hint-item'; itemEl.title = `Nước gợi ý #${rank}`;
-        itemEl.innerHTML = `<div class="hint-left"><span class="hint-rank-badge rank-${rank}">#${rank}</span><span class="hint-move-san">${san}</span><span class="hint-move-uci">(${uci})</span></div><span class="hint-eval-badge ${scoreClass}">${scoreText}</span>`;
+        itemEl.innerHTML = `<div class="hint-left"><span class="hint-rank-badge rank-${rank}">#${rank}</span><span class="hint-move-san">${escapeHTML(san)}</span><span class="hint-move-uci">(${escapeHTML(uci)})</span></div><span class="hint-eval-badge ${scoreClass}">${escapeHTML(scoreText)}</span>`;
         itemEl.addEventListener('click', () => {
             const boardEl = document.getElementById('board');
             if (boardEl && uci.length >= 4) {
@@ -4632,8 +4739,8 @@ if (btnCoachHint) {
     btnCoachHint.addEventListener('click', async () => {
         if (!gamePositions || gamePositions.length === 0) return;
         const currentPos = gamePositions[currentMoveIndex]; if (!currentPos) return;
-        if (isShowingHints) { isShowingHints = false; currentHintsData = []; clearArrows(); if (coachHintsBox) coachHintsBox.classList.add('hidden'); btnCoachHint.classList.remove('active'); btnCoachHint.textContent = 'Gợi ý'; return; }
-        if (isAnalyzing && !isAnalysisPaused) { showStatus('Đang phân tích ván cờ, vui lòng chờ.', 'info'); return; }
+        if (isShowingHints) { isShowingHints = false; currentHintsData = []; clearArrows(); if (coachHintsBox) coachHintsBox.classList.add('hidden'); btnCoachHint.classList.remove('active'); btnCoachHint.textContent = t('btn_hints_lbl'); return; }
+        if (isAnalyzing && !isAnalysisPaused) { showStatus(t('analysis_in_progress'), 'info'); return; }
 
         let targetFen = currentPos.fen;
         if (isInTrialBranch()) {
@@ -4648,13 +4755,13 @@ if (btnCoachHint) {
         if (isShowingBestMove) { isShowingBestMove = false; updateCoachPanel(); }
 
         const analyzingMoveIndex = currentMoveIndex;
-        btnCoachHint.disabled = true; btnCoachHint.textContent = 'Đang tính...';
+        btnCoachHint.disabled = true; btnCoachHint.textContent = t('btn_calculating');
         try {
             const results = await stockfishEngine.evaluateMultiPV(targetFen, 15, 3);
             if (currentMoveIndex !== analyzingMoveIndex) return;
             btnCoachHint.disabled = false;
-            if (!results || results.length === 0) { btnCoachHint.textContent = 'Gợi ý'; return; }
-            isShowingHints = true; currentHintsData = results; btnCoachHint.classList.add('active'); btnCoachHint.textContent = 'Đóng gợi ý';
+            if (!results || results.length === 0) { btnCoachHint.textContent = t('btn_hints_lbl'); return; }
+            isShowingHints = true; currentHintsData = results; btnCoachHint.classList.add('active'); btnCoachHint.textContent = t('btn_close_hints');
             clearArrows();
             const hintColors = [ARROW_COLORS.BEST, ARROW_COLORS.SUGGEST_2, ARROW_COLORS.SUGGEST_3];
             const hintWidths = [17, 15, 14]; const hintOpacities = [0.85, 0.78, 0.72];
@@ -4663,12 +4770,12 @@ if (btnCoachHint) {
             });
             renderHintsList(targetFen, results);
         } catch (err) {
-            if (btnCoachHint) { btnCoachHint.disabled = false; btnCoachHint.textContent = 'Gợi ý'; btnCoachHint.classList.remove('active'); }
+            if (btnCoachHint) { btnCoachHint.disabled = false; btnCoachHint.textContent = t('btn_hints_lbl'); btnCoachHint.classList.remove('active'); }
         }
     });
 }
 
-if (btnCloseHints) btnCloseHints.addEventListener('click', () => { isShowingHints = false; currentHintsData = []; clearArrows(); if (coachHintsBox) coachHintsBox.classList.add('hidden'); if (btnCoachHint) { btnCoachHint.classList.remove('active'); btnCoachHint.textContent = 'Gợi ý'; } });
+if (btnCloseHints) btnCloseHints.addEventListener('click', () => { isShowingHints = false; currentHintsData = []; clearArrows(); if (coachHintsBox) coachHintsBox.classList.add('hidden'); if (btnCoachHint) { btnCoachHint.classList.remove('active'); btnCoachHint.textContent = t('btn_hints_lbl'); } });
 btnCoachExplain.addEventListener('click', () => { if (currentMoveIndex <= 0) return; isShowingExplain = !isShowingExplain; updateCoachPanel(); });
 if (btnPrevMistake) btnPrevMistake.addEventListener('click', () => { stopAutoplay(); const prevErrIdx = findPrevMistakeIndex(currentMoveIndex); if (prevErrIdx !== -1) goToMove(prevErrIdx); });
 btnNextMistake.addEventListener('click', () => { stopAutoplay(); const nextErrIdx = findNextMistakeIndex(currentMoveIndex); if (nextErrIdx !== -1) goToMove(nextErrIdx); });
@@ -4697,6 +4804,7 @@ function getChartMoveIndexFromEvent(e) {
 }
 
 function handleEvalChartInteraction(e, isDrag = false) {
+    if (typeof isBotGameActive !== 'undefined' && isBotGameActive) return;
     if (!gamePositions || gamePositions.length === 0) return;
     stopAutoplay();
     const targetMove = getChartMoveIndexFromEvent(e);
@@ -4801,8 +4909,8 @@ function handleResponsiveResize() {
             if (typeof redrawArrows === 'function' && typeof board.orientation === 'function') {
                 redrawArrows(board.orientation());
             }
-            if (typeof highlightCheckSquare === 'function') {
-                highlightCheckSquare();
+            if (typeof isBotGameActive !== 'undefined' && isBotGameActive && botGameChess && botGameChess.in_check() && typeof highlightCheckSquare === 'function') {
+                highlightCheckSquare(botGameChess.turn());
             }
         }
     }, 60);
@@ -4872,7 +4980,7 @@ if (btnClearAllCache) {
         if (typeof clearAllAnalysisCache === 'function') await clearAllAnalysisCache();
         analyzedGameUrls.clear(); applyGameListFilters();
         if (cacheStatusBadge) cacheStatusBadge.classList.add('hidden'); if (btnReanalyze) btnReanalyze.classList.add('hidden');
-        showStatus('Đã xóa toàn bộ bộ nhớ phân tích thành công.', 'info');
+        showStatus(t('clear_cache_success'), 'info');
     });
 }
 
