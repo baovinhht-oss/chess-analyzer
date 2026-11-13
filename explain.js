@@ -39,132 +39,34 @@ function getChessConstructor() {
 }
 
 /**
- * DANH SÁCH CÂU MẪU CỐ ĐỊNH THEO NGÔN NGỮ (VI & EN)
- * Bơm đầy nhiệt huyết, cảm xúc và phân tích sâu sắc chuẩn Chess.com Coach
- */
-const COMMENT_TEMPLATES = {
-    vi: {
-        Brilliant: [
-            'Tuyệt đỉnh! Một pha thí quân chói sáng mang dáng dấp của một Đại kiện tướng. {{Actor}} đã nhìn thấy một viễn cảnh sâu sắc mà {{other}} không thể ngờ tới!',
-            'Thần sầu quỷ khốc! Pha hy sinh quân quả cảm xé toang phòng tuyến {{other}}, biến thế cờ thành một kiệt tác tấn công!',
-            'Đẳng cấp Grandmaster! {{Actor}} dâng tặng quân cờ để đổi lấy quyền kiểm soát tuyệt đối và thế công vũ bão!'
-        ],
-        Great: [
-            'Tuyệt hay! Nhãn quan chiến thuật tuyệt vời. Đây là nước cờ then chốt giúp {{actor}} cứu vãn tình thế và lật ngược thế cờ.',
-            'Đỉnh cao bản lĩnh! {{Actor}} đã tìm ra chìa khóa then chốt duy nhất trong mê cung chiến thuật hiểm nghèo.',
-            'Cực kỳ chuẩn xác! Nước cờ then chốt duy nhất giúp giữ vững ưu thế và xoay chuyển toàn bộ cục diện ván đấu.'
-        ],
-        Book: [
-            'Bài bản như sách giáo khoa! {{Actor}} đang triển khai quân theo đúng lý thuyết khai cuộc kinh điển.',
-            'Khai cuộc mẫu mực! Nước đi chuẩn lý thuyết giúp quân cờ chiếm lĩnh vị trí lý tưởng ngay từ đầu.'
-        ],
-        Best: [
-            'Lựa chọn hoàn hảo! Đây chính xác là những gì cỗ máy cờ vua mạnh nhất đề xuất. {{Actor}} đang kiểm soát thế trận rất tốt.',
-            'Chuẩn xác tuyệt đối! Nước đi tối ưu nhất giúp duy trì quyền chủ động và gây sức ép tối đa lên {{other}}.',
-            'Không thể hoàn hảo hơn! Nước cờ thể hiện nhãn quan sắc bén của một cỗ máy hàng đầu.'
-        ],
-        Excellent: [
-            'Nước đi xuất sắc! {{Actor}} đang tạo ra áp lực lớn và đặt quân cờ vào vị trí chiến lược cực đẹp.',
-            'Rất sắc sảo! Nước đi gần như tối ưu, mở rộng không gian và tăng cường tính liên kết toàn đội hình.',
-            'Rất hay! {{Actor}} đang làm chủ nhịp độ trận đấu và dồn ép {{other}} vào thế bị động.'
-        ],
-        Good: [
-            'Nước đi tốt! Giữ vững đội hình và tiếp tục kế hoạch chiến lược đã định.',
-            'Chắc chắn và vững vàng! {{Actor}} đang bảo toàn cấu trúc thế trận và kiên nhẫn chờ đón thời cơ.'
-        ],
-        Inaccuracy: [
-            'Chưa phải là tối ưu. Nước đi này hơi thụ động và nhường lại một chút quyền chủ động cho {{other}}.',
-            'Hơi chệch hướng! {{Actor}} đã bỏ lỡ một phương án linh hoạt hơn, tạo khoảng thở cho {{other}} củng cố phòng ngự.'
-        ],
-        Mistake: [
-            'Một quyết định vội vàng! Nước đi này đã làm suy yếu cấu trúc phòng ngự và mở ra cơ hội phản công cho {{other}}.',
-            'Sai lầm đáng tiếc! {{Actor}} đã để lộ điểm yếu về không gian, {{other}} có thể chớp lấy thời cơ ngay lập tức.'
-        ],
-        Miss: [
-            'Bỏ lỡ cơ hội vàng! Một đòn trừng phạt quyết định vừa vuột khỏi tầm tay của {{actor}}.',
-            'Bỏ lỡ thời cơ! {{Actor}} đã có thể gia tăng cách biệt rõ rệt hoặc tung đòn kết liễu trận đấu ngay tại đây.'
-        ],
-        Blunder: [
-            'Sai lầm chí mạng! {{Actor}} đã để lộ sơ hở nghiêm trọng khiến thế trận rơi vào nguy hiểm.',
-            'Cú sảy chân lớn! Nước đi này dâng tặng lợi thế lớn cho {{other}} và khiến {{actor}} đối mặt tổn thất lực lượng nặng nề.',
-            'Báo động lớn! Một pha xử lý sơ hở khiến cục diện ván cờ đảo chiều hoàn toàn.'
-        ]
-    },
-    en: {
-        Brilliant: [
-            'Brilliant move! A breathtaking piece sacrifice worthy of a Grandmaster. {{Actor}} foresaw a deep tactical truth that blindsided {{other}}!',
-            'Absolute genius! A courageous sacrifice that tears open enemy lines and turns the game into a masterpiece of attacking chess!',
-            'Grandmaster level! Material was offered to claim total board dominance and an unstoppable initiative!'
-        ],
-        Great: [
-            'Great move! Outstanding tactical vision. This was the only move to preserve the advantage and turn the tables.',
-            'Sheer resilience! {{Actor}} navigated through a tactical minefield to find the single saving move on the board.',
-            'Pinpoint precision! The only critical continuation that holds the position together under severe pressure.'
-        ],
-        Book: [
-            'Textbook opening play! Following classical theory with textbook discipline.',
-            'Pure opening mastery! Developing seamlessly along proven master lines.'
-        ],
-        Best: [
-            'Flawless choice! Exactly what the strongest chess engine commands. {{Actor}} is in command of the position.',
-            'Absolute precision! The best move on the board, maintaining maximum pressure and suffocating counterplay.',
-            'Top engine pick! Navigating this position with razor-sharp engine precision.'
-        ],
-        Excellent: [
-            'Excellent move! Ramping up the pressure and planting pieces on gorgeous strategic outposts.',
-            'Sharp and proactive! Almost the top engine choice, carving out space and tightening coordination.',
-            'Impressive play! Dictating the tempo and putting pressure on {{other}}.'
-        ],
-        Good: [
-            'Solid move! Maintaining healthy structure and staying true to the game plan.',
-            'Sturdy and reliable! Keeping forces compact and waiting for the right moment to strike.'
-        ],
-        Inaccuracy: [
-            'Suboptimal move. A bit too passive, letting the grip loosen and handing initiative to {{other}}.',
-            'Slightly off the mark! There were more ambitious alternatives available that keep {{other}} on the ropes.'
-        ],
-        Mistake: [
-            'A hasty decision! This move weakens the defensive structure and gives {{other}} a golden counterchance.',
-            'Costly slip! {{Actor}} ceded critical board space and gave away the strategic upper hand.'
-        ],
-        Miss: [
-            'Missed opportunity! A decisive sequence slipped away from {{actor}} here.',
-            'Missed win! A crushing tactical sequence was right there for the taking, but it went unplayed.'
-        ],
-        Blunder: [
-            'A catastrophic blunder! A lethal vulnerability was opened that puts the position in grave danger.',
-            'Disaster strikes! This move hands over massive material or a crushing attack to {{other}}.',
-            'Severe mistake! A lapse in concentration that turns a promising position completely upside down.'
-        ]
-    }
-};
-
-/**
- * Chọn câu nhận xét cho nước đi (Đa ngôn ngữ)
+ * Chọn câu nhận xét cho nước đi (Đa ngôn ngữ & Chống lặp thông minh qua CoachDialogue)
  * @param {string} san - Ký hiệu SAN của nước vừa đi
  * @param {string} category - Loại nước đi
  * @param {number} moveIndex - Chỉ số nước đi
  * @param {boolean} isUserMove - true nếu là nước của mình
  * @param {string} lang - 'vi' hoặc 'en'
+ * @param {Object} [context={}] - Ngữ cảnh bàn cờ bổ sung ({ move, prevPos, currPos, bestSan })
  */
-function getCoachCommentText(san, category, moveIndex = 1, isUserMove = true, lang = (typeof currentLang !== 'undefined' ? currentLang : 'vi')) {
-    const dict = COMMENT_TEMPLATES[lang] || COMMENT_TEMPLATES.vi;
-    const templates = dict[category] || dict.Good;
-    const rawTemplate = templates[moveIndex % templates.length];
+function getCoachCommentText(san, category, moveIndex = 1, isUserMove = true, lang = (typeof currentLang !== 'undefined' ? currentLang : 'vi'), context = {}) {
+    const CoachDialogueModule = (typeof CoachDialogue !== 'undefined')
+        ? CoachDialogue
+        : (typeof window !== 'undefined' && window.CoachDialogue ? window.CoachDialogue : null);
 
-    const isEn = (lang === 'en');
-    const actor = isEn ? (isUserMove ? 'you' : 'your opponent') : (isUserMove ? 'bạn' : 'đối thủ');
-    const Actor = isEn ? (isUserMove ? 'You' : 'Your opponent') : (isUserMove ? 'Bạn' : 'Đối thủ');
-    const other = isEn ? (isUserMove ? 'your opponent' : 'you') : (isUserMove ? 'đối thủ' : 'bạn');
-    const Other = isEn ? (isUserMove ? 'Your opponent' : 'You') : (isUserMove ? 'Đối thủ' : 'Bạn');
+    if (CoachDialogueModule && typeof CoachDialogueModule.getDynamicCoachComment === 'function') {
+        return CoachDialogueModule.getDynamicCoachComment({
+            san,
+            category,
+            moveIndex,
+            isUserMove,
+            lang,
+            move: context.move || {},
+            prevPos: context.prevPos || null,
+            currPos: context.currPos || null,
+            bestSan: context.bestSan || ''
+        });
+    }
 
-    const adjustedTemplate = rawTemplate
-        .replace(/\{\{Actor\}\}/g, Actor)
-        .replace(/\{\{actor\}\}/g, actor)
-        .replace(/\{\{Other\}\}/g, Other)
-        .replace(/\{\{other\}\}/g, other);
-
-    return `${san}: ${adjustedTemplate}`;
+    return `${san}: ${category}`;
 }
 
 /**
@@ -800,18 +702,24 @@ function buildMoveExplanation(prevPos, currPos, isUserMove = true, lang = (typeo
     const sec3Title = isEn ? '3. What happens next (Expected continuation)' : '3. Kịch bản tiếp theo (Diễn biến dự kiến)';
     const sec4Title = isEn ? "4. Coach's Master Tip" : '4. Lời khuyên của Huấn luyện viên';
 
+    const iconAction = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>`;
+    const iconGood = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--best, #81b64c)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+    const iconBad = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--blu, #fa412d)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12.01" y1="17" x2="12.01" y2="17"></line></svg>`;
+    const iconPv = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+    const iconTip = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>`;
+
     return `
 <div class="explain-coach-card">
     <div class="coach-block block-action">
         <div class="coach-sec-header">
-            <span>🎯</span> <span>${sec1Title}</span>
+            <span>${iconAction}</span> <span>${sec1Title}</span>
         </div>
         <div>${actionDesc}</div>
     </div>
 
     <div class="coach-block ${isGoodMove ? 'block-why-good' : 'block-why-bad'}">
         <div class="coach-sec-header">
-            <span>${isGoodMove ? '✅' : '⚠️'}</span> <span>${sec2Title}</span>
+            <span>${isGoodMove ? iconGood : iconBad}</span> <span>${sec2Title}</span>
         </div>
         <div>${tacticalReason}</div>
     </div>
@@ -819,14 +727,14 @@ function buildMoveExplanation(prevPos, currPos, isUserMove = true, lang = (typeo
     ${pvStory ? `
     <div class="coach-block block-pv">
         <div class="coach-sec-header">
-            <span>🔮</span> <span>${sec3Title}</span>
+            <span>${iconPv}</span> <span>${sec3Title}</span>
         </div>
         <div>${pvStory}</div>
     </div>` : ''}
 
     <div class="coach-block block-tip">
         <div class="coach-sec-header">
-            <span>💡</span> <span>${sec4Title}</span>
+            <span>${iconTip}</span> <span>${sec4Title}</span>
         </div>
         <div>${coachTip}</div>
     </div>
@@ -835,7 +743,6 @@ function buildMoveExplanation(prevPos, currPos, isUserMove = true, lang = (typeo
 
 if (typeof window !== 'undefined') {
     window.PIECE_NAMES = PIECE_NAMES;
-    window.COMMENT_TEMPLATES = COMMENT_TEMPLATES;
     window.formatEvaluationBadge = formatEvaluationBadge;
     window.getPositionDescriptionText = getPositionDescriptionText;
     window.buildMoveExplanation = buildMoveExplanation;

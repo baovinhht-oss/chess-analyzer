@@ -18,6 +18,8 @@ class StockfishEngine {
         this.currentCallback = null;
         this.currentReject = null;
         this.isSearchActive = false;
+        this.awaitingBestmove = false;
+        this.mutexChain = Promise.resolve();
         this.engineName = 'Stockfish';
     }
 
@@ -39,14 +41,15 @@ class StockfishEngine {
                         this.engineName = line.replace('id name ', '').trim();
                     }
 
+                    if (line.startsWith('bestmove ')) {
+                        this.awaitingBestmove = false;
+                    }
+
                     if (line === 'uciok') {
                         this.isReady = true;
-
-                        // FIX TÍNH KHÔNG XÁC ĐỊNH: Ép cứng chạy 1 luồng (Threads = 1)
-                        // Tuyệt đối không dùng navigator.hardwareConcurrency ở đây
                         try {
                             this.worker.postMessage('setoption name Hash value 128');
-                            this.worker.postMessage(`setoption name Threads value 1`);
+                            this.worker.postMessage('setoption name Threads value 1');
                         } catch (optErr) { }
 
                         console.log(`♟️ [Stockfish Ổn Định] Khởi động: ${this.engineName} (Hash: 128MB, Threads: 1)`);
@@ -70,6 +73,8 @@ class StockfishEngine {
                             return;
                         } catch (fallbackErr) { }
                     }
+                    if (this.worker) { try { this.worker.terminate(); } catch (e) { } this.worker = null; }
+                    this.isReady = false;
                     reject(new Error('Stockfish Web Worker gặp sự cố.'));
                 };
 
@@ -97,21 +102,30 @@ class StockfishEngine {
         return this.initPromise;
     }
 
+    /**
+     * Serializes all search operations through a strict FIFO mutex queue
+     * so concurrent callers can never overwrite each other's callbacks or deadlocks.
+     */
+    _enqueue(taskFn) {
+        const run = this.mutexChain.then(taskFn, taskFn);
+        this.mutexChain = run.catch(() => { });
+        return run;
+    }
+
     async ensureIdle() {
         if (!this.worker || !this.isReady) return;
         this.isSearchActive = false;
         this.activeSearchId++;
+
+        if (this.currentReject) {
+            const rej = this.currentReject;
+            this.currentReject = null;
+            try { rej(new Error('ENGINE_STOPPED')); } catch (e) { }
+        }
+
         return new Promise((resolve) => {
             let timeout = null;
-            const wasSearching = !!this.currentReject;
-            let gotBestmove = !wasSearching;
             let gotReadyok = false;
-
-            if (this.currentReject) {
-                const rej = this.currentReject;
-                this.currentReject = null;
-                try { rej(new Error('ENGINE_STOPPED')); } catch (e) { }
-            }
 
             const cleanup = () => {
                 if (timeout) {
@@ -123,33 +137,59 @@ class StockfishEngine {
                 }
             };
 
-            const handleIdleLine = (line) => {
-                if (line.startsWith('bestmove ')) {
-                    gotBestmove = true;
-                }
-                if (line === 'readyok') {
-                    gotReadyok = true;
-                }
-                if (gotBestmove && gotReadyok) {
+            const checkDone = () => {
+                if (!this.awaitingBestmove && gotReadyok) {
                     cleanup();
                     resolve();
                 }
+            };
+
+            const handleIdleLine = (line) => {
+                if (line === 'readyok') {
+                    gotReadyok = true;
+                }
+                checkDone();
             };
 
             this.currentCallback = handleIdleLine;
             this.worker.postMessage('stop');
             this.worker.postMessage('isready');
 
+            // Safety fallback if worker drops a bestmove in extreme edge cases
             timeout = setTimeout(() => {
+                this.awaitingBestmove = false;
                 cleanup();
                 resolve();
-            }, 800);
+            }, 1200);
+        });
+    }
+
+    async resetNewGame() {
+        if (!this.worker || !this.isReady) await this.init();
+        return this._enqueue(async () => {
+            await this.ensureIdle();
+            this.worker.postMessage('ucinewgame');
+            this.worker.postMessage('setoption name Clear Hash value true');
+            await new Promise((resolve) => {
+                const timer = setTimeout(() => {
+                    if (this.currentCallback === onReady) this.currentCallback = null;
+                    resolve();
+                }, 1000);
+                const onReady = (line) => {
+                    if (line === 'readyok') {
+                        clearTimeout(timer);
+                        this.currentCallback = null;
+                        resolve();
+                    }
+                };
+                this.currentCallback = onReady;
+                this.worker.postMessage('isready');
+            });
         });
     }
 
     async evaluatePosition(fen, depth = 16, onProgress = null, clearHash = false, moveTime = 0) {
         if (!this.worker || !this.isReady) await this.init();
-        await this.ensureIdle();
 
         const actualDepth = depth ? Math.max(1, depth) : 16;
         const chess = new Chess(fen);
@@ -175,154 +215,184 @@ class StockfishEngine {
             return Promise.resolve(rawRes);
         }
 
-        return new Promise((resolve, reject) => {
-            let lastCp = 0; let lastMate = null; let lastPv = []; let lastDepth = 0; let lastBestmove = null;
-            const mySearchId = ++this.activeSearchId;
+        // Pre-cancel any running search immediately so queued older callers abort before mutex runs
+        const ticketSearchId = ++this.activeSearchId;
+        this.abortCurrentSearch();
 
-            this.currentReject = reject;
-            this.worker.postMessage('setoption name MultiPV value 1');
+        return this._enqueue(async () => {
+            if (ticketSearchId !== this.activeSearchId) {
+                throw new Error('ENGINE_INTERRUPTED');
+            }
+            await this.ensureIdle();
 
-            this.currentCallback = (line) => {
-                if (mySearchId !== this.activeSearchId || !this.isSearchActive) return;
+            return new Promise((resolve, reject) => {
+                let lastCp = 0; let lastMate = null; let lastPv = []; let lastDepth = 0; let lastBestmove = null;
+                const mySearchId = ++this.activeSearchId;
 
-                if (line.startsWith('info ') && line.includes(' score ')) {
-                    const depthMatch = line.match(/depth (\d+)/);
-                    if (depthMatch) lastDepth = parseInt(depthMatch[1], 10);
+                this.currentReject = reject;
+                this.worker.postMessage('setoption name MultiPV value 1');
 
-                    const cpMatch = line.match(/score\s+cp\s+(-?\d+)/);
-                    const mateMatch = line.match(/score\s+mate\s+(-?\d+)/);
+                if (clearHash) {
+                    this.worker.postMessage('setoption name Clear Hash value true');
+                }
 
-                    if (cpMatch) {
-                        lastCp = parseInt(cpMatch[1], 10);
-                        lastMate = null;
-                    } else if (mateMatch) {
-                        lastMate = parseInt(mateMatch[1], 10);
-                        lastCp = null;
+                this.currentCallback = (line) => {
+                    if (mySearchId !== this.activeSearchId || !this.isSearchActive) return;
+
+                    if (line.startsWith('info ') && line.includes(' score ')) {
+                        const depthMatch = line.match(/depth (\d+)/);
+                        if (depthMatch) lastDepth = parseInt(depthMatch[1], 10);
+
+                        const cpMatch = line.match(/score\s+cp\s+(-?\d+)/);
+                        const mateMatch = line.match(/score\s+mate\s+(-?\d+)/);
+
+                        if (cpMatch) {
+                            lastCp = parseInt(cpMatch[1], 10);
+                            lastMate = null;
+                        } else if (mateMatch) {
+                            lastMate = parseInt(mateMatch[1], 10);
+                            lastCp = null;
+                        }
+
+                        const pvMatch = line.match(/ pv (.+)$/);
+                        if (pvMatch) {
+                            lastPv = pvMatch[1].trim().split(/\s+/);
+                            lastBestmove = lastPv[0] || null;
+                        }
+
+                        if (onProgress) {
+                            const whiteScore = toWhitePerspective({ cp: lastCp, mate: lastMate, turn }, turn);
+                            onProgress({
+                                depth: lastDepth, cp: lastCp, mate: lastMate, bestmove: lastBestmove, pv: lastPv, turn: turn,
+                                cpWhite: whiteScore.cpWhite, mateWhite: whiteScore.mateWhite, isGameOver: false
+                            });
+                        }
                     }
 
-                    const pvMatch = line.match(/ pv (.+)$/);
-                    if (pvMatch) {
-                        lastPv = pvMatch[1].trim().split(/\s+/);
-                        lastBestmove = lastPv[0] || null;
-                    }
+                    if (line.startsWith('bestmove ')) {
+                        if (mySearchId !== this.activeSearchId || !this.isSearchActive) return;
+                        this.isSearchActive = false;
+                        const parts = line.split(/\s+/);
+                        const bestmove = (parts[1] && parts[1] !== '(none)') ? parts[1] : (lastBestmove || null);
 
-                    if (onProgress) {
+                        this.currentCallback = null;
+                        this.currentReject = null;
+
                         const whiteScore = toWhitePerspective({ cp: lastCp, mate: lastMate, turn }, turn);
-                        onProgress({
-                            depth: lastDepth, cp: lastCp, mate: lastMate, bestmove: lastBestmove, pv: lastPv, turn: turn,
+                        resolve({
+                            depth: lastDepth || actualDepth, cp: lastCp, mate: lastMate, bestmove: bestmove, pv: lastPv, turn: turn,
                             cpWhite: whiteScore.cpWhite, mateWhite: whiteScore.mateWhite, isGameOver: false
                         });
                     }
+                };
+
+                this.worker.postMessage(`position fen ${fen}`);
+                this.isSearchActive = true;
+                this.awaitingBestmove = true;
+                let goCmd = `go depth ${actualDepth}`;
+                if (moveTime && moveTime > 0) {
+                    goCmd += ` movetime ${moveTime}`;
                 }
-
-                if (line.startsWith('bestmove ')) {
-                    if (mySearchId !== this.activeSearchId || !this.isSearchActive) return;
-                    this.isSearchActive = false;
-                    const parts = line.split(/\s+/);
-                    const bestmove = (parts[1] && parts[1] !== '(none)') ? parts[1] : (lastBestmove || null);
-
-                    this.currentCallback = null;
-                    this.currentReject = null;
-
-                    const whiteScore = toWhitePerspective({ cp: lastCp, mate: lastMate, turn }, turn);
-                    resolve({
-                        depth: lastDepth || actualDepth, cp: lastCp, mate: lastMate, bestmove: bestmove, pv: lastPv, turn: turn,
-                        cpWhite: whiteScore.cpWhite, mateWhite: whiteScore.mateWhite, isGameOver: false
-                    });
-                }
-            };
-
-            if (clearHash) {
-                this.worker.postMessage('setoption name Clear Hash');
-            }
-            this.worker.postMessage(`position fen ${fen}`);
-            this.isSearchActive = true;
-            let goCmd = `go depth ${actualDepth}`;
-            if (moveTime && moveTime > 0) {
-                goCmd += ` movetime ${moveTime}`;
-            }
-            this.worker.postMessage(goCmd);
+                this.worker.postMessage(goCmd);
+            });
         });
     }
 
     clearHash() {
         if (this.worker && this.isReady) {
-            this.worker.postMessage('setoption name Clear Hash');
+            this.worker.postMessage('setoption name Clear Hash value true');
         }
     }
 
-    async evaluateMultiPV(fen, depth = 15, lines = 3, moveTime = 200) {
+    async evaluateMultiPV(fen, depth = 15, lines = 3, moveTime = 300) {
         if (!this.worker || !this.isReady) await this.init();
-        await this.ensureIdle();
         const chess = new Chess(fen); const turn = chess.turn();
         if (chess.in_checkmate() || chess.in_draw() || chess.in_stalemate() || chess.in_threefold_repetition() || chess.insufficient_material()) return [];
         const legalMoves = chess.moves({ verbose: true });
         if (legalMoves.length === 0) return [];
         const actualLines = Math.min(lines, legalMoves.length);
 
-        return new Promise((resolve, reject) => {
-            const pvMap = new Map();
-            const mySearchId = ++this.activeSearchId;
-            this.currentReject = (err) => { if (this.worker) this.worker.postMessage('setoption name MultiPV value 1'); reject(err); };
+        const ticketSearchId = ++this.activeSearchId;
+        this.abortCurrentSearch();
 
-            this.worker.postMessage('setoption name Clear Hash'); // Tẩy não trước khi gọi Hint
-            this.worker.postMessage(`setoption name MultiPV value ${actualLines}`);
-
-            this.currentCallback = (line) => {
-                if (mySearchId !== this.activeSearchId || !this.isSearchActive) return;
-
-                if (line.startsWith('info ') && line.includes('multipv ') && line.includes(' score ')) {
-                    const mpMatch = line.match(/\bmultipv\s+(\d+)/);
-                    const cpMatch = line.match(/\bscore\s+cp\s+(-?\d+)/);
-                    const mateMatch = line.match(/\bscore\s+mate\s+(-?\d+)/);
-                    const pvMatch = line.match(/\bpv\s+(.+)$/);
-
-                    if (mpMatch && pvMatch) {
-                        const rank = parseInt(mpMatch[1], 10);
-                        const pvArray = pvMatch[1].trim().split(/\s+/);
-                        const uci = pvArray[0];
-                        let cp = null; let mate = null;
-                        if (cpMatch) cp = parseInt(cpMatch[1], 10);
-                        else if (mateMatch) mate = parseInt(mateMatch[1], 10);
-                        pvMap.set(rank, { rank, uci, cp, mate, pv: pvArray, turn });
-                    }
-                }
-                if (line.startsWith('bestmove ')) {
-                    if (mySearchId !== this.activeSearchId || !this.isSearchActive) return;
-                    this.isSearchActive = false;
-                    this.worker.postMessage('setoption name MultiPV value 1');
-                    this.currentCallback = null; this.currentReject = null;
-                    const results = [];
-                    for (let r = 1; r <= actualLines; r++) if (pvMap.has(r)) results.push(pvMap.get(r));
-                    if (results.length === 0) {
-                        const parts = line.split(/\s+/);
-                        const bestUci = parts[1];
-                        if (bestUci && bestUci !== '(none)') results.push({ rank: 1, uci: bestUci, cp: 0, mate: null, pv: [bestUci], turn });
-                    }
-                    resolve(results);
-                }
-            };
-            this.worker.postMessage(`position fen ${fen}`);
-            this.isSearchActive = true;
-            let goCmd = `go depth ${Math.max(12, depth)}`;
-            if (moveTime && moveTime > 0) {
-                goCmd += ` movetime ${moveTime}`;
+        return this._enqueue(async () => {
+            if (ticketSearchId !== this.activeSearchId) {
+                throw new Error('ENGINE_INTERRUPTED');
             }
-            this.worker.postMessage(goCmd);
+            await this.ensureIdle();
+
+            return new Promise((resolve, reject) => {
+                const pvMap = new Map();
+                const mySearchId = ++this.activeSearchId;
+                this.currentReject = (err) => { if (this.worker) this.worker.postMessage('setoption name MultiPV value 1'); reject(err); };
+
+                this.worker.postMessage('setoption name Clear Hash value true');
+                this.worker.postMessage(`setoption name MultiPV value ${actualLines}`);
+
+                this.currentCallback = (line) => {
+                    if (mySearchId !== this.activeSearchId || !this.isSearchActive) return;
+
+                    if (line.startsWith('info ') && line.includes('multipv ') && line.includes(' score ')) {
+                        const mpMatch = line.match(/\bmultipv\s+(\d+)/);
+                        const cpMatch = line.match(/\bscore\s+cp\s+(-?\d+)/);
+                        const mateMatch = line.match(/\bscore\s+mate\s+(-?\d+)/);
+                        const pvMatch = line.match(/\bpv\s+(.+)$/);
+
+                        if (mpMatch && pvMatch) {
+                            const rank = parseInt(mpMatch[1], 10);
+                            const pvArray = pvMatch[1].trim().split(/\s+/);
+                            const uci = pvArray[0];
+                            let cp = null; let mate = null;
+                            if (cpMatch) cp = parseInt(cpMatch[1], 10);
+                            else if (mateMatch) mate = parseInt(mateMatch[1], 10);
+                            pvMap.set(rank, { rank, uci, cp, mate, pv: pvArray, turn });
+                        }
+                    }
+                    if (line.startsWith('bestmove ')) {
+                        if (mySearchId !== this.activeSearchId || !this.isSearchActive) return;
+                        this.isSearchActive = false;
+                        this.worker.postMessage('setoption name MultiPV value 1');
+                        this.currentCallback = null; this.currentReject = null;
+                        const results = [];
+                        for (let r = 1; r <= actualLines; r++) if (pvMap.has(r)) results.push(pvMap.get(r));
+                        if (results.length === 0) {
+                            const parts = line.split(/\s+/);
+                            const bestUci = parts[1];
+                            if (bestUci && bestUci !== '(none)') results.push({ rank: 1, uci: bestUci, cp: 0, mate: null, pv: [bestUci], turn });
+                        }
+                        resolve(results);
+                    }
+                };
+                this.worker.postMessage(`position fen ${fen}`);
+                this.isSearchActive = true;
+                this.awaitingBestmove = true;
+                let goCmd = `go depth ${Math.max(12, depth)}`;
+                if (moveTime && moveTime > 0) {
+                    goCmd += ` movetime ${moveTime}`;
+                }
+                this.worker.postMessage(goCmd);
+            });
         });
     }
 
-    stop() {
+    abortCurrentSearch() {
         this.isSearchActive = false;
-        this.activeSearchId++;
         if (this.worker && this.isReady) {
             this.worker.postMessage('stop');
-            this.worker.postMessage('setoption name MultiPV value 1');
             if (this.currentReject) {
                 const rejectFn = this.currentReject;
-                this.currentReject = null; this.currentCallback = null;
+                this.currentReject = null;
+                this.currentCallback = null;
                 try { rejectFn(new Error('ENGINE_STOPPED')); } catch (e) { }
-            } else { this.currentCallback = null; }
+            }
+        }
+    }
+
+    stop() {
+        this.activeSearchId++;
+        this.abortCurrentSearch();
+        if (this.worker && this.isReady) {
+            this.worker.postMessage('setoption name MultiPV value 1');
         }
     }
 }
@@ -356,3 +426,4 @@ function uciToSan(fen, uci) {
 }
 
 if (typeof window !== 'undefined') { window.stockfishEngine = stockfishEngine; window.toWhitePerspective = toWhitePerspective; window.uciToSan = uciToSan; }
+if (typeof module !== 'undefined' && module.exports) { module.exports = { StockfishEngine, stockfishEngine, toWhitePerspective, uciToSan }; }

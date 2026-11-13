@@ -9,10 +9,14 @@
     <!-- Google Fonts: Inter, Plus Jakarta Sans, Outfit, Space Grotesk, JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
 
     <!-- CSS thư viện chessboard.js -->
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+        integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous"
+        referrerpolicy="no-referrer">
 
     <!-- CSS ứng dụng -->
     <link rel="stylesheet" href="style.css">
@@ -26,22 +30,21 @@
     <aside class="drawer" id="game-drawer" aria-label="Danh sách ván cờ">
         <div class="dh">
             <b><span data-i18n="game_list_title">Danh sách ván cờ</span> (<span id="game-count">0</span>)</b>
-            <div style="display:flex;gap:6px;align-items:center;">
-                <button id="btn-drawer-lifetime-stats" class="sm" data-i18n="lifetime_stats_btn" title="Xem thống kê sự nghiệp">Thống kê</button>
-                <button id="btn-clear-all-cache" class="sm" data-i18n="clear_cache" title="Xóa toàn bộ bộ nhớ phân tích đã lưu">Xóa bộ nhớ</button>
-                <button id="btn-close-drawer" class="sm" aria-label="Đóng danh sách ván cờ">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                        <path d="M3 3l8 8M11 3l-8 8" />
-                    </svg>
-                </button>
-            </div>
+            <button id="btn-close-drawer" class="sm" aria-label="Đóng danh sách ván cờ">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"
+                    stroke-linecap="round">
+                    <path d="M3 3l8 8M11 3l-8 8" />
+                </svg>
+            </button>
         </div>
 
         <!-- Điều hướng tháng & năm (Thanh gọn gàng tiết kiệm diện tích - Yêu cầu 8) -->
         <div class="mnav-compact">
             <div class="month-selector-group">
                 <button id="btn-prev-month" class="btn-icon-subtle" title="Xem tháng trước" aria-label="Tháng trước">
-                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10 3L5 8l5 5" />
+                    </svg>
                 </button>
                 <select id="month" title="Chọn tháng">
                     <option value="01" data-i18n="month_01">Thg 1</option>
@@ -58,13 +61,17 @@
                     <option value="12" data-i18n="month_12">Thg 12</option>
                 </select>
                 <input type="number" id="year" min="2007" max="2030" value="2026" title="Năm">
-                <button id="btn-next-month" class="btn-icon-subtle" disabled title="Xem tháng sau" aria-label="Tháng sau">
-                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg>
+                <button id="btn-next-month" class="btn-icon-subtle" disabled title="Xem tháng sau"
+                    aria-label="Tháng sau">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 3l5 5-5 5" />
+                    </svg>
                 </button>
             </div>
             <button id="btn-fetch" class="primary btn-fetch-icon" title="Tải lại danh sách ván cờ">
-                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M2 8a6 6 0 1 1 1.8 4.2M2 12V8h4"/>
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round">
+                    <path d="M2 8a6 6 0 1 1 1.8 4.2M2 12V8h4" />
                 </svg>
                 <span data-i18n="fetch_btn">Tải</span>
             </button>
@@ -89,14 +96,18 @@
                 <option value="daily" data-i18n="filter_time_daily">Daily</option>
             </select>
             <button id="btn-toggle-sort" class="btn-sort-compact" title="Bấm để đổi thứ tự sắp xếp">
-                <span id="sort-icon" hidden>⬇️</span><span id="sort-label" data-i18n="sort_newest">Mới nhất</span>
+                <span id="sort-icon" hidden><svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <polyline points="19 12 12 19 5 12"></polyline>
+                    </svg></span><span id="sort-label" data-i18n="sort_newest">Mới nhất</span>
             </button>
         </div>
 
         <!-- Thanh điều khiển phân tích chạy nền liên tục (Batch Analysis) -->
         <div class="batch-controls-bar">
-            <button id="btn-start-batch" class="primary" data-i18n="batch_start">▶ Chạy phân tích nền</button>
-            <button id="btn-stop-batch" style="display:none;" data-i18n="batch_stop">⏸ Dừng lại</button>
+            <button id="btn-start-batch" class="primary" data-i18n="batch_start">Chạy phân tích nền</button>
+            <button id="btn-stop-batch" style="display:none;" data-i18n="batch_stop">Dừng lại</button>
             <span id="batch-progress-text" class="mute" style="font-size:12px; margin-left:8px;"></span>
         </div>
 
@@ -111,8 +122,10 @@
         <!-- THANH TRÊN CÙNG (HEADER) -->
         <header class="top">
             <div class="brand">
-                <button id="btn-open-drawer" class="hb" aria-label="Mở danh sách ván cờ" aria-expanded="false" title="Mở danh sách ván cờ">
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <button id="btn-open-drawer" class="hb" aria-label="Mở danh sách ván cờ" aria-expanded="false"
+                    title="Mở danh sách ván cờ">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
                         <line class="hb-line hb-line-1" x1="2.5" y1="4.5" x2="15.5" y2="4.5" />
                         <line class="hb-line hb-line-2" x1="2.5" y1="9" x2="15.5" y2="9" />
                         <line class="hb-line hb-line-3" x1="2.5" y1="13.5" x2="15.5" y2="13.5" />
@@ -123,16 +136,22 @@
 
             <div class="tools">
                 <span class="pill hidden" id="cache-status-badge" data-i18n="cache_saved">Đã lưu - tải từ bộ nhớ</span>
-                <button id="btn-lifetime-stats" class="btn-tool-stats" title="Thống kê sự nghiệp (Lifetime Stats)" aria-label="Thống kê sự nghiệp">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <button id="btn-lifetime-stats" class="btn-tool-stats" title="Thống kê sự nghiệp (Lifetime Stats)"
+                    aria-label="Thống kê sự nghiệp">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 20V10M12 20V4M6 20v-6" />
                     </svg>
                     <span data-i18n="lifetime_stats_btn">Thống kê</span>
                 </button>
-                <button id="btn-open-settings" class="btn-tool-settings" title="Cài đặt (Settings)" aria-label="Cài đặt">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <button id="btn-open-settings" class="btn-tool-settings" title="Cài đặt (Settings)"
+                    aria-label="Cài đặt">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
                     </svg>
                     <span data-i18n="settings_btn">Cài đặt</span>
                 </button>
@@ -182,6 +201,7 @@
                         <option value="16" selected>Độ sâu 16</option>
                         <option value="18">Độ sâu 18</option>
                         <option value="20">Độ sâu 20</option>
+                        <option value="22">Độ sâu 22</option>
                     </select>
                     <button id="btn-theme">Giao diện: Tối</button>
                 </div>
@@ -192,9 +212,17 @@
         <div id="review-placeholder" class="placeholder-box">
             <!-- Trạng thái trống (khi chưa tải ván cờ hoặc không có dữ liệu) -->
             <div id="welcome-empty" class="welcome-empty hidden">
-                <div class="placeholder-icon">♟️</div>
+                <div class="placeholder-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M12 2a3 3 0 0 0-3 3c0 .7.3 1.4.7 1.9C8.3 8 7 10.3 7 13c0 1.2.4 2.2 1 3H6v2h12v-2h-2c.6-.8 1-1.8 1-3 0-2.7-1.3-5-2.7-6.1.4-.5.7-1.2.7-1.9a3 3 0 0 0-3-3z" />
+                        <path d="M5 21h14" />
+                    </svg>
+                </div>
                 <h2 data-i18n="welcome_title">Chào mừng bạn đến với Chess.com Game Review</h2>
-                <p><span data-i18n="welcome_desc">Vui lòng bấm nút danh mục ở góc trên bên trái để chọn một ván cờ của</span> <strong id="header-username">bazu25022005</strong>.</p>
+                <p><span data-i18n="welcome_desc">Vui lòng bấm nút danh mục ở góc trên bên trái để chọn một ván cờ
+                        của</span> <strong id="header-username">bazu25022005</strong>.</p>
             </div>
 
             <!-- Mini-Dashboard hiển thị khi đã tải danh sách ván cờ -->
@@ -206,14 +234,16 @@
                         <h2 id="welcome-hero-title">Đang tải ván cờ...</h2>
                         <div class="g hero-meta" id="welcome-hero-meta"></div>
                     </div>
-                    <button type="button" id="btn-welcome-hero-analyze" class="primary btn-hero-analyze" data-i18n="welcome_analyze_this_game">Phân tích ván này</button>
+                    <button type="button" id="btn-welcome-hero-analyze" class="primary btn-hero-analyze"
+                        data-i18n="welcome_analyze_this_game">Phân tích ván này</button>
                 </div>
 
                 <!-- Phân vùng 2: Tiles (Thống kê nhanh) -->
                 <div class="tiles" id="welcome-tiles">
                     <!-- Tile 1: Tổng số ván trong tháng + Win/Draw/Loss bar -->
                     <div class="card tile" id="welcome-tile-games">
-                        <div class="l" id="welcome-tile-games-label" data-i18n="welcome_month_games">Ván trong tháng</div>
+                        <div class="l" id="welcome-tile-games-label" data-i18n="welcome_month_games">Ván trong tháng
+                        </div>
                         <div class="n" id="welcome-tile-games-count">0</div>
                         <div class="wl" id="welcome-tile-games-bar">
                             <i style="flex:1;background:var(--best)"></i>
@@ -242,7 +272,8 @@
                 <div class="card list" id="welcome-list-card">
                     <div class="ttl">
                         <span data-i18n="welcome_recent_games">Ván gần đây</span>
-                        <button type="button" id="btn-welcome-view-all" class="btn-view-all" data-i18n="welcome_view_all">Xem tất cả</button>
+                        <button type="button" id="btn-welcome-view-all" class="btn-view-all"
+                            data-i18n="welcome_view_all">Xem tất cả</button>
                     </div>
                     <div id="welcome-recent-list" class="recent-rows">
                         <!-- 5 ván cờ gần nhất sẽ được render động -->
@@ -308,7 +339,8 @@
                                         <span class="promotion-label" data-i18n="promo_knight">Mã</span>
                                     </button>
                                 </div>
-                                <button id="btn-cancel-promotion" class="btn-cancel-promotion" data-i18n="cancel_move">Hủy nước đi</button>
+                                <button id="btn-cancel-promotion" class="btn-cancel-promotion"
+                                    data-i18n="cancel_move">Hủy nước đi</button>
                             </div>
                         </div>
                     </div>
@@ -346,9 +378,12 @@
                             </div>
                         </div>
                         <div class="rt-actions">
-                            <button id="btn-reanalyze" class="btn-action sm hidden" data-i18n="reanalyze" title="Xóa bộ nhớ đệm và phân tích lại ván này">Phân tích lại</button>
-                            <a id="btn-open-chesscom" class="btn-action sm" target="_blank" rel="noopener noreferrer" title="Mở ván cờ này trên Chess.com">Chess.com</a>
-                            <button id="btn-copy-pgn" class="btn-action sm" data-i18n="copy_pgn" title="Sao chép toàn bộ biên bản PGN">Copy PGN</button>
+                            <button id="btn-reanalyze" class="btn-action sm hidden" data-i18n="reanalyze"
+                                title="Xóa bộ nhớ đệm và phân tích lại ván này">Phân tích lại</button>
+                            <a id="btn-open-chesscom" class="btn-action sm" target="_blank" rel="noopener noreferrer"
+                                title="Mở ván cờ này trên Chess.com">Chess.com</a>
+                            <button id="btn-copy-pgn" class="btn-action sm" data-i18n="copy_pgn"
+                                title="Sao chép toàn bộ biên bản PGN">Copy PGN</button>
                             <span id="copy-toast" class="copy-toast hidden" data-i18n="copied">Đã copy</span>
                         </div>
                     </div>
@@ -361,7 +396,9 @@
                                 <span id="analysis-elapsed-time" class="analysis-elapsed-time">00:00</span>
                             </div>
                             <div class="progress-header-right">
-                                <button id="btn-pause-analysis" class="btn-pause-analysis hidden" data-i18n="pause_analysis" title="Tạm dừng quá trình phân tích">Dừng phân tích</button>
+                                <button id="btn-pause-analysis" class="btn-pause-analysis hidden"
+                                    data-i18n="pause_analysis" title="Tạm dừng quá trình phân tích">Dừng phân
+                                    tích</button>
                                 <span id="analysis-progress-percent">0%</span>
                             </div>
                         </div>
@@ -373,11 +410,14 @@
                     <!-- 4 Ô KPI CHÍNH THEO BẢN MẪU CHESS.COM -->
                     <div class="acc">
                         <div class="ab">
-                            <div class="an"><span class="dot" style="background:#fff;"></span><span data-i18n="your_accuracy">Độ chính xác của bạn</span></div>
+                            <div class="an"><span class="dot" style="background:#fff;"></span><span
+                                    data-i18n="your_accuracy">Độ chính xác của bạn</span></div>
                             <div class="avl" id="kpi-user-accuracy" style="color:var(--pri);">--%</div>
                         </div>
                         <div class="ab">
-                            <div class="an"><span class="dot" style="background:#333;border:1px solid #888;"></span><span data-i18n="opp_accuracy">Độ chính xác của đối thủ</span></div>
+                            <div class="an"><span class="dot"
+                                    style="background:#333;border:1px solid #888;"></span><span
+                                    data-i18n="opp_accuracy">Độ chính xác của đối thủ</span></div>
                             <div class="avl" id="kpi-opp-accuracy">--%</div>
                         </div>
                     </div>
@@ -386,7 +426,9 @@
                     <div class="perf-card" id="performance-card">
                         <div class="perf-header">
                             <div class="perf-title-wrap">
-                                <svg class="perf-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg class="perf-icon" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                                    stroke-linejoin="round">
                                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                                 </svg>
                                 <span class="perf-title" data-i18n="performance_rating">Hiệu suất ván đấu</span>
@@ -398,7 +440,8 @@
                                 <span class="perf-val" id="kpi-performance-rating">--</span>
                                 <span class="perf-elo-label">Elo</span>
                             </div>
-                            <span class="perf-sub" id="kpi-perf-comparison" data-i18n="perf_waiting">Chờ phân tích ván đấu...</span>
+                            <span class="perf-sub" id="kpi-perf-comparison" data-i18n="perf_waiting">Chờ phân tích ván
+                                đấu...</span>
                         </div>
                     </div>
 
@@ -411,13 +454,34 @@
                             <span data-i18n="your_mistakes">Nước sai của bạn</span>
                             <b>
                                 <span id="kpi-user-mistakes" style="color:var(--ink);">0</span>
-                                <small id="kpi-user-mistakes-detail" style="color:var(--mute);font-weight:500;">(0 sai lầm, 0 sai lầm nặng)</small>
+                                <small id="kpi-user-mistakes-detail" style="color:var(--mute);font-weight:500;">(0 sai
+                                    lầm, 0 sai lầm nặng)</small>
                             </b>
                         </div>
                     </div>
 
                     <!-- KHUNG "NHẬN XÉT NƯỚC ĐI" (COACH PANEL) -->
                     <div class="coach" id="coach-panel">
+                        <!-- KHUNG THÔNG BÁO KẾT THÚC VÁN (GAME OVER BANNER) -->
+                        <div id="game-over-banner" class="game-over-banner hidden" role="alert">
+                            <div class="gob-icon-wrap" id="gob-icon-wrap"></div>
+                            <div class="gob-content">
+                                <div class="gob-header">
+                                    <span class="gob-title" id="gob-title">Chiến thắng xuất sắc!</span>
+                                    <span class="gob-reason" id="gob-reason"></span>
+                                </div>
+                                <p class="gob-message" id="gob-message"></p>
+                                <div class="gob-actions" id="gob-actions"></div>
+                            </div>
+                            <button type="button" id="btn-close-game-over-banner" class="gob-close-btn"
+                                aria-label="Đóng thông báo" title="Đóng thông báo">
+                                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round">
+                                    <path d="M3 3l8 8M11 3l-8 8" />
+                                </svg>
+                            </button>
+                        </div>
+
                         <div class="ch">
                             <div class="mt" id="coach-move-title">
                                 <span class="dot" style="background:var(--good);"></span>
@@ -425,15 +489,18 @@
                             </div>
                             <div style="text-align:right;">
                                 <div class="eb" id="coach-eval-badge">+0,0</div>
-                                <div class="chip" id="coach-eval-perspective" data-i18n="white_perspective">Điểm số theo góc nhìn Trắng</div>
+                                <div class="chip" id="coach-eval-perspective" data-i18n="white_perspective">Điểm số theo
+                                    góc nhìn Trắng</div>
                             </div>
                         </div>
 
-                        <p id="coach-comment-text" data-i18n="starting_comment">Thế cờ xuất phát. Hãy bấm Tiến hoặc phím mũi tên Phải để xem từng nước đi.</p>
+                        <p id="coach-comment-text" data-i18n="starting_comment">Thế cờ xuất phát. Hãy bấm Tiến hoặc phím
+                            mũi tên Phải để xem từng nước đi.</p>
 
                         <div class="cm">
                             <span id="coach-pos-desc">Thế cờ cân bằng.</span>
-                            <span><span id="win-prob-label" data-i18n="win_prob_white">Tỉ lệ thắng (Trắng):</span> <b id="current-win-prob">50,0%</b></span>
+                            <span><span id="win-prob-label" data-i18n="win_prob_white">Tỉ lệ thắng (Trắng):</span> <b
+                                    id="current-win-prob">50,0%</b></span>
                             <span><span data-i18n="move_word">Nước</span> <b id="move-counter">0 / 0</b></span>
                         </div>
 
@@ -441,12 +508,25 @@
                         <div id="bot-game-panel" class="bot-game-panel hidden">
                             <div class="bot-game-header">
                                 <div class="bot-badge-title">
-                                    <span class="bot-avatar-icon">🤖</span>
+                                    <span class="bot-avatar-icon">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                                            <circle cx="12" cy="5" r="2"></circle>
+                                            <path d="M12 7v4"></path>
+                                            <line x1="8" y1="16" x2="8" y2="16"></line>
+                                            <line x1="16" y1="16" x2="16" y2="16"></line>
+                                        </svg>
+                                    </span>
                                     <strong data-i18n="bot_mode_title">Đang đấu với Bot (Stockfish)</strong>
                                 </div>
                                 <div class="bot-header-controls">
-                                    <button id="btn-bot-undo" class="btn-bot-undo" title="Đi lùi lại 1 lượt đấu (Lùi 2 nước)" data-i18n-title="btn_bot_undo">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <button id="btn-bot-undo" class="btn-bot-undo"
+                                        title="Đi lùi lại 1 lượt đấu (Lùi 2 nước)" data-i18n-title="btn_bot_undo">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                            stroke-linejoin="round">
                                             <path d="M3 7v6h6"></path>
                                             <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path>
                                         </svg>
@@ -464,21 +544,36 @@
 
                         <!-- Các nút tác vụ Coach -->
                         <div class="acts">
-                            <button id="btn-coach-exit-trial" class="btn-coach btn-exit-trial-coach hidden" data-i18n="btn_exit_trial" title="Thoát khỏi nhánh đi thử và quay lại ván gốc">Quay lại ván gốc</button>
-                            <button id="btn-exit-bot" class="btn-coach btn-exit-bot-coach hidden" data-i18n="btn_exit_bot" title="Thoát chế độ đấu với Bot và quay lại ván cờ">Thoát chế độ Bot</button>
-                            <button id="btn-play-bot" class="btn-coach btn-play-bot" disabled data-i18n="btn_play_bot" title="Chơi tiếp từ thế cờ này đấu với Bot (Stockfish)">Đấu với Bot</button>
-                            <button id="btn-coach-best" class="hidden" data-i18n="btn_best" title="Hiện/Ẩn nước đi tốt nhất của Stockfish">Nước tốt nhất</button>
-                            <button id="btn-coach-hint" disabled data-i18n="btn_hint" title="Gợi ý 3 nước hàng đầu (MultiPV = 3)">Gợi ý</button>
-                            <button id="btn-coach-explain" disabled data-i18n="btn_explain" title="Giải thích chi tiết nước đi này">Giải thích</button>
-                            <button id="btn-prev-mistake" disabled data-i18n="btn_prev_mistake" title="Nhảy về nước sai trước đó">Nước sai trước đó</button>
-                            <button id="btn-next-mistake" class="primary" disabled data-i18n="btn_next_mistake" title="Nhảy tới nước sai kế tiếp">Nước sai tiếp theo</button>
+                            <button id="btn-coach-exit-trial" class="btn-coach btn-exit-trial-coach hidden"
+                                data-i18n="btn_exit_trial" title="Thoát khỏi nhánh đi thử và quay lại ván gốc">Quay lại
+                                ván gốc</button>
+                            <button id="btn-exit-bot" class="btn-coach btn-exit-bot-coach hidden"
+                                data-i18n="btn_exit_bot" title="Thoát chế độ đấu với Bot và quay lại ván cờ">Thoát chế
+                                độ Bot</button>
+                            <button id="btn-play-bot" class="btn-coach btn-play-bot" disabled data-i18n="btn_play_bot"
+                                title="Chơi tiếp từ thế cờ này đấu với Bot (Stockfish)">Đấu với Bot</button>
+                            <button id="btn-coach-best" class="hidden" data-i18n="btn_best"
+                                title="Hiện/Ẩn nước đi tốt nhất của Stockfish">Nước tốt nhất</button>
+                            <button id="btn-coach-hint" disabled data-i18n="btn_hint"
+                                title="Gợi ý 3 nước hàng đầu (MultiPV = 3)">Gợi ý</button>
+                            <button id="btn-coach-explain" disabled data-i18n="btn_explain"
+                                title="Giải thích chi tiết nước đi này">Giải thích</button>
+                            <button id="btn-prev-mistake" disabled data-i18n="btn_prev_mistake"
+                                title="Nhảy về nước sai trước đó">Nước sai trước đó</button>
+                            <button id="btn-next-mistake" class="primary" disabled data-i18n="btn_next_mistake"
+                                title="Nhảy tới nước sai kế tiếp">Nước sai tiếp theo</button>
                         </div>
 
                         <!-- Khung 3 gợi ý MultiPV -->
                         <div id="coach-hints-box" class="coach-hints-box hidden">
                             <div class="hints-box-header">
                                 <span class="hints-title" data-i18n="hints_title">3 Nước gợi ý (Stockfish)</span>
-                                <button id="btn-close-hints" class="btn-close-hints" title="Đóng danh sách gợi ý">✕</button>
+                                <button id="btn-close-hints" class="btn-close-hints" title="Đóng danh sách gợi ý">
+                                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-linecap="round">
+                                        <path d="M3 3l8 8M11 3l-8 8" />
+                                    </svg>
+                                </button>
                             </div>
                             <div id="hints-list" class="hints-list"></div>
                         </div>
@@ -504,11 +599,12 @@
                             <div class="moves" id="move-list"></div>
                             <div class="moves bot-moves-container hidden" id="bot-move-list">
                                 <div class="bot-moves-header-bar">
-                                    <span class="bot-branch-tag" data-i18n="bot_branch_tag">🤖 Nhánh đấu với Bot</span>
+                                    <span class="bot-branch-tag" data-i18n="bot_branch_tag">Nhánh đấu với Bot</span>
                                     <span id="bot-moves-live-count" class="bot-live-count">0 nước</span>
                                 </div>
                                 <div id="bot-moves-rows" class="bot-moves-rows">
-                                    <p class="empty-text" data-i18n="bot_no_moves">Chưa có nước đi nào trong trận đấu với Bot.</p>
+                                    <p class="empty-text" data-i18n="bot_no_moves">Chưa có nước đi nào trong trận đấu
+                                        với Bot.</p>
                                 </div>
                             </div>
                         </div>
@@ -549,14 +645,16 @@
                         <div id="t-engine" class="tab-pane" style="display:none;padding-top:8px;">
                             <div id="live-engine-bar" class="live-engine-bar">
                                 <div class="live-engine-top">
-                                    <label class="engine-toggle-label" title="Bật/Tắt phân tích Stockfish trực tiếp khi đổi thế cờ">
+                                    <label class="engine-toggle-label"
+                                        title="Bật/Tắt phân tích Stockfish trực tiếp khi đổi thế cờ">
                                         <input type="checkbox" id="toggle-live-engine" checked>
                                         <span class="engine-toggle-slider"></span>
                                         <span class="engine-toggle-text" data-i18n="live_engine">Engine trực tiếp</span>
                                     </label>
                                     <div class="live-depth-control">
                                         <label for="select-live-depth">Depth:</label>
-                                        <select id="select-live-depth" class="select-live-depth" title="Chọn độ sâu phân tích trực tiếp">
+                                        <select id="select-live-depth" class="select-live-depth"
+                                            title="Chọn độ sâu phân tích trực tiếp">
                                             <option value="10" data-i18n="live_depth_10">10 (Nhanh)</option>
                                             <option value="12" data-i18n="live_depth_12">12</option>
                                             <option value="13" data-i18n="live_depth_13" selected>13 (Chuẩn)</option>
@@ -564,15 +662,18 @@
                                             <option value="18" data-i18n="live_depth_18">18 (Rất sâu)</option>
                                         </select>
                                     </div>
-                                    <span id="live-engine-status-badge" class="live-status-badge running" data-i18n="status_analyzing">Đang phân tích</span>
+                                    <span id="live-engine-status-badge" class="live-status-badge running"
+                                        data-i18n="status_analyzing">Đang phân tích</span>
                                 </div>
                                 <div id="live-engine-results" class="live-engine-results">
-                                    <div class="live-result-item" title="Điểm đánh giá thế cờ hiện tại (góc nhìn Trắng)">
+                                    <div class="live-result-item"
+                                        title="Điểm đánh giá thế cờ hiện tại (góc nhìn Trắng)">
                                         <span class="live-result-label" data-i18n="eval_label">Đánh giá:</span>
                                         <span id="live-eval-text" class="live-result-val score-neutral">+0.00</span>
                                     </div>
                                     <div class="live-result-item" title="Nước đi tốt nhất Stockfish đề xuất">
-                                        <span class="live-result-label" data-i18n="best_move_label">Nước tốt nhất:</span>
+                                        <span class="live-result-label" data-i18n="best_move_label">Nước tốt
+                                            nhất:</span>
                                         <span id="live-best-move-text" class="live-result-val">--</span>
                                     </div>
                                     <div class="live-result-item" title="Độ sâu tìm kiếm hiện tại">
@@ -588,23 +689,28 @@
                 <!-- BỘ NÚT ĐIỀU KHIỂN CỐ ĐỊNH Ở ĐÁY PANEL PHẢI -->
                 <div class="ctrl">
                     <button id="btn-start" aria-label="Về đầu ván" title="Về đầu ván (Home)">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M4 3v10M13 3L7 8l6 5" />
                         </svg>
                     </button>
                     <button id="btn-prev" aria-label="Nước trước" title="Nước trước (←)">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M10 3L5 8l5 5" />
                         </svg>
                     </button>
-                    <button id="btn-play" class="primary" data-i18n="ctrl_play" title="Tự động phát ván cờ (Space)">Phát</button>
+                    <button id="btn-play" class="primary" data-i18n="ctrl_play"
+                        title="Tự động phát ván cờ (Space)">Phát</button>
                     <button id="btn-next" aria-label="Nước tiếp theo" title="Nước tiếp theo (→)">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M6 3l5 5-5 5" />
                         </svg>
                     </button>
                     <button id="btn-end" aria-label="Tới cuối ván" title="Tới cuối ván (End)">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 3v10M3 3l6 5-6 5" />
                         </svg>
                     </button>
@@ -615,19 +721,31 @@
     </div>
 
     <!-- BẢNG CÀI ĐẶT CHUNG (SETTINGS MODAL 2 CỘT CHUẨN DISCORD / CHESS.COM) -->
-    <div id="settings-modal" class="settings-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+    <div id="settings-modal" class="settings-modal-backdrop hidden" role="dialog" aria-modal="true"
+        aria-labelledby="settings-modal-title">
         <div class="settings-modal-dialog">
             <!-- Header Bảng Cài đặt -->
             <div class="settings-modal-header">
                 <div class="settings-modal-title-group">
-                    <div class="settings-title-icon-badge">⚙️</div>
+                    <div class="settings-title-icon-badge">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                            </path>
+                        </svg>
+                    </div>
                     <div>
                         <h2 id="settings-modal-title" data-i18n="settings_title">Cài đặt</h2>
-                        <p class="settings-subtitle" data-i18n="settings_subtitle">Tùy biến giao diện, font chữ, bàn cờ, quân cờ và engine phân tích</p>
+                        <p class="settings-subtitle" data-i18n="settings_subtitle">Tùy biến giao diện, font chữ, bàn cờ,
+                            quân cờ và engine phân tích</p>
                     </div>
                 </div>
-                <button id="btn-close-settings-modal" class="settings-close-btn" aria-label="Đóng bảng cài đặt" title="Đóng cài đặt (Esc)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <button id="btn-close-settings-modal" class="settings-close-btn" aria-label="Đóng bảng cài đặt"
+                    title="Đóng cài đặt (Esc)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
@@ -639,19 +757,48 @@
                 <!-- Cột trái: Sidebar Tabs -->
                 <nav class="settings-sidebar" aria-label="Danh mục cài đặt">
                     <button type="button" class="settings-tab-btn active" data-settings-tab="ui">
-                        <span class="settings-tab-icon">🎨</span>
+                        <span class="settings-tab-icon">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
+                                <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
+                                <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                                <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
+                                <path
+                                    d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1.1-.3-.4-.4-.8-.4-1.4 0-1.1.9-2 2-2h2.3c3.7 0 6.6-3 6.6-6.6C23.6 5.8 18.4 2 12 2z">
+                                </path>
+                            </svg>
+                        </span>
                         <span class="settings-tab-label" data-i18n="settings_tab_ui">Giao diện & Font</span>
                     </button>
                     <button type="button" class="settings-tab-btn" data-settings-tab="board">
-                        <span class="settings-tab-icon">♟️</span>
+                        <span class="settings-tab-icon">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                <path d="M3 9h18M3 15h18M9 3v18M15 3v18"></path>
+                            </svg>
+                        </span>
                         <span class="settings-tab-label" data-i18n="settings_tab_board">Bàn cờ & Quân cờ</span>
                     </button>
                     <button type="button" class="settings-tab-btn" data-settings-tab="engine">
-                        <span class="settings-tab-icon">⚡</span>
+                        <span class="settings-tab-icon">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                        </span>
                         <span class="settings-tab-label" data-i18n="settings_tab_engine">Trò chơi & Engine</span>
                     </button>
                     <button type="button" class="settings-tab-btn" data-settings-tab="data">
-                        <span class="settings-tab-icon">⚙️</span>
+                        <span class="settings-tab-icon">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                            </svg>
+                        </span>
                         <span class="settings-tab-label" data-i18n="settings_tab_data">Hệ thống & Dữ liệu</span>
                     </button>
                 </nav>
@@ -667,14 +814,35 @@
                             <div class="settings-card-header">
                                 <div>
                                     <h3 data-i18n="settings_theme_label">Giao diện hiển thị</h3>
-                                    <p class="settings-card-desc" data-i18n="settings_theme_desc">Chuyển đổi giữa chế độ nền Tối và nền Sáng bảo vệ mắt</p>
+                                    <p class="settings-card-desc" data-i18n="settings_theme_desc">Chuyển đổi giữa chế độ
+                                        nền Tối và nền Sáng bảo vệ mắt</p>
                                 </div>
                                 <div class="settings-segmented" id="settings-theme-segmented">
                                     <button type="button" class="seg-btn active" data-theme-val="dark">
-                                        <span class="seg-icon">🌙</span> <span data-i18n="settings_theme_dark">Tối</span>
+                                        <span class="seg-icon">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                                            </svg>
+                                        </span> <span data-i18n="settings_theme_dark">Tối</span>
                                     </button>
                                     <button type="button" class="seg-btn" data-theme-val="light">
-                                        <span class="seg-icon">☀️</span> <span data-i18n="settings_theme_light">Sáng</span>
+                                        <span class="seg-icon">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="5"></circle>
+                                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                            </svg>
+                                        </span> <span data-i18n="settings_theme_light">Sáng</span>
                                     </button>
                                 </div>
                             </div>
@@ -685,11 +853,12 @@
                             <div class="settings-card-header">
                                 <div>
                                     <h3 data-i18n="settings_lang_label">Ngôn ngữ giao diện</h3>
-                                    <p class="settings-card-desc" data-i18n="settings_lang_desc">Lựa chọn ngôn ngữ sử dụng trên toàn bộ trang và huấn luyện viên</p>
+                                    <p class="settings-card-desc" data-i18n="settings_lang_desc">Lựa chọn ngôn ngữ sử
+                                        dụng trên toàn bộ trang và huấn luyện viên</p>
                                 </div>
                                 <div class="settings-segmented" id="settings-lang-segmented">
-                                    <button type="button" class="seg-btn active" data-lang-val="vi">🇻🇳 Tiếng Việt</button>
-                                    <button type="button" class="seg-btn" data-lang-val="en">🇬🇧 English</button>
+                                    <button type="button" class="seg-btn active" data-lang-val="vi">Tiếng Việt</button>
+                                    <button type="button" class="seg-btn" data-lang-val="en">English</button>
                                 </div>
                             </div>
                         </div>
@@ -698,35 +867,41 @@
                         <div class="settings-card">
                             <div class="settings-card-header-simple">
                                 <h3 data-i18n="settings_font_label">Font chữ ứng dụng</h3>
-                                <p class="settings-card-desc" data-i18n="settings_font_desc">Chọn phong cách Typography ưa thích từ Google Fonts cao cấp</p>
+                                <p class="settings-card-desc" data-i18n="settings_font_desc">Chọn phong cách Typography
+                                    ưa thích từ Google Fonts cao cấp</p>
                             </div>
                             <div class="settings-fonts-grid" id="settings-fonts-grid">
-                                <div class="font-option-card active" data-font="inter" style="font-family: 'Inter', sans-serif;">
+                                <div class="font-option-card active" data-font="inter"
+                                    style="font-family: 'Inter', sans-serif;">
                                     <div class="font-card-top">
                                         <span class="font-name">Inter</span>
                                         <span class="font-badge" data-i18n="settings_font_default">Mặc định</span>
                                     </div>
                                     <div class="font-preview-sample">Aa Bb 123 • Chess Review</div>
                                 </div>
-                                <div class="font-option-card" data-font="plus-jakarta-sans" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+                                <div class="font-option-card" data-font="plus-jakarta-sans"
+                                    style="font-family: 'Plus Jakarta Sans', sans-serif;">
                                     <div class="font-card-top">
                                         <span class="font-name">Plus Jakarta Sans</span>
                                     </div>
                                     <div class="font-preview-sample">Aa Bb 123 • Chess Review</div>
                                 </div>
-                                <div class="font-option-card" data-font="outfit" style="font-family: 'Outfit', sans-serif;">
+                                <div class="font-option-card" data-font="outfit"
+                                    style="font-family: 'Outfit', sans-serif;">
                                     <div class="font-card-top">
                                         <span class="font-name">Outfit</span>
                                     </div>
                                     <div class="font-preview-sample">Aa Bb 123 • Chess Review</div>
                                 </div>
-                                <div class="font-option-card" data-font="space-grotesk" style="font-family: 'Space Grotesk', sans-serif;">
+                                <div class="font-option-card" data-font="space-grotesk"
+                                    style="font-family: 'Space Grotesk', sans-serif;">
                                     <div class="font-card-top">
                                         <span class="font-name">Space Grotesk</span>
                                     </div>
                                     <div class="font-preview-sample">Aa Bb 123 • Chess Review</div>
                                 </div>
-                                <div class="font-option-card" data-font="jetbrains-mono" style="font-family: 'JetBrains Mono', monospace;">
+                                <div class="font-option-card" data-font="jetbrains-mono"
+                                    style="font-family: 'JetBrains Mono', monospace;">
                                     <div class="font-card-top">
                                         <span class="font-name">JetBrains Mono</span>
                                     </div>
@@ -762,8 +937,10 @@
                                     <div class="mini-sq sq-l"></div>
                                 </div>
                                 <div class="mini-board-info">
-                                    <div class="mini-board-title" id="mini-preview-theme-title">Bàn cờ: Xanh lá • Quân cờ: Classic</div>
-                                    <p class="mini-board-subtitle" data-i18n="settings_mini_preview_hint">Xem trước thời gian thực — Bấm chọn bàn cờ hoặc quân cờ bên dưới để thay đổi lập tức!</p>
+                                    <div class="mini-board-title" id="mini-preview-theme-title">Bàn cờ: Xanh lá • Quân
+                                        cờ: Classic</div>
+                                    <p class="mini-board-subtitle" data-i18n="settings_mini_preview_hint">Xem trước thời
+                                        gian thực — Bấm chọn bàn cờ hoặc quân cờ bên dưới để thay đổi lập tức!</p>
                                 </div>
                             </div>
                         </div>
@@ -772,7 +949,8 @@
                         <div class="settings-card">
                             <div class="settings-card-header-simple">
                                 <h3 data-i18n="settings_board_theme">Mẫu bàn cờ (Board Themes)</h3>
-                                <p class="settings-card-desc" data-i18n="settings_board_desc">Chọn màu sắc và chất liệu bàn cờ trực quan</p>
+                                <p class="settings-card-desc" data-i18n="settings_board_desc">Chọn màu sắc và chất liệu
+                                    bàn cờ trực quan</p>
                             </div>
                             <div class="board-swatches-grid" id="settings-board-swatches">
                                 <!-- Đổ động từ JS -->
@@ -783,7 +961,8 @@
                         <div class="settings-card">
                             <div class="settings-card-header-simple">
                                 <h3 data-i18n="settings_piece_theme">Bộ quân cờ (Piece Sets)</h3>
-                                <p class="settings-card-desc" data-i18n="settings_piece_desc">Chọn bộ thiết kế quân cờ từ Chess.com, Lichess và Vector cổ điển</p>
+                                <p class="settings-card-desc" data-i18n="settings_piece_desc">Chọn bộ thiết kế quân cờ
+                                    từ Chess.com, Lichess và Vector cổ điển</p>
                             </div>
                             <div class="pieces-grid" id="settings-pieces-grid">
                                 <!-- Đổ động từ JS -->
@@ -798,8 +977,10 @@
                             <div class="settings-toggles-list">
                                 <div class="settings-toggle-row">
                                     <div class="toggle-info">
-                                        <span class="toggle-label" data-i18n="settings_coordinates">Tọa độ bàn cờ (1-8, a-h)</span>
-                                        <span class="toggle-desc" data-i18n="settings_coords_desc">Hiển thị ký hiệu hàng và cột ở mép bàn cờ</span>
+                                        <span class="toggle-label" data-i18n="settings_coordinates">Tọa độ bàn cờ (1-8,
+                                            a-h)</span>
+                                        <span class="toggle-desc" data-i18n="settings_coords_desc">Hiển thị ký hiệu hàng
+                                            và cột ở mép bàn cờ</span>
                                     </div>
                                     <label class="settings-switch">
                                         <input type="checkbox" id="toggle-settings-coords" checked>
@@ -808,8 +989,10 @@
                                 </div>
                                 <div class="settings-toggle-row">
                                     <div class="toggle-info">
-                                        <span class="toggle-label" data-i18n="settings_legal_hints">Chấm gợi ý nước đi hợp lệ</span>
-                                        <span class="toggle-desc" data-i18n="settings_legal_desc">Hiển thị các ô có thể đi khi nhấp chuột chọn quân</span>
+                                        <span class="toggle-label" data-i18n="settings_legal_hints">Chấm gợi ý nước đi
+                                            hợp lệ</span>
+                                        <span class="toggle-desc" data-i18n="settings_legal_desc">Hiển thị các ô có thể
+                                            đi khi nhấp chuột chọn quân</span>
                                     </div>
                                     <label class="settings-switch">
                                         <input type="checkbox" id="toggle-settings-legal-hints" checked>
@@ -818,8 +1001,10 @@
                                 </div>
                                 <div class="settings-toggle-row">
                                     <div class="toggle-info">
-                                        <span class="toggle-label" data-i18n="settings_highlight_last">Tô sáng nước đi cuối (Highlight)</span>
-                                        <span class="toggle-desc" data-i18n="settings_highlight_desc">Đánh dấu ô xuất phát và ô đích của nước vừa đi</span>
+                                        <span class="toggle-label" data-i18n="settings_highlight_last">Tô sáng nước đi
+                                            cuối (Highlight)</span>
+                                        <span class="toggle-desc" data-i18n="settings_highlight_desc">Đánh dấu ô xuất
+                                            phát và ô đích của nước vừa đi</span>
                                     </div>
                                     <label class="settings-switch">
                                         <input type="checkbox" id="toggle-settings-highlight-last" checked>
@@ -828,8 +1013,10 @@
                                 </div>
                                 <div class="settings-toggle-row">
                                     <div class="toggle-info">
-                                        <span class="toggle-label" data-i18n="settings_auto_flip">Tự động xoay bàn cờ theo màu quân</span>
-                                        <span class="toggle-desc" data-i18n="settings_autoflip_desc">Tự động xoay góc nhìn theo phía người dùng (Trắng/Đen) khi chọn ván cờ</span>
+                                        <span class="toggle-label" data-i18n="settings_auto_flip">Tự động xoay bàn cờ
+                                            theo màu quân</span>
+                                        <span class="toggle-desc" data-i18n="settings_autoflip_desc">Tự động xoay góc
+                                            nhìn theo phía người dùng (Trắng/Đen) khi chọn ván cờ</span>
                                     </div>
                                     <label class="settings-switch">
                                         <input type="checkbox" id="toggle-settings-auto-flip" checked>
@@ -849,7 +1036,8 @@
                             <div class="settings-card-header">
                                 <div>
                                     <h3 data-i18n="settings_sound">Âm thanh (Sound Effects)</h3>
-                                    <p class="settings-card-desc" data-i18n="settings_sound_desc">Phát âm thanh khi đi quân, ăn quân, chiếu Vua và kết thúc ván</p>
+                                    <p class="settings-card-desc" data-i18n="settings_sound_desc">Phát âm thanh khi đi
+                                        quân, ăn quân, chiếu Vua và kết thúc ván</p>
                                 </div>
                                 <label class="settings-switch">
                                     <input type="checkbox" id="toggle-settings-sound" checked>
@@ -863,13 +1051,18 @@
                             <div class="settings-card-header">
                                 <div>
                                     <h3 data-i18n="settings_anim_speed">Tốc độ di chuyển quân</h3>
-                                    <p class="settings-card-desc" data-i18n="settings_anim_desc">Thời gian chuyển động lướt quân cờ trên bàn đấu</p>
+                                    <p class="settings-card-desc" data-i18n="settings_anim_desc">Thời gian chuyển động
+                                        lướt quân cờ trên bàn đấu</p>
                                 </div>
                                 <div class="settings-segmented" id="settings-speed-segmented">
-                                    <button type="button" class="seg-btn" data-speed-val="0" data-i18n="settings_speed_instant">Tức thì (0ms)</button>
-                                    <button type="button" class="seg-btn" data-speed-val="150" data-i18n="settings_speed_fast">Nhanh (150ms)</button>
-                                    <button type="button" class="seg-btn active" data-speed-val="280" data-i18n="settings_speed_standard">Chuẩn (280ms)</button>
-                                    <button type="button" class="seg-btn" data-speed-val="450" data-i18n="settings_speed_smooth">Mượt (450ms)</button>
+                                    <button type="button" class="seg-btn" data-speed-val="0"
+                                        data-i18n="settings_speed_instant">Tức thì (0ms)</button>
+                                    <button type="button" class="seg-btn" data-speed-val="150"
+                                        data-i18n="settings_speed_fast">Nhanh (150ms)</button>
+                                    <button type="button" class="seg-btn active" data-speed-val="280"
+                                        data-i18n="settings_speed_standard">Chuẩn (280ms)</button>
+                                    <button type="button" class="seg-btn" data-speed-val="450"
+                                        data-i18n="settings_speed_smooth">Mượt (450ms)</button>
                                 </div>
                             </div>
                         </div>
@@ -879,7 +1072,8 @@
                             <div class="settings-card-header">
                                 <div>
                                     <h3 data-i18n="settings_review_depth">Độ sâu phân tích (Review Depth)</h3>
-                                    <p class="settings-card-desc" data-i18n="settings_depth_desc">Độ sâu tính toán của Stockfish khi chạy Game Review toàn ván</p>
+                                    <p class="settings-card-desc" data-i18n="settings_depth_desc">Độ sâu tính toán của
+                                        Stockfish khi chạy Game Review toàn ván</p>
                                 </div>
                                 <div class="settings-segmented" id="settings-depth-segmented">
                                     <button type="button" class="seg-btn active" data-depth-val="16">16 (Nhanh)</button>
@@ -896,12 +1090,14 @@
                                 <div class="slider-header-wrap">
                                     <div>
                                         <h3 data-i18n="settings_move_time">Thời gian suy nghĩ mỗi nước</h3>
-                                        <p class="settings-card-desc" data-i18n="settings_movetime_desc">Giới hạn thời gian tối đa Stockfish tính toán cho mỗi nước cờ</p>
+                                        <p class="settings-card-desc" data-i18n="settings_movetime_desc">Giới hạn thời
+                                            gian tối đa Stockfish tính toán cho mỗi nước cờ</p>
                                     </div>
                                     <span class="settings-val-badge" id="settings-move-time-val">180ms</span>
                                 </div>
                                 <div class="slider-container">
-                                    <input type="range" id="settings-move-time-slider" min="100" max="500" step="25" value="180" class="settings-range-slider">
+                                    <input type="range" id="settings-move-time-slider" min="100" max="500" step="25"
+                                        value="180" class="settings-range-slider">
                                     <div class="slider-ticks">
                                         <span>100ms</span>
                                         <span>200ms</span>
@@ -921,8 +1117,10 @@
                             <div class="settings-toggles-list">
                                 <div class="settings-toggle-row">
                                     <div class="toggle-info">
-                                        <span class="toggle-label" data-i18n="settings_best_arrow">Mũi tên gợi ý nước đi tốt nhất</span>
-                                        <span class="toggle-desc" data-i18n="settings_arrow_desc">Vẽ mũi tên vector xanh lá chỉ rõ nước cờ tối ưu của Stockfish</span>
+                                        <span class="toggle-label" data-i18n="settings_best_arrow">Mũi tên gợi ý nước đi
+                                            tốt nhất</span>
+                                        <span class="toggle-desc" data-i18n="settings_arrow_desc">Vẽ mũi tên vector xanh
+                                            lá chỉ rõ nước cờ tối ưu của Stockfish</span>
                                     </div>
                                     <label class="settings-switch">
                                         <input type="checkbox" id="toggle-settings-best-arrow" checked>
@@ -931,8 +1129,10 @@
                                 </div>
                                 <div class="settings-toggle-row">
                                     <div class="toggle-info">
-                                        <span class="toggle-label" data-i18n="settings_eval_badges">Huy hiệu đánh giá trên ô cờ</span>
-                                        <span class="toggle-desc" data-i18n="settings_badge_desc">Gắn biểu tượng Brilliant (!!), Great (!), Best (★), Blunder (??)... vào ô đích</span>
+                                        <span class="toggle-label" data-i18n="settings_eval_badges">Huy hiệu đánh giá
+                                            trên ô cờ</span>
+                                        <span class="toggle-desc" data-i18n="settings_badge_desc">Gắn biểu tượng
+                                            Brilliant (!!), Great (!), Best (★), Blunder (??)... vào ô đích</span>
                                     </div>
                                     <label class="settings-switch">
                                         <input type="checkbox" id="toggle-settings-eval-badges" checked>
@@ -951,13 +1151,17 @@
                         <div class="settings-card">
                             <div class="settings-card-header-simple">
                                 <h3 data-i18n="settings_default_user">Tài khoản Chess.com mặc định</h3>
-                                <p class="settings-card-desc" data-i18n="settings_user_desc">Tự động tải danh sách ván đấu, nhận diện màu quân và thống kê sự nghiệp theo người chơi này</p>
+                                <p class="settings-card-desc" data-i18n="settings_user_desc">Tự động tải danh sách ván
+                                    đấu, nhận diện màu quân và thống kê sự nghiệp theo người chơi này</p>
                             </div>
                             <div class="username-input-group">
-                                <input type="text" id="settings-username-input" class="settings-text-input" placeholder="Nhập username Chess.com (VD: bazu25022005)" autocomplete="off">
+                                <input type="text" id="settings-username-input" class="settings-text-input"
+                                    placeholder="Nhập username Chess.com (VD: bazu25022005)" autocomplete="off">
                                 <button type="button" id="btn-save-username" class="settings-action-btn primary">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z">
+                                        </path>
                                         <polyline points="17 21 17 13 7 13 7 21"></polyline>
                                         <polyline points="7 3 7 8 15 8"></polyline>
                                     </svg>
@@ -971,7 +1175,8 @@
                             <div class="settings-card-header">
                                 <div>
                                     <h3 data-i18n="settings_cache_mgmt">Quản lý bộ nhớ đệm phân tích (IndexedDB)</h3>
-                                    <p class="settings-card-desc">Lưu trữ kết quả đánh giá ván cờ trên trình duyệt giúp tải lại tức thì không cần phân tích lại</p>
+                                    <p class="settings-card-desc">Lưu trữ kết quả đánh giá ván cờ trên trình duyệt giúp
+                                        tải lại tức thì không cần phân tích lại</p>
                                 </div>
                                 <div class="cache-stat-badge">
                                     <span class="stat-number" id="settings-cache-count">0 ván cờ</span>
@@ -979,9 +1184,12 @@
                             </div>
                             <div class="card-action-bar">
                                 <button type="button" id="btn-settings-clear-cache" class="settings-action-btn danger">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                        </path>
                                     </svg>
                                     <span data-i18n="settings_clear_cache_btn">Xóa bộ nhớ phân tích</span>
                                 </button>
@@ -993,10 +1201,13 @@
                             <div class="settings-card-header">
                                 <div>
                                     <h3 data-i18n="settings_reset_label">Khôi phục cài đặt gốc</h3>
-                                    <p class="settings-card-desc" data-i18n="settings_reset_desc">Đưa toàn bộ tùy biến giao diện, font chữ, bàn cờ, âm thanh và engine về mặc định ban đầu</p>
+                                    <p class="settings-card-desc" data-i18n="settings_reset_desc">Đưa toàn bộ tùy biến
+                                        giao diện, font chữ, bàn cờ, âm thanh và engine về mặc định ban đầu</p>
                                 </div>
-                                <button type="button" id="btn-settings-reset-defaults" class="settings-action-btn warning">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <button type="button" id="btn-settings-reset-defaults"
+                                    class="settings-action-btn warning">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
                                         <path d="M3 3v5h5"></path>
                                     </svg>
@@ -1011,7 +1222,8 @@
     </div>
 
     <!-- MODAL THỐNG KÊ SỰ NGHIỆP (LIFETIME STATS MODAL) -->
-    <div id="lifetime-stats-modal" class="stats-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="stats-modal-title">
+    <div id="lifetime-stats-modal" class="stats-modal-backdrop hidden" role="dialog" aria-modal="true"
+        aria-labelledby="stats-modal-title">
         <div class="stats-modal-dialog">
             <!-- Modal Header -->
             <div class="stats-modal-header">
@@ -1022,11 +1234,13 @@
                             <h2 id="stats-modal-title" data-i18n="lifetime_stats_title">Thống kê sự nghiệp</h2>
                             <span class="stats-username-badge" id="stats-username">bazu25022005</span>
                         </div>
-                        <p class="stats-subtitle" data-i18n="stats_subtitle">Tổng hợp phân tích từ toàn bộ lịch sử đấu</p>
+                        <p class="stats-subtitle" data-i18n="stats_subtitle">Tổng hợp phân tích từ toàn bộ lịch sử đấu
+                        </p>
                     </div>
                 </div>
                 <button id="btn-close-stats-modal" class="stats-close-btn" aria-label="Đóng" title="Đóng bảng thống kê">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
@@ -1039,16 +1253,26 @@
                     <!-- THẺ 1: TỔNG SỐ VÁN ĐẤU & BIỂU ĐỒ THẮNG / HÒA / THUA -->
                     <div class="stats-card card-overview">
                         <div class="stats-card-header">
-                            <span class="stats-card-icon">📊</span>
+                            <span class="stats-card-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                                </svg>
+                            </span>
                             <h3 data-i18n="stats_total_games">Tổng số ván đấu</h3>
                         </div>
                         <div class="stats-card-content">
                             <div class="stats-big-number" id="stats-total-games-count">0</div>
                             <div class="stats-wld-container">
                                 <div class="stats-wld-bar" id="stats-wld-bar">
-                                    <div class="wld-segment wld-win" id="wld-win-bar" style="width: 0%" title="Thắng: 0"></div>
-                                    <div class="wld-segment wld-draw" id="wld-draw-bar" style="width: 0%" title="Hòa: 0"></div>
-                                    <div class="wld-segment wld-loss" id="wld-loss-bar" style="width: 0%" title="Thua: 0"></div>
+                                    <div class="wld-segment wld-win" id="wld-win-bar" style="width: 0%"
+                                        title="Thắng: 0"></div>
+                                    <div class="wld-segment wld-draw" id="wld-draw-bar" style="width: 0%"
+                                        title="Hòa: 0"></div>
+                                    <div class="wld-segment wld-loss" id="wld-loss-bar" style="width: 0%"
+                                        title="Thua: 0"></div>
                                 </div>
                                 <div class="stats-wld-legend">
                                     <div class="wld-legend-item legend-win">
@@ -1077,21 +1301,30 @@
                     <!-- THẺ 2: ĐỘ CHÍNH XÁC TRUNG BÌNH TOÀN SỰ NGHIỆP -->
                     <div class="stats-card card-accuracy">
                         <div class="stats-card-header">
-                            <span class="stats-card-icon">🎯</span>
+                            <span class="stats-card-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <circle cx="12" cy="12" r="6"></circle>
+                                    <circle cx="12" cy="12" r="2"></circle>
+                                </svg>
+                            </span>
                             <h3 data-i18n="stats_career_accuracy">Độ chính xác trung bình</h3>
                         </div>
                         <div class="stats-card-content accuracy-center-content">
                             <div class="accuracy-circle-wrap">
                                 <svg class="accuracy-circle-svg" viewBox="0 0 120 120">
                                     <circle class="circle-bg" cx="60" cy="60" r="52"></circle>
-                                    <circle class="circle-progress" id="stats-accuracy-circle" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"></circle>
+                                    <circle class="circle-progress" id="stats-accuracy-circle" cx="60" cy="60" r="52"
+                                        stroke-dasharray="326.7" stroke-dashoffset="326.7"></circle>
                                 </svg>
                                 <div class="accuracy-circle-value">
                                     <span class="accuracy-main-num" id="stats-avg-accuracy">--%</span>
                                 </div>
                             </div>
                             <div class="accuracy-meta">
-                                <p class="stats-analyzed-count" id="stats-analyzed-games-text">Chưa có ván nào được phân tích</p>
+                                <p class="stats-analyzed-count" id="stats-analyzed-games-text">Chưa có ván nào được phân
+                                    tích</p>
                                 <div class="accuracy-split-row">
                                     <span id="stats-white-accuracy">Cầm Trắng: --%</span>
                                     <span id="stats-black-accuracy">Cầm Đen: --%</span>
@@ -1103,7 +1336,13 @@
                     <!-- THẺ 3: TỔNG SỐ HUY HIỆU TÍCH LŨY (10 HẠNG MỤC) -->
                     <div class="stats-card card-badges">
                         <div class="stats-card-header">
-                            <span class="stats-card-icon">🏅</span>
+                            <span class="stats-card-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="8" r="6"></circle>
+                                    <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
+                                </svg>
+                            </span>
                             <h3 data-i18n="stats_move_badges">Huy hiệu nước đi tích lũy</h3>
                         </div>
                         <div class="stats-card-content">
@@ -1116,7 +1355,13 @@
                     <!-- THẺ 4: KHAI CUỘC CHƠI NHIỀU NHẤT -->
                     <div class="stats-card card-openings">
                         <div class="stats-card-header">
-                            <span class="stats-card-icon">📖</span>
+                            <span class="stats-card-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                </svg>
+                            </span>
                             <h3 data-i18n="stats_favorite_openings">Khai cuộc chơi nhiều nhất</h3>
                         </div>
                         <div class="stats-card-content">
@@ -1131,17 +1376,24 @@
     </div>
 
     <!-- NẠP THƯ VIỆN BÊN NGOÀI QUA CDN (GIỮ NGUYÊN THỨ TỰ) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" integrity="sha384-aH7F59TKSh8OEAivbclch9UUnWn/Uy8AQlYYKzpVaQkAp8W6IF2VocW/knEeRwT0" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+        integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"
+        integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"
+        integrity="sha384-aH7F59TKSh8OEAivbclch9UUnWn/Uy8AQlYYKzpVaQkAp8W6IF2VocW/knEeRwT0" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
 
     <!-- NẠP CÁC FILE JAVASCRIPT ỨNG DỤNG (GIỮ NGUYÊN THỨ TỰ) -->
-    <script src="config.js"></script>
     <script src="api.js"></script>
     <script src="cache.js"></script>
     <script src="engine.js"></script>
     <script src="arrows.js"></script>
+    <script src="move-icons.js"></script>
     <script src="classify.js"></script>
+    <script src="coach-dialogue.js"></script>
     <script src="explain.js"></script>
     <script src="stats.js"></script>
     <script src="app.js"></script>

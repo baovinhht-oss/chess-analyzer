@@ -56,7 +56,8 @@ chess-analyzer/
 ├── engine.js           # Giao tiếp với Stockfish WebAssembly Engine
 ├── cache.js            # Quản lý lưu trữ bộ nhớ đệm (IndexedDB / LocalStorage)
 ├── arrows.js           # Vẽ mũi tên phân tích và gợi ý nước đi trên bàn cờ
+├── move-icons.js       # Hệ thống huy hiệu phân loại nước đi SVG chuẩn Chess.com
 ├── classify.js         # Thuật toán chấm điểm và gán huy hiệu nước đi
+├── coach-dialogue.js   # Hệ thống lời thoại Huấn luyện viên AI & thông báo Game Over
 ├── explain.js          # Tạo nội dung giải thích chi tiết nước cờ
-├── stats.js            # Thống kê sự nghiệp & Dashboard tổng quan
-└── config.js           # Cấu hình tài khoản mặc định và thông số hệ thống
+└── stats.js            # Thống kê sự nghiệp & Dashboard tổng quan

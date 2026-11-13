@@ -371,14 +371,11 @@ function renderLifetimeStatsModal(stats, lang = (typeof currentLang !== 'undefin
             'Good', 'Inaccuracy', 'Mistake', 'Miss', 'Blunder'
         ];
 
-        const iconsMap = (typeof SVG_ICONS !== 'undefined') ? SVG_ICONS : (typeof CATEGORY_ICONS !== 'undefined' ? CATEGORY_ICONS : {});
         const colorsMap = (typeof CATEGORY_ARROW_COLORS !== 'undefined') ? CATEGORY_ARROW_COLORS : {};
-        const cssMap = (typeof CATEGORY_CSS_VAR !== 'undefined') ? CATEGORY_CSS_VAR : {};
 
         let badgesHtml = '';
         for (const cat of categoriesOrder) {
             const count = stats.badges[cat] || 0;
-            const svg = iconsMap[cat] || '★';
             const color = colorsMap[cat] || '#81b64c';
             const cssCls = cat.toLowerCase();
 
@@ -389,10 +386,14 @@ function renderLifetimeStatsModal(stats, lang = (typeof currentLang !== 'undefin
                 catLabel = lang === 'en' ? MOVE_CATEGORIES[cat].enName : MOVE_CATEGORIES[cat].viName;
             }
 
+            const badgeSvg = typeof badgeHTML === 'function'
+                ? badgeHTML(cat, 22, `move-class-badge badge-${cssCls}`)
+                : `<span class="move-class-badge badge-${cssCls}">★</span>`;
+
             badgesHtml += `
                 <div class="stats-badge-item" title="${escapeHTML(catLabel)}">
                     <div class="badge-item-left">
-                        <span class="move-class-badge badge-${cssCls}">${svg}</span>
+                        ${badgeSvg}
                         <span class="badge-item-name">${escapeHTML(catLabel)}</span>
                     </div>
                     <span class="badge-item-count" style="color: ${color};">${count}</span>

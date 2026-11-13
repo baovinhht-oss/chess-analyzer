@@ -15,9 +15,9 @@ const MOVE_CATEGORIES = {
     Excellent: { key: 'Excellent', label: 'Excellent', viName: 'Xuất sắc', enName: 'Excellent', color: '#96bc4b', bgColor: 'rgba(150, 188, 75, 0.15)', icon: '👍' },
     Good: { key: 'Good', label: 'Good', viName: 'Tốt', enName: 'Good', color: '#96af8b', bgColor: 'rgba(150, 175, 139, 0.15)', icon: '✔️' },
     Inaccuracy: { key: 'Inaccuracy', label: 'Inaccuracy', viName: 'Không chính xác', enName: 'Inaccuracy', color: '#f7c631', bgColor: 'rgba(247, 198, 49, 0.15)', icon: '?!' },
-    Mistake: { key: 'Mistake', label: 'Mistake', viName: 'Sai lầm', enName: 'Mistake', color: '#e58f2a', bgColor: 'rgba(229, 143, 42, 0.15)', icon: '?' },
+    Mistake: { key: 'Mistake', label: 'Mistake', viName: 'Sai lầm', enName: 'Mistake', color: '#ffa459', bgColor: 'rgba(255, 164, 89, 0.15)', icon: '?' },
     Miss: { key: 'Miss', label: 'Miss', viName: 'Bỏ lỡ', enName: 'Miss', color: '#ff7769', bgColor: 'rgba(255, 119, 105, 0.15)', icon: 'X' },
-    Blunder: { key: 'Blunder', label: 'Blunder', viName: 'Sai lầm nặng', enName: 'Blunder', color: '#ca3431', bgColor: 'rgba(202, 52, 49, 0.15)', icon: '??' }
+    Blunder: { key: 'Blunder', label: 'Blunder', viName: 'Sai lầm nặng', enName: 'Blunder', color: '#fa412d', bgColor: 'rgba(250, 65, 45, 0.15)', icon: '??' }
 };
 
 function getCategoryName(categoryKey, lang = (typeof currentLang !== 'undefined' ? currentLang : 'vi')) {
@@ -161,7 +161,7 @@ function evaluateMoveQuality(evalBefore, evalAfter, moverColor, playedUci, bestU
     );
 
     const hadWinningChance = hadMateBefore || (winBefore >= 82.0 && cpMoverBefore >= 350);
-    const stayedNotLosing = !isGettingMatedAfter && winAfter >= 40.0;
+    const stayedNotLosing = !isGettingMatedAfter && winAfter >= 32.0;
     const isMissedMate = (hadMateBefore && !hasMateAfter && winAfter < 95.0);
     const isLostWinningEdge = (winBefore - winAfter >= 18.0 && winAfter < 68.0);
     const isMiss = !isBlunderedMate && !isAcceleratedMate && hadWinningChance && stayedNotLosing && (isMissedMate || isLostWinningEdge);
@@ -186,7 +186,7 @@ function evaluateMoveQuality(evalBefore, evalAfter, moverColor, playedUci, bestU
         categoryKey = 'Good';
     } else if (winLoss <= 10.0) {
         categoryKey = 'Inaccuracy';
-    } else if (winLoss <= 20.0) {
+    } else if (winLoss <= 24.0) {
         categoryKey = 'Mistake';
     } else {
         categoryKey = 'Blunder';
@@ -234,7 +234,7 @@ function detectBrilliant(pos, prevPos) {
         ? (prevPos.eval.mateWhite * sign)
         : null;
 
-    if ((mateMoverBefore !== null && mateMoverBefore < 0) || moverCpBefore < -120 || moverCpBefore > 500) {
+    if ((mateMoverBefore !== null && mateMoverBefore < 0) || moverCpBefore < -120 || moverCpBefore > 850) {
         return false;
     }
 
@@ -250,10 +250,10 @@ function detectBrilliant(pos, prevPos) {
     const hasMateAfter = (mateMoverAfter === 0 && moverCpAfter > 0) || (mateMoverAfter !== null && mateMoverAfter > 0);
 
     if (!hasMateAfter && (moverCpAfter < moverCpBefore - 30 || moverCpAfter < -80)) return false;
-    if (cls.winLoss !== undefined && cls.winLoss > 0.8) return false;
+    if (cls.winLoss !== undefined && cls.winLoss > 1.2) return false;
     if (cls.winAfter !== undefined && cls.winAfter < 48.0) return false;
 
-    const isTopChoice = Boolean(cls.isEngineBest || cls.category === 'Best' || cls.category === 'Great' || (cls.winLoss !== undefined && cls.winLoss < 0.5));
+    const isTopChoice = Boolean(cls.isEngineBest || cls.category === 'Best' || cls.category === 'Great' || (cls.winLoss !== undefined && cls.winLoss <= 1.2));
     if (!isTopChoice) return false;
 
     const pieceValues = { q: 9, r: 5, b: 3, n: 3, p: 1, k: 100 };

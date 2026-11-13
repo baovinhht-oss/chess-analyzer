@@ -4,10 +4,12 @@
    ========================================================= */
 
 :root {
-    --bg: #302e2b;
-    --panel: #262522;
-    --card: #2f2d2a;
-    --line: #403d39;
+    --bg: #1c1b19;
+    --panel: #252421;
+    --card: #2e2d29;
+    --card-hover: #363430;
+    --line: rgba(255, 255, 255, 0.06);
+    --line-subtle: rgba(255, 255, 255, 0.035);
     --ink: #f2f2f0;
     --mute: #a6a39e;
     --pri: #81b64c;
@@ -36,11 +38,11 @@
     /* Xanh oliu nhạt: Good ✔️ */
     --inac: #f7c631;
     /* Vàng: Inaccuracy ?! */
-    --mis: #e58f2a;
+    --mis: #ffa459;
     /* Cam: Mistake ? */
     --miss: #ff7769;
     /* Đỏ san hô: Miss X */
-    --blu: #ca3431;
+    --blu: #fa412d;
     /* Đỏ: Blunder ?? */
 
     box-sizing: border-box;
@@ -50,10 +52,12 @@
 
 /* Giao diện Sáng (Light Theme) */
 :root[data-theme="light"] {
-    --bg: #e9ece6;
+    --bg: #f3f3f1;
     --panel: #ffffff;
-    --card: #f4f6f1;
-    --line: #d9ded4;
+    --card: #f8f8f7;
+    --card-hover: #f0f0ed;
+    --line: rgba(0, 0, 0, 0.08);
+    --line-subtle: rgba(0, 0, 0, 0.04);
     --ink: #1f2a1f;
     --mute: #667064;
     --pri: #5b9a2c;
@@ -61,21 +65,6 @@
     --cg-fill: #ffffff;
     --brill: #0891b2;
     /* Màu Brilliant trên nền sáng */
-}
-
-@media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) {
-        --bg: #e9ece6;
-        --panel: #ffffff;
-        --card: #f4f6f1;
-        --line: #d9ded4;
-        --ink: #1f2a1f;
-        --mute: #667064;
-        --pri: #5b9a2c;
-        --cg-bg: #cfd5c9;
-        --cg-fill: #ffffff;
-        --brill: #0891b2;
-    }
 }
 
 * {
@@ -111,15 +100,7 @@ html {
 
 body {
     background-color: var(--bg);
-    background-image:
-        radial-gradient(ellipse at 50% 0%, rgba(129, 182, 76, 0.08) 0%, transparent 65%),
-        linear-gradient(45deg, rgba(255, 255, 255, 0.015) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(255, 255, 255, 0.015) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.015) 75%),
-        linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.015) 75%);
-    background-size: 100% 100%, 64px 64px, 64px 64px, 64px 64px, 64px 64px;
-    background-position: 0 0, 0 0, 0 32px, 32px -32px, -32px 0px;
-    background-attachment: fixed;
+    background-image: none;
     color: var(--ink);
     /* Typography hiện đại: Inter → SF Pro → system-ui → Roboto */
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -134,15 +115,7 @@ body {
 }
 
 :root[data-theme="light"] body {
-    background-image:
-        radial-gradient(ellipse at 50% 0%, rgba(91, 154, 44, 0.08) 0%, transparent 65%),
-        linear-gradient(45deg, rgba(0, 0, 0, 0.02) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(0, 0, 0, 0.02) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, rgba(0, 0, 0, 0.02) 75%),
-        linear-gradient(-45deg, transparent 75%, rgba(0, 0, 0, 0.02) 75%);
-    background-size: 100% 100%, 64px 64px, 64px 64px, 64px 64px, 64px 64px;
-    background-position: 0 0, 0 0, 0 32px, 32px -32px, -32px 0px;
-    background-attachment: fixed;
+    background-image: none;
 }
 
 /* Các lớp trạng thái chung */
@@ -203,6 +176,43 @@ input:focus-visible {
 
 .primary:hover {
     filter: brightness(0.92);
+}
+
+/* =========================================================
+   CHUẨN HÓA TYPOGRAPHY & TABULAR NUMBERS (CHỮ SỐ CỐ ĐỊNH CHIỀU RỘNG)
+   ========================================================= */
+.tile .n,
+.avl,
+.ab-score,
+.sym-acc-badge,
+.accuracy-main-num,
+.eval-bar-score,
+.eval-num,
+.eb,
+.live-score-val,
+.clock,
+.player-clock,
+.player-clock-sub,
+#analysis-elapsed-time,
+.time-spent,
+.move-spent,
+#move-counter,
+.bot-moves-counter,
+.bot-live-count,
+.move-cell-num,
+.sym-count,
+.stats-table td,
+.stats-card-val,
+.stats-big-number,
+.kpi-perf-num,
+.perf-diff-badge,
+.stats-badge-count,
+.legend-pct,
+.stats-split-pct,
+.move-time,
+.move-eval {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'cv05' 1, 'cv09' 1;
 }
 
 /* Khung bọc ứng dụng */
@@ -489,22 +499,26 @@ input:focus-visible {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background: var(--panel);
-    border: 1px solid var(--line);
+    background: var(--card);
+    border: none;
     border-radius: 8px;
     padding: 16px;
 }
 .tile .l {
     color: var(--mute);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 .tile .n {
-    font-size: 28px;
-    font-weight: 800;
+    font-size: 20px;
+    font-weight: 700;
     line-height: 1.2;
-    margin: 6px 0 4px;
+    margin: 4px 0 2px;
     color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
 }
 .tile .n.highlight-acc {
     color: var(--pri);
@@ -684,6 +698,20 @@ input:focus-visible {
         overflow: visible !important;
         padding: 12px 14px;
     }
+
+    .moves {
+        max-height: 280px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+
+    .bot-moves-rows {
+        max-height: 280px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
 }
 
 /* =========================================================
@@ -836,20 +864,24 @@ input:focus-visible {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
+.evalbar i,
+.evalbar .evalbar-white-wrap {
+    transition: height 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: height;
+}
+
 .evalbar i {
     display: block;
     background: #403d39;
     height: 50%;
     width: 100%;
     flex-shrink: 0;
-    transition: height 0.25s ease;
 }
 
 .evalbar .evalbar-white-wrap {
     flex: 1;
     width: 100%;
     background: #f2f2f0;
-    transition: height 0.25s ease;
 }
 
 /* Số điểm hiển thị trực tiếp trên thanh Eval Bar */
@@ -866,7 +898,7 @@ input:focus-visible {
     pointer-events: none;
     padding: 4px 1px;
     letter-spacing: -0.2px;
-    transition: opacity 0.22s ease, transform 0.22s ease;
+    transition: transform 0.35s ease, opacity 0.35s ease;
 }
 
 .eval-num.black-num {
@@ -902,17 +934,26 @@ input:focus-visible {
     position: relative;
     width: 100%;
     aspect-ratio: 1;
-    border-radius: 4px;
+    border-radius: 8px;
     overflow: hidden;
     flex: 1;
     min-width: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--line);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    overscroll-behavior: contain;
 }
 
 #board {
     width: 100% !important;
     height: 100% !important;
     aspect-ratio: 1;
+    touch-action: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }
 
 /* =========================================================
@@ -1159,15 +1200,17 @@ body.hide-last-move-highlight .highlight-last-move {
 .piece-417db {
     will-change: transform;
     user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: none;
     -webkit-user-drag: none;
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Nâng nhẹ và bóng đổ động khi quân cờ trượt hoặc kéo thả */
 body > img.piece-417db {
-    transform: translateY(-8px) scale(1.08) !important;
-    filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.45)) !important;
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), filter 0.28s ease;
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35)) !important;
+    transition: none !important;
+    touch-action: none;
     z-index: 99999 !important;
     pointer-events: none;
 }
@@ -1191,8 +1234,8 @@ body > img.piece-417db {
     color: #ffffff;
     z-index: 25;
     pointer-events: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2);
-    border: 2px solid #ffffff;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+    border: none;
     letter-spacing: -0.5px;
     animation: evalBadgePop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -1233,7 +1276,7 @@ body > img.piece-417db {
 
 .board-eval-badge.badge-brilliant {
     background-color: var(--brill);
-    box-shadow: 0 0 10px rgba(27, 172, 166, 0.65), 0 3px 8px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
     animation: evalBadgePopBrilliant 0.48s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -1302,6 +1345,49 @@ body > img.piece-417db {
 
 .board-eval-badge.badge-blunder {
     background-color: var(--blu);
+}
+
+/* =========================================================
+   HUY HIỆU KẾT THÚC VÁN TRÊN Ô VUA (ON-BOARD KING RESULT BADGES)
+   ========================================================= */
+.king-result-badge {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    z-index: 26;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    animation: evalBadgePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.king-result-badge.badge-winner {
+    background-color: var(--best, #81b64c);
+    color: #ffffff;
+}
+
+.king-result-badge.badge-loser {
+    background-color: var(--blu, #fa412d);
+    color: #ffffff;
+}
+
+.king-result-badge.badge-draw {
+    background-color: #8b8987;
+    color: #ffffff;
+}
+
+.king-badge-draw-val {
+    font-size: 14.5px;
+    font-weight: 800;
+    line-height: 1;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin-top: -1px;
 }
 
 /* Toạ độ ô cờ (a-h / 1-8) */
@@ -1429,7 +1515,7 @@ body > img.piece-417db {
     display: flex;
     flex-direction: column;
     background: var(--panel);
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     border: 1px solid var(--line);
 }
@@ -1526,9 +1612,9 @@ body > img.piece-417db {
 /* Thanh tiến độ phân tích Stockfish */
 .analysis-progress-box {
     background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 8px 10px;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 12px;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -1580,13 +1666,13 @@ body > img.piece-417db {
 
 .ab {
     background: var(--card);
-    border-radius: 6px;
-    padding: 8px 10px;
-    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    border: none;
 }
 
 .an {
-    font-size: 11.5px;
+    font-size: 11px;
     color: var(--mute);
     display: flex;
     align-items: center;
@@ -1595,6 +1681,8 @@ body > img.piece-417db {
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .dot {
@@ -1606,26 +1694,28 @@ body > img.piece-417db {
 }
 
 .avl {
-    font-size: 24px;
-    font-weight: 800;
+    font-size: 20px;
+    font-weight: 700;
     line-height: 1.2;
-    margin-top: 2px;
+    margin-top: 3px;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
 }
 
 /* Thẻ Performance Rating (Hiệu suất ván đấu) */
 .perf-card {
     background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 8px 10px;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 12px;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    transition: border-color 0.15s ease, background 0.15s ease;
+    transition: background-color 0.15s ease;
 }
 
 .perf-card:hover {
-    border-color: rgba(129, 182, 76, 0.4);
+    background: var(--card-hover);
 }
 
 .perf-header {
@@ -1724,9 +1814,9 @@ body > img.piece-417db {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
     background: var(--card);
-    border-radius: 6px;
-    padding: 8px 10px;
-    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    border: none;
     font-size: 12px;
 }
 
@@ -1747,17 +1837,198 @@ body > img.piece-417db {
 }
 
 /* =========================================================
+   THÔNG BÁO KẾT QUẢ VÁN ĐẤU (GAME OVER BANNER)
+   ========================================================= */
+#game-over-banner,
+.game-over-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    position: relative;
+    margin-bottom: 8px;
+    border: 1px solid transparent;
+    animation: bannerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes bannerSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.game-over-banner.banner-win {
+    background: linear-gradient(135deg, rgba(129, 182, 76, 0.16), rgba(129, 182, 76, 0.06));
+    border-color: rgba(129, 182, 76, 0.3);
+}
+
+.game-over-banner.banner-win .gob-icon-wrap {
+    background: rgba(129, 182, 76, 0.2);
+    color: var(--pri, #81b64c);
+    border: 1px solid rgba(129, 182, 76, 0.4);
+}
+
+.game-over-banner.banner-loss {
+    background: linear-gradient(135deg, rgba(250, 65, 45, 0.14), rgba(250, 65, 45, 0.05));
+    border-color: rgba(250, 65, 45, 0.3);
+}
+
+.game-over-banner.banner-loss .gob-icon-wrap {
+    background: rgba(250, 65, 45, 0.18);
+    color: var(--blu, #fa412d);
+    border: 1px solid rgba(250, 65, 45, 0.4);
+}
+
+.game-over-banner.banner-draw {
+    background: linear-gradient(135deg, rgba(139, 137, 135, 0.16), rgba(139, 137, 135, 0.06));
+    border-color: rgba(139, 137, 135, 0.3);
+}
+
+.game-over-banner.banner-draw .gob-icon-wrap {
+    background: rgba(139, 137, 135, 0.2);
+    color: #a6a39e;
+    border: 1px solid rgba(139, 137, 135, 0.4);
+}
+
+.gob-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.gob-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.gob-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.gob-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+}
+
+.game-over-banner.banner-win .gob-title {
+    color: var(--pri, #81b64c);
+}
+
+.game-over-banner.banner-loss .gob-title {
+    color: var(--blu, #fa412d);
+}
+
+.gob-reason {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--mute);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1px 7px;
+    border-radius: 4px;
+}
+
+.gob-message {
+    font-size: 12.5px;
+    color: var(--ink);
+    line-height: 1.45;
+    margin: 2px 0 6px 0;
+}
+
+.gob-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.gob-btn {
+    height: 28px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.gob-btn.primary {
+    background: var(--pri);
+    color: #ffffff;
+    border: 1px solid var(--pri);
+}
+
+.gob-btn.primary:hover {
+    filter: brightness(0.92);
+}
+
+.gob-btn.secondary {
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--line);
+}
+
+.gob-btn.secondary:hover {
+    background: var(--card-hover);
+    border-color: var(--mute);
+}
+
+.gob-close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--mute);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.gob-close-btn:hover {
+    color: var(--ink);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* =========================================================
    KHUNG "NHẬN XÉT NƯỚC ĐI" (COACH PANEL)
    ========================================================= */
 .coach {
     background: var(--card);
-    border: 1px solid var(--line);
+    border: none;
     border-radius: 8px;
-    padding: 12px;
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
     gap: 6px;
-    transition: border-color 0.2s ease;
+    transition: background-color 0.15s ease;
 }
 
 .ch {
@@ -1783,9 +2054,11 @@ body > img.piece-417db {
 }
 
 .eb {
-    font-size: 24px;
-    font-weight: 800;
+    font-size: 20px;
+    font-weight: 700;
     line-height: 1;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
 }
 
 .white-adv {
@@ -1865,31 +2138,23 @@ body > img.piece-417db {
 }
 
 .btn-exit-bot-coach {
-    background: rgba(239, 68, 68, 0.18) !important;
-    border: 1px solid #ef4444 !important;
+    background: rgba(239, 68, 68, 0.12) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
     color: #ef4444 !important;
-    font-weight: 700 !important;
-    animation: pulseExitBot 1.8s infinite;
+    font-weight: 600 !important;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .btn-exit-bot-coach:hover {
     background: #ef4444 !important;
+    border-color: #ef4444 !important;
     color: #ffffff !important;
-}
-
-@keyframes pulseExitBot {
-    0%, 100% {
-        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
-    }
 }
 
 /* Khung trạng thái đấu với Bot trong Coach Panel */
 .bot-game-panel {
-    background: linear-gradient(135deg, rgba(129, 182, 76, 0.1), rgba(27, 172, 166, 0.08));
-    border: 1px solid rgba(129, 182, 76, 0.35);
+    background: var(--card);
+    border: 1px solid rgba(129, 182, 76, 0.2);
     border-radius: 8px;
     padding: 10px 12px;
     display: flex;
@@ -1991,10 +2256,10 @@ body > img.piece-417db {
 .coach-hints-box,
 .coach-explain-box {
     margin-top: 8px;
-    padding: 10px;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 6px;
+    padding: 12px;
+    background: var(--card);
+    border: none;
+    border-radius: 8px;
     font-size: 12px;
 }
 
@@ -2008,10 +2273,10 @@ body > img.piece-417db {
 }
 
 .explain-coach-card .coach-block {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 8px 11px;
+    background: var(--card-hover);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 12px;
 }
 
 .explain-coach-card .coach-sec-header {
@@ -2070,16 +2335,34 @@ body > img.piece-417db {
 
 .hint-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 8px;
+    flex-direction: column;
+    gap: 4px;
+    padding: 7px 10px;
     background: var(--card);
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .hint-item:hover {
-    border: 1px solid var(--pri);
+    border-color: var(--pri);
+    background: rgba(129, 182, 76, 0.05);
+}
+
+.hint-main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.hint-idea {
+    font-size: 11.5px;
+    color: var(--mute);
+    line-height: 1.4;
+    font-style: italic;
+    padding-left: 2px;
 }
 
 .hint-left {
@@ -2159,15 +2442,15 @@ svg.chart {
     display: flex;
     gap: 4px;
     background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 4px;
+    border: none;
+    border-radius: 8px;
+    padding: 3px;
 }
 
 .tabs button {
     height: auto;
     border: 0;
-    border-radius: 7px;
+    border-radius: 6px;
     background: none;
     color: var(--mute);
     font-weight: 600;
@@ -2176,12 +2459,12 @@ svg.chart {
     cursor: pointer;
     flex: 1;
     text-align: center;
-    transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
     letter-spacing: 0.01em;
 }
 
 .tabs button:hover {
-    background: var(--line);
+    background: var(--card-hover);
     color: var(--ink);
     border-color: transparent;
 }
@@ -2189,8 +2472,8 @@ svg.chart {
 .tabs button.on {
     background: var(--panel);
     color: var(--ink);
-    border: 1px solid var(--line);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Tab 1: Danh sách nước đi */
@@ -2273,20 +2556,15 @@ svg.chart {
     justify-content: center;
     line-height: 1;
     letter-spacing: -0.5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
     flex-shrink: 0;
     transition: transform 0.14s ease;
 }
 
 .move-class-badge svg,
 .board-eval-badge svg {
-    width: 68%;
-    height: 68%;
     display: block;
-    margin-top: 1px; /* Cân bằng thị giác một chút */
     flex-shrink: 0;
-    color: #ffffff;
-    fill: currentColor;
 }
 
 .move-class-badge.badge-brilliant,
@@ -2295,7 +2573,7 @@ svg.chart {
 .badge-brill {
     background-color: var(--brill) !important;
     color: #ffffff !important;
-    box-shadow: 0 0 6px rgba(27, 172, 166, 0.6);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
 }
 
 .move-class-badge.badge-great,
@@ -2375,13 +2653,11 @@ svg.chart {
 
 .trial-move-badge.brilliant-badge {
     color: var(--brill) !important;
-    background: rgba(34, 211, 238, 0.12) !important;
-    box-shadow: 0 0 5px rgba(34, 211, 238, 0.35);
+    background: rgba(27, 172, 166, 0.12) !important;
 }
 
 .dot-brilliant {
     background: var(--brill) !important;
-    box-shadow: 0 0 5px rgba(34, 211, 238, 0.5);
 }
 
 .chart-error-dot-brilliant {
@@ -2476,10 +2752,9 @@ svg.chart {
     gap: 8px;
     align-items: center;
     background: var(--card);
-    border: 1px solid var(--line);
+    border: none;
     border-radius: 8px;
     padding: 10px 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .sym-player-card {
@@ -2598,10 +2873,9 @@ svg.chart {
     flex-direction: column;
     gap: 3px;
     background: var(--card);
-    border: 1px solid var(--line);
+    border: none;
     border-radius: 8px;
     padding: 5px 6px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
     height: max-content;
     /* Khóa chiều cao, chống kéo giãn */
 }
@@ -2620,7 +2894,7 @@ svg.chart {
 }
 
 .sym-row:hover {
-    background: color-mix(in srgb, var(--ink) 4%, transparent);
+    background: var(--card-hover);
 }
 
 .sym-count {
@@ -2733,18 +3007,19 @@ svg.chart {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 10px;
+    padding: 7px 10px;
     background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 4px;
+    border: 1px solid transparent;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 12px;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .key-move-item:hover,
 .key-move-item.active {
-    border-color: var(--pri);
-    background: color-mix(in srgb, var(--pri) 12%, var(--card));
+    border-color: rgba(255, 255, 255, 0.05);
+    background: var(--card-hover);
 }
 
 .key-move-left {
@@ -2767,14 +3042,14 @@ svg.chart {
     font-weight: 700;
     font-size: 11px;
     padding: 2px 6px;
-    border-radius: 3px;
+    border-radius: 4px;
 }
 
 /* Tab 4: Live Engine Bar */
 .live-engine-bar {
     background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 6px;
+    border: none;
+    border-radius: 8px;
     padding: 10px 12px;
     display: flex;
     flex-direction: column;
@@ -3149,29 +3424,29 @@ svg.chart {
 
 /* Thẻ ván cờ thanh mảnh, hiện đại */
 .game-item {
-    border: 1px solid var(--line);
+    border: 1px solid transparent;
     border-left: 3.5px solid transparent;
     background: var(--card);
-    border-radius: 6px;
-    padding: 7px 10px;
+    border-radius: 8px;
+    padding: 8px 11px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     gap: 4px;
     font-size: 12px;
-    transition: all 0.15s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .game-item:hover {
-    border-color: var(--mute);
-    border-left-color: var(--mute);
-    background: color-mix(in srgb, var(--ink) 4%, var(--card));
+    border-color: rgba(255, 255, 255, 0.05);
+    border-left-color: rgba(255, 255, 255, 0.2);
+    background: var(--card-hover);
 }
 
 .game-item.active {
-    border-color: var(--line);
+    border-color: rgba(255, 255, 255, 0.06);
     border-left-color: var(--pri) !important;
-    background: color-mix(in srgb, var(--pri) 12%, var(--card)) !important;
+    background: var(--card-hover) !important;
 }
 
 .game-item-header {
@@ -3321,15 +3596,6 @@ svg.chart {
 /* =========================================================
    LIFETIME STATS BUTTON & MODAL (ENLARGED & BALANCED 2-COLUMN GRID)
    ========================================================= */
-@keyframes statsBounce {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-3px);
-    }
-}
-
 .btn-tool-stats {
     display: inline-flex;
     align-items: center;
@@ -3343,24 +3609,17 @@ svg.chart {
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
-    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .btn-tool-stats:hover {
-    background: rgba(129, 182, 76, 0.15);
-    border-color: var(--pri);
+    background: var(--card-hover);
+    border-color: rgba(255, 255, 255, 0.15);
     color: var(--pri);
-    box-shadow: 0 4px 12px rgba(129, 182, 76, 0.22);
-    transform: translateY(-1px);
 }
 
 .btn-tool-stats svg {
     color: var(--pri);
-    transition: transform 0.2s ease;
-}
-
-.btn-tool-stats:hover svg {
-    animation: statsBounce 0.5s ease infinite;
 }
 
 .stats-modal-backdrop {
@@ -3387,7 +3646,7 @@ svg.chart {
 .stats-modal-dialog {
     background: var(--panel);
     border: 1px solid var(--line);
-    border-radius: 14px;
+    border-radius: 12px;
     width: 95%;
     max-width: 960px;
     max-height: 90vh;
@@ -3525,8 +3784,8 @@ svg.chart {
 
 .stats-card {
     background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 10px;
+    border: none;
+    border-radius: 8px;
     padding: 16px 18px;
     display: flex;
     flex-direction: column;
@@ -3565,11 +3824,13 @@ svg.chart {
 
 /* Thẻ 1: Overview & WLD */
 .stats-big-number {
-    font-size: 32px;
-    font-weight: 800;
+    font-size: 22px;
+    font-weight: 700;
     color: var(--ink);
-    letter-spacing: -0.5px;
+    letter-spacing: -0.3px;
     line-height: 1;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
 }
 
 .stats-wld-container {
@@ -3688,10 +3949,12 @@ svg.chart {
 }
 
 .accuracy-main-num {
-    font-size: 24px;
-    font-weight: 800;
+    font-size: 20px;
+    font-weight: 700;
     color: var(--ink);
-    letter-spacing: -0.5px;
+    letter-spacing: -0.3px;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
 }
 
 .accuracy-meta {
@@ -3766,10 +4029,8 @@ svg.chart {
 }
 
 .badge-item-left .move-class-badge svg {
-    width: 14px;
-    height: 14px;
-    color: #ffffff;
-    fill: currentColor;
+    display: block;
+    flex-shrink: 0;
 }
 
 .badge-item-name {
@@ -4087,7 +4348,7 @@ svg.chart {
 .settings-modal-dialog {
     background: var(--panel);
     border: 1px solid var(--line);
-    border-radius: 16px;
+    border-radius: 12px;
     width: 95%;
     max-width: 960px;
     height: 85vh;
@@ -4127,16 +4388,15 @@ svg.chart {
 }
 
 .settings-title-icon-badge {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, var(--pri), #3b6d27);
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: rgba(129, 182, 76, 0.12);
+    border: 1px solid rgba(129, 182, 76, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(129, 182, 76, 0.3);
+    color: var(--pri);
 }
 
 .settings-modal-header h2 {
@@ -4200,7 +4460,7 @@ svg.chart {
     align-items: center;
     gap: 12px;
     padding: 11px 14px;
-    border-radius: 10px;
+    border-radius: 6px;
     border: 1px solid transparent;
     background: transparent;
     color: var(--mute);
@@ -4266,8 +4526,8 @@ svg.chart {
 /* Settings Cards */
 .settings-card {
     background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 12px;
+    border: none;
+    border-radius: 8px;
     padding: 16px 18px;
     display: flex;
     flex-direction: column;
@@ -4886,7 +5146,6 @@ svg.chart {
 .key-moves-list,
 .settings-content-area,
 .stats-modal-dialog,
-.stats-history-scroll,
 .hints-list {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
