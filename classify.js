@@ -330,11 +330,142 @@ function detectBrilliant(pos, prevPos) {
 }
 
 /**
+ * Giải phóng Main Thread để nhường quyền xử lý cho UI rendering, Event Loop và Animation
+ * Hỗ trợ Web standard scheduler.yield() và fallback requestAnimationFrame / setTimeout
+ */
+function yieldToMain() {
+    if (typeof globalThis !== 'undefined' && globalThis.scheduler && typeof globalThis.scheduler.yield === 'function') {
+        return globalThis.scheduler.yield();
+    }
+    return new Promise(resolve => {
+        if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(() => setTimeout(resolve, 0));
+        } else {
+            setTimeout(resolve, 0);
+        }
+    });
+}
+
+/**
+ * Phân loại toàn bộ các nước đi và tính toán thống kê (Bất đồng bộ có yielding theo chunk)
+ * Tránh triệt để UI Freeze và cảnh báo Long Task (>50ms) trong trình duyệt
+ * @param {Array} positions - Mảng các thế cờ gamePositions
+ * @param {Object} [options] - Tuỳ chọn { chunkSize: 8, maxBlockMs: 8, onProgress: (done, total) => {} }
+ * @returns {Promise<Object>} Thống kê chi tiết cho White ('w') và Black ('b')
+ */
+async function classifyAllMovesAndStatsAsync(positions, options = {}) {
+    const stats = {
+        w: {
+            accuracies: [],
+            avgAccuracy: 0,
+            counts: {
+                Brilliant: 0, Great: 0, Book: 0, Best: 0, Excellent: 0,
+                Good: 0, Inaccuracy: 0, Mistake: 0, Miss: 0, Blunder: 0
+            }
+        },
+        b: {
+            accuracies: [],
+            avgAccuracy: 0,
+            counts: {
+                Brilliant: 0, Great: 0, Book: 0, Best: 0, Excellent: 0,
+                Good: 0, Inaccuracy: 0, Mistake: 0, Miss: 0, Blunder: 0
+            }
+        }
+    };
+
+    if (!Array.isArray(positions) || positions.length <= 1) {
+        return stats;
+    }
+
+    const total = positions.length - 1;
+    const chunkSize = options.chunkSize || 8;
+    const maxBlockMs = options.maxBlockMs || 8;
+    const onProgress = typeof options.onProgress === 'function' ? options.onProgress : null;
+    let lastYieldTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+
+    for (let i = 1; i < positions.length; i++) {
+        const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+        // Yielding nhường Main Thread sau mỗi chunkSize nước hoặc khi vượt quá maxBlockMs
+        if ((i % chunkSize === 0) || (now - lastYieldTime >= maxBlockMs)) {
+            if (onProgress) {
+                onProgress(i, total);
+            }
+            await yieldToMain();
+            lastYieldTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+        }
+
+        const prevPos = positions[i - 1];
+        const currPos = positions[i];
+
+        if (!prevPos || !currPos || !currPos.move || !prevPos.eval || !currPos.eval) continue;
+
+        const moverColor = currPos.move.color;
+        if (!stats[moverColor]) continue;
+
+        const playedUci = currPos.move.uci;
+        const bestUci = prevPos.eval.bestmove;
+
+        const evalPrevPrev = (i >= 2 && positions[i - 2] && positions[i - 2].eval) ? positions[i - 2].eval : null;
+        const result = evaluateMoveQuality(prevPos.eval, currPos.eval, moverColor, playedUci, bestUci, i, {
+            evalPrevPrev: evalPrevPrev,
+            move: currPos.move
+        });
+
+        if (!result) continue;
+        currPos.classification = result;
+
+        if (detectBrilliant(currPos, prevPos)) {
+            currPos.classification.isBrilliant = true;
+            currPos.classification.category = 'Brilliant';
+            currPos.classification.info = MOVE_CATEGORIES['Brilliant'];
+            currPos.classification.accuracy = 100.0;
+        }
+
+        const finalCat = currPos.classification.category;
+        stats[moverColor].accuracies.push(currPos.classification.accuracy);
+        if (stats[moverColor].counts[finalCat] !== undefined) {
+            stats[moverColor].counts[finalCat]++;
+        }
+    }
+
+    if (onProgress) {
+        onProgress(total, total);
+    }
+
+    ['w', 'b'].forEach(color => {
+        const arr = stats[color].accuracies;
+        if (arr.length > 0) {
+            let weightedSum = 0;
+            let totalWeight = 0;
+            for (const acc of arr) {
+                const weight = acc < 50 ? 2.0 : (acc < 80 ? 1.4 : 1.0);
+                weightedSum += acc * weight;
+                totalWeight += weight;
+            }
+            stats[color].avgAccuracy = Number((weightedSum / totalWeight).toFixed(1));
+            stats[color].weightedSum = Number(weightedSum.toFixed(2));
+            stats[color].totalWeight = Number(totalWeight.toFixed(2));
+        } else {
+            stats[color].avgAccuracy = 0;
+            stats[color].weightedSum = 0;
+            stats[color].totalWeight = 0;
+        }
+    });
+
+    return stats;
+}
+
+/**
  * Phân loại toàn bộ các nước đi và tính toán thống kê (Accuracy, Category Counts) của ván cờ
  * @param {Array} positions - Mảng các thế cờ gamePositions
- * @returns {Object} Thống kê chi tiết cho White ('w') và Black ('b')
+ * @param {Object} [options] - Tuỳ chọn { async: boolean, chunkSize: number, onProgress: Function }
+ * @returns {Object|Promise<Object>} Thống kê chi tiết cho White ('w') và Black ('b')
  */
-function classifyAllMovesAndStats(positions) {
+function classifyAllMovesAndStats(positions, options = {}) {
+    if (options && options.async) {
+        return classifyAllMovesAndStatsAsync(positions, options);
+    }
+
     const stats = {
         w: {
             accuracies: [],
@@ -420,8 +551,12 @@ function classifyAllMovesAndStats(positions) {
                 totalWeight += weight;
             }
             stats[color].avgAccuracy = Number((weightedSum / totalWeight).toFixed(1));
+            stats[color].weightedSum = Number(weightedSum.toFixed(2));
+            stats[color].totalWeight = Number(totalWeight.toFixed(2));
         } else {
             stats[color].avgAccuracy = 0;
+            stats[color].weightedSum = 0;
+            stats[color].totalWeight = 0;
         }
     });
 
@@ -435,7 +570,9 @@ if (typeof window !== 'undefined') {
     window.calculateMoveAccuracy = calculateMoveAccuracy;
     window.evaluateMoveQuality = evaluateMoveQuality;
     window.detectBrilliant = detectBrilliant;
+    window.yieldToMain = yieldToMain;
     window.classifyAllMovesAndStats = classifyAllMovesAndStats;
+    window.classifyAllMovesAndStatsAsync = classifyAllMovesAndStatsAsync;
 }
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -445,6 +582,8 @@ if (typeof module !== 'undefined' && module.exports) {
         calculateMoveAccuracy,
         evaluateMoveQuality,
         detectBrilliant,
-        classifyAllMovesAndStats
+        yieldToMain,
+        classifyAllMovesAndStats,
+        classifyAllMovesAndStatsAsync
     };
 }

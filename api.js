@@ -6,7 +6,7 @@
 
 // Fallback an toàn nếu config.js bị thiếu hoặc load thất bại
 if (typeof window !== 'undefined') {
-    window.CHESSCOM_USERNAME = window.CHESSCOM_USERNAME || (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : 'bazu25022005');
+    window.CHESSCOM_USERNAME = window.CHESSCOM_USERNAME || (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : '');
 }
 
 /**
@@ -55,18 +55,35 @@ function parseChessComResult(resultCode, lang = (typeof currentLang !== 'undefin
     };
 }
 
+function resolveAppUsername(explicitUser) {
+    if (explicitUser && typeof explicitUser === 'string' && explicitUser.trim()) {
+        return explicitUser.trim();
+    }
+    if (typeof getAppUsername === 'function') {
+        const u = getAppUsername();
+        if (u && String(u).trim()) return String(u).trim();
+    }
+    if (typeof window !== 'undefined' && window.CHESSCOM_USERNAME) {
+        return String(window.CHESSCOM_USERNAME).trim();
+    }
+    if (typeof CHESSCOM_USERNAME !== 'undefined') {
+        return String(CHESSCOM_USERNAME).trim();
+    }
+    return '';
+}
+
 /**
  * Gọi API lấy danh sách các ván cờ của người chơi trong tháng/năm chỉ định
- * @param {string} [username=CHESSCOM_USERNAME] - Tên người dùng trên Chess.com (mặc định từ config.js)
+ * @param {string} [username] - Tên người dùng trên Chess.com
  * @param {string|number} year - Năm (4 chữ số, VD: 2024)
  * @param {string|number} month - Tháng (1-12 hoặc '01'-'12')
  * @returns {Promise<Array>} Danh sách các ván cờ đã được xử lý thông tin
  */
-async function fetchMonthlyGames(username = (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : (typeof window !== 'undefined' && window.CHESSCOM_USERNAME ? window.CHESSCOM_USERNAME : 'bazu25022005')), year, month) {
-    const targetUser = username || (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : (typeof window !== 'undefined' && window.CHESSCOM_USERNAME ? window.CHESSCOM_USERNAME : 'bazu25022005'));
-    const cleanUsername = targetUser.trim().toLowerCase();
+async function fetchMonthlyGames(username, year, month) {
+    const targetUser = resolveAppUsername(username);
+    const cleanUsername = String(targetUser || '').trim().toLowerCase();
     if (!cleanUsername) {
-        throw new Error('Không tìm thấy username Chess.com được cấu hình.');
+        throw new Error('Không tìm thấy username Chess.com được cấu hình. Vui lòng nhập username trong Cài đặt.');
     }
 
     // Đảm bảo tháng luôn có 2 chữ số (ví dụ: 5 -> "05") đúng chuẩn URL của Chess.com
@@ -101,9 +118,9 @@ async function fetchMonthlyGames(username = (typeof CHESSCOM_USERNAME !== 'undef
         throw new Error(`Người chơi "${username}" không có ván cờ nào trong tháng ${formattedMonth}/${year}.`);
     }
 
-    // Chỉ lọc các ván cờ tiêu chuẩn (rules === 'chess') và có sẵn dữ liệu biên bản PGN
+    // Chỉ lọc các ván cờ tiêu chuẩn (rules === 'chess') và có sẵn dữ liệu biên bản PGN + thông tin người chơi
     // (Loại bỏ các biến thể như cờ 960, Bughouse, 3-check... vì chuẩn PGN/Stockfish cơ bản khác nhau)
-    const validGames = data.games.filter(g => g.rules === 'chess' && g.pgn);
+    const validGames = data.games.filter(g => g && g.rules === 'chess' && g.pgn && g.white && g.black && g.white.username && g.black.username);
 
     if (validGames.length === 0) {
         throw new Error(`Không tìm thấy ván cờ vua tiêu chuẩn nào có biên bản PGN trong tháng ${formattedMonth}/${year}.`);

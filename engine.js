@@ -125,7 +125,6 @@ class StockfishEngine {
 
         return new Promise((resolve) => {
             let timeout = null;
-            let gotReadyok = false;
 
             const cleanup = () => {
                 if (timeout) {
@@ -137,30 +136,28 @@ class StockfishEngine {
                 }
             };
 
-            const checkDone = () => {
-                if (!this.awaitingBestmove && gotReadyok) {
+            const handleIdleLine = (line) => {
+                if (line.startsWith('bestmove ')) {
+                    this.awaitingBestmove = false;
+                }
+                if (line === 'readyok') {
+                    // Stockfish theo chuẩn UCI đã xả sạch mọi buffer lệnh tìm kiếm trước đó
+                    this.awaitingBestmove = false;
                     cleanup();
                     resolve();
                 }
-            };
-
-            const handleIdleLine = (line) => {
-                if (line === 'readyok') {
-                    gotReadyok = true;
-                }
-                checkDone();
             };
 
             this.currentCallback = handleIdleLine;
             this.worker.postMessage('stop');
             this.worker.postMessage('isready');
 
-            // Safety fallback if worker drops a bestmove in extreme edge cases
+            // Timeout bảo vệ tối đa đề phòng Worker bị crash hoặc terminate
             timeout = setTimeout(() => {
                 this.awaitingBestmove = false;
                 cleanup();
                 resolve();
-            }, 1200);
+            }, 2000);
         });
     }
 

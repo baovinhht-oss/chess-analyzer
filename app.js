@@ -5,7 +5,7 @@
 
 // Fallback an toàn nếu config.js bị thiếu hoặc load thất bại
 if (typeof window !== 'undefined') {
-    window.CHESSCOM_USERNAME = window.CHESSCOM_USERNAME || (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : 'bazu25022005');
+    window.CHESSCOM_USERNAME = window.CHESSCOM_USERNAME || (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : '');
 }
 
 const CATEGORY_ARROW_COLORS = {
@@ -895,8 +895,8 @@ function applyLanguage(lang) {
 
     updateThemeButtonText();
 
-    if (typeof loadedGames !== 'undefined' && selectedGameIndex !== null && loadedGames[selectedGameIndex]) {
-        const g = loadedGames[selectedGameIndex];
+    if (typeof AppState.loadedGames !== 'undefined' && AppState.selectedGameIndex !== null && AppState.loadedGames[AppState.selectedGameIndex]) {
+        const g = AppState.loadedGames[AppState.selectedGameIndex];
         if (currentStats) {
             renderStatsTable(currentStats, g);
         }
@@ -937,8 +937,8 @@ function applyLanguage(lang) {
     if (typeof isBotGameActive !== 'undefined' && isBotGameActive && typeof updateBotGameUI === 'function') {
         updateBotGameUI();
     }
-    if (typeof renderWelcomeDashboard === 'function' && typeof loadedGames !== 'undefined' && loadedGames && loadedGames.length) {
-        renderWelcomeDashboard(loadedGames);
+    if (typeof renderWelcomeDashboard === 'function' && typeof AppState.loadedGames !== 'undefined' && AppState.loadedGames && AppState.loadedGames.length) {
+        renderWelcomeDashboard(AppState.loadedGames);
     }
 }
 
@@ -973,11 +973,18 @@ if (typeof window !== 'undefined') {
  * @param {number} [mistakes] - Số lượng sai lầm (Mistakes)
  * @param {number} [blunders] - Số lượng sai lầm nặng (Blunders)
  * @param {number|string} [opponentRating] - Hệ số Elo của đối thủ
+ * @param {number} [moveCount] - Số lượng nước đi của người chơi trong ván cờ
  * @returns {number} Elo hiệu suất ước tính
  */
-function calculatePerformanceRating(accuracy, mistakes = 0, blunders = 0, opponentRating = 1000) {
+function calculatePerformanceRating(accuracy, mistakes = 0, blunders = 0, opponentRating = 1000, moveCount = 0) {
     const oppElo = Math.max(100, Number(opponentRating) || 1000);
     const acc = Math.max(0, Math.min(100, Number(accuracy) || 0));
+
+    // Xác định số nước đi (nếu chưa truyền vào thì thử lấy từ AppState nếu có)
+    let moves = Number(moveCount) || 0;
+    if (moves <= 0 && typeof AppState !== 'undefined' && Array.isArray(AppState.gamePositions) && AppState.gamePositions.length > 1) {
+        moves = Math.floor((AppState.gamePositions.length - 1) / 2);
+    }
 
     // Công thức tính Performance Rating theo chuẩn Chess.com:
     // Performance Rating = Elo_Đối_thủ + (Accuracy - 50) * 10
@@ -991,6 +998,18 @@ function calculatePerformanceRating(accuracy, mistakes = 0, blunders = 0, oppone
         }
     } else {
         delta = (acc - 50) * 10;
+    }
+
+    // Giới hạn (cap) & scale theo độ dài ván cờ (nếu dưới 15 nước, giảm mạnh delta cộng thêm để tránh Elo ảo)
+    if (delta > 0 && moves < 15) {
+        if (moves <= 0) {
+            delta = 0;
+        } else {
+            const moveScale = Math.max(0.1, moves / 15);
+            delta = delta * moveScale;
+            const maxShortGameBonus = moves * 25; // Mỗi nước đi tối đa đóng góp +25 Elo bonus
+            delta = Math.min(delta, maxShortGameBonus);
+        }
     }
 
     const rawPerformance = oppElo + delta;
@@ -1039,21 +1058,77 @@ const CUSTOM_SVG_PIECES = (() => {
 // ============================================================================
 // 2. BIẾN TOÀN CỤC & DOM
 // ============================================================================
-let loadedGames = [];
+// ============================================================================
+// 2. TRẠNG THÁI ỨNG DỤNG TẬP TRUNG (CENTRALIZED APPLICATION STATE)
+// ============================================================================
+const AppState = {
+    loadedGames: [],
+    selectedGameIndex: null,
+    gamePositions: [],
+    currentMoveIndex: 0,
+    isAnalyzing: false,
+    trialBranch: null,
+
+    resetCurrentGame() {
+        this.gamePositions = [];
+        this.currentMoveIndex = 0;
+        this.trialBranch = null;
+        this.isAnalyzing = false;
+    },
+    clearAll() {
+        this.loadedGames = [];
+        this.selectedGameIndex = null;
+        this.gamePositions = [];
+        this.currentMoveIndex = 0;
+        this.isAnalyzing = false;
+        this.trialBranch = null;
+    }
+};
+
 if (typeof window !== 'undefined') {
-    window.getLoadedGames = () => loadedGames;
+    window.AppState = AppState;
+    window.getLoadedGames = () => AppState.loadedGames;
+    Object.defineProperty(window, 'loadedGames', {
+        get: () => AppState.loadedGames,
+        set: (v) => { AppState.loadedGames = v; },
+        configurable: true
+    });
+    Object.defineProperty(window, 'selectedGameIndex', {
+        get: () => AppState.selectedGameIndex,
+        set: (v) => { AppState.selectedGameIndex = v; },
+        configurable: true
+    });
+    Object.defineProperty(window, 'gamePositions', {
+        get: () => AppState.gamePositions,
+        set: (v) => { AppState.gamePositions = v; },
+        configurable: true
+    });
+    Object.defineProperty(window, 'currentMoveIndex', {
+        get: () => AppState.currentMoveIndex,
+        set: (v) => { AppState.currentMoveIndex = v; },
+        configurable: true
+    });
+    Object.defineProperty(window, 'isAnalyzing', {
+        get: () => AppState.isAnalyzing,
+        set: (v) => { AppState.isAnalyzing = v; },
+        configurable: true
+    });
+    Object.defineProperty(window, 'trialBranch', {
+        get: () => AppState.trialBranch,
+        set: (v) => { AppState.trialBranch = v; },
+        configurable: true
+    });
 }
-let selectedGameIndex = null;
 
 /**
  * Xác định màu quân của người dùng (Trắng hay Đen) cho ván cờ hiện tại hoặc ván cờ được truyền vào
- * @param {Object} [game] - Đối tượng game, mặc định là loadedGames[selectedGameIndex]
+ * @param {Object} [game] - Đối tượng game, mặc định là AppState.loadedGames[AppState.selectedGameIndex]
  * @returns {'w'|'b'} 'w' nếu Trắng, 'b' nếu Đen
  */
-function getCurrentUserColor(game = (selectedGameIndex !== null && loadedGames ? loadedGames[selectedGameIndex] : null)) {
+function getCurrentUserColor(game = (AppState.selectedGameIndex !== null && AppState.loadedGames ? AppState.loadedGames[AppState.selectedGameIndex] : null)) {
     if (!game) return 'w';
     if (game.userColor) return game.userColor;
-    const defaultUser = (typeof getAppUsername === 'function' ? getAppUsername() : (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : 'bazu25022005')).toLowerCase();
+    const defaultUser = (typeof getAppUsername === 'function' ? getAppUsername() : (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : '')).toLowerCase();
     if (game.white) {
         const whiteName = (typeof game.white === 'string' ? game.white : (game.white.username || '')).toLowerCase();
         if (whiteName === defaultUser) return 'w';
@@ -1071,7 +1146,7 @@ function getCurrentUserColor(game = (selectedGameIndex !== null && loadedGames ?
     return 'w';
 }
 
-function isCurrentUserWhite(game = (selectedGameIndex !== null && loadedGames ? loadedGames[selectedGameIndex] : null)) {
+function isCurrentUserWhite(game = (AppState.selectedGameIndex !== null && AppState.loadedGames ? AppState.loadedGames[AppState.selectedGameIndex] : null)) {
     return getCurrentUserColor(game) === 'w';
 }
 
@@ -1081,14 +1156,11 @@ if (typeof window !== 'undefined') {
 }
 let board = null;
 let dragPositionSynced = false;
-let gamePositions = [];
-let currentMoveIndex = 0;
 let analysisSessionId = 0;
 let isShowingBestMove = true;
 let isShowingExplain = false;
 let isShowingHints = false;
 let currentHintsData = [];
-let trialBranch = null;
 let pendingPromotion = null;
 let selectedSquareForMove = null;
 let isBotGameActive = false;
@@ -1110,7 +1182,6 @@ try {
 } catch (e) { }
 
 let isAnalysisPaused = false;
-let isAnalyzing = false;
 let lastCompletedIndex = 0;
 let analysisTimerInterval = null;
 let elapsedSeconds = 0;
@@ -1134,7 +1205,7 @@ const btnStopBatch = document.getElementById('btn-stop-batch');
 const batchProgressText = document.getElementById('batch-progress-text');
 
 const headerUsername = document.getElementById('header-username');
-if (headerUsername && typeof CHESSCOM_USERNAME !== 'undefined') headerUsername.textContent = CHESSCOM_USERNAME;
+if (headerUsername) headerUsername.textContent = (typeof getAppUsername === 'function' ? getAppUsername() : '') || (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : '');
 const monthSelect = document.getElementById('month');
 const yearInput = document.getElementById('year');
 const btnFetch = document.getElementById('btn-fetch');
@@ -1618,7 +1689,7 @@ function syncSettingsToUnifiedStorage() {
         const showEvalBadges = storedBadges !== null ? Boolean(storedBadges) : (localStorage.getItem('chess_show_eval_badges') !== 'false');
 
         const soundEnabled = (typeof SoundManager !== 'undefined' && SoundManager.isEnabled) ? SoundManager.isEnabled() : true;
-        const currentUsername = typeof getAppUsername === 'function' ? getAppUsername() : 'bazu25022005';
+        const currentUsername = typeof getAppUsername === 'function' ? getAppUsername() : '';
 
         const settings = {
             reviewDepth: currentDepth,
@@ -1811,29 +1882,26 @@ function applyReviewDepth(depth, autoReanalyze = false) {
         });
     }
 
-    if (autoReanalyze && selectedGameIndex !== null && loadedGames && loadedGames[selectedGameIndex]) {
-        const game = loadedGames[selectedGameIndex];
-        isAnalyzing = false;
-        isAnalysisPaused = false;
-        stockfishEngine.stop();
-        stopElapsedTimer();
+    if (autoReanalyze && AppState.selectedGameIndex !== null && AppState.loadedGames && AppState.loadedGames[AppState.selectedGameIndex]) {
+        const currentGame = AppState.loadedGames[AppState.selectedGameIndex];
+        if (stockfishEngine && typeof stockfishEngine.stop === 'function') {
+            stockfishEngine.stop();
+        }
         (async () => {
-            let cachedData = null;
             if (typeof getGameAnalysisCache === 'function') {
-                cachedData = await getGameAnalysisCache(game.url, currentDepth);
+                try {
+                    const cached = await getGameAnalysisCache(currentGame.url, currentDepth);
+                    if (cached && typeof applyCachedAnalysis === 'function') {
+                        await applyCachedAnalysis(cached, currentGame);
+                        return;
+                    }
+                } catch (e) { }
             }
-            if (cachedData && cachedData.positions && cachedData.positions.length) {
-                applyCachedAnalysis(cachedData, game);
-            } else {
-                if (cacheStatusBadge) cacheStatusBadge.classList.add('hidden');
-                if (btnReanalyze) btnReanalyze.classList.add('hidden');
-                stopAutoplay();
-                gamePositions = buildPositionsFromPGN(game.pgn);
-                renderMoveList();
-                drawEvalChart();
-                renderKeyMovesList();
-                goToMove(0);
-                analyzeCurrentGame(game, 0);
+            const fn = (typeof triggerLiveAnalysis === 'function')
+                ? triggerLiveAnalysis
+                : (typeof window !== 'undefined' && typeof window.triggerLiveAnalysis === 'function' ? window.triggerLiveAnalysis : null);
+            if (fn) {
+                fn(null, true);
             }
         })();
     }
@@ -1845,7 +1913,7 @@ function getAppUsername() {
         const saved = savedUnified || localStorage.getItem('chesscom_username');
         if (saved && String(saved).trim()) return String(saved).trim();
     } catch (e) { }
-    return (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : 'bazu25022005');
+    return (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : '');
 }
 
 function updateAppUsername(newUsername) {
@@ -2307,7 +2375,7 @@ function handleCustomImportSubmit() {
             black: { username: (userColor === 'b' ? userName : 'Stockfish'), rating: '?' }
         };
 
-        loadedGames.unshift(customFenGame);
+        AppState.loadedGames.unshift(customFenGame);
         applyGameListFilters();
         closeCustomImportModal();
         closeGameDrawer();
@@ -2367,7 +2435,7 @@ function handleCustomImportSubmit() {
             black: { username: blackUsername, rating: blackRating }
         };
 
-        loadedGames.unshift(customPgnGame);
+        AppState.loadedGames.unshift(customPgnGame);
         applyGameListFilters();
         closeCustomImportModal();
         closeGameDrawer();
@@ -2454,7 +2522,7 @@ async function updatePersonalPuzzlesBadge() {
             ? extractPersonalPuzzles
             : (typeof window !== 'undefined' && typeof window.extractPersonalPuzzles === 'function' ? window.extractPersonalPuzzles : null);
         if (!extractor) return;
-        const puzzles = await extractor(typeof loadedGames !== 'undefined' ? loadedGames : null);
+        const puzzles = await extractor(typeof AppState.loadedGames !== 'undefined' ? AppState.loadedGames : null);
         const count = puzzles ? puzzles.length : 0;
         if (count > 0) {
             badgeEl.textContent = count > 99 ? '99+' : String(count);
@@ -2476,12 +2544,28 @@ async function openPersonalPuzzlesModal() {
     if (isBotGameActive && typeof exitBotGame === 'function') exitBotGame();
     if (typeof isInTrialBranch === 'function' && isInTrialBranch() && typeof exitTrialBranch === 'function') exitTrialBranch();
     stopAutoplay();
-    if (isAnalyzing && stockfishEngine) stockfishEngine.stop();
+    if (AppState.isAnalyzing && stockfishEngine) stockfishEngine.stop();
 
     getStoredPuzzleStreak();
     updatePuzzleStreakUI();
 
     modal.classList.remove('hidden');
+
+    const activeContainer = document.getElementById('puzzle-active-container');
+    const emptyContainer = document.getElementById('puzzle-empty-container');
+    const msgEl = document.getElementById('puzzle-status-message');
+
+    // Hiển thị trạng thái Loading trước để tối ưu UX, tránh giật lag UI
+    if (activeContainer) activeContainer.classList.remove('hidden');
+    if (emptyContainer) emptyContainer.classList.add('hidden');
+    if (msgEl) {
+        msgEl.textContent = (typeof currentLang !== 'undefined' && currentLang === 'en')
+            ? 'Scanning your analyzed games for tactical puzzles...'
+            : 'Đang trích xuất câu đố từ các ván đấu đã phân tích...';
+    }
+
+    // Nhường Main Thread một nhịp để trình duyệt kịp paint Modal & trạng thái Loading
+    await new Promise(r => setTimeout(r, 50));
 
     const extractor = (typeof extractPersonalPuzzles === 'function')
         ? extractPersonalPuzzles
@@ -2489,14 +2573,11 @@ async function openPersonalPuzzlesModal() {
 
     if (extractor) {
         try {
-            personalPuzzlesList = await extractor(typeof loadedGames !== 'undefined' ? loadedGames : null);
+            personalPuzzlesList = await extractor(typeof AppState.loadedGames !== 'undefined' ? AppState.loadedGames : null);
         } catch (e) {
             personalPuzzlesList = [];
         }
     }
-
-    const activeContainer = document.getElementById('puzzle-active-container');
-    const emptyContainer = document.getElementById('puzzle-empty-container');
 
     if (!personalPuzzlesList || personalPuzzlesList.length === 0) {
         if (activeContainer) activeContainer.classList.add('hidden');
@@ -2653,20 +2734,30 @@ function clearPuzzleArrows() {
     if (svg) svg.innerHTML = '';
 }
 
-function isMoveMatchingPuzzleBest(playedUci, validMove) {
-    if (!currentPuzzle || !currentPuzzle.bestMoveUci) return false;
+function isMoveMatchingPuzzleBest(playedUci, validMove, puzzle = null) {
+    const targetPuzzle = puzzle
+        || (typeof currentPuzzle !== 'undefined' && currentPuzzle)
+        || (typeof window !== 'undefined' && window.currentPuzzle)
+        || (typeof globalThis !== 'undefined' && globalThis.currentPuzzle)
+        || null;
+    if (!targetPuzzle || !targetPuzzle.bestMoveUci || !playedUci) return false;
 
-    const bestUci = currentPuzzle.bestMoveUci.toLowerCase();
-    const played = playedUci.toLowerCase();
+    const bestUci = targetPuzzle.bestMoveUci.toLowerCase().trim();
+    const played = playedUci.toLowerCase().trim();
+
+    // So sánh tuyệt đối 4 ký tự đầu (from-to)
     if (played.slice(0, 4) === bestUci.slice(0, 4)) {
-        if (bestUci.length > 4) {
-            return played.length > 4 ? played.charAt(4) === bestUci.charAt(4) : true;
+        // Chỉ kiểm tra charAt(4) nếu CẢ bestUci và playedUci đều có độ dài > 4 (phong cấp rõ ràng)
+        if (bestUci.length > 4 && played.length > 4) {
+            if (played.charAt(4) !== bestUci.charAt(4)) {
+                return false;
+            }
         }
         return true;
     }
 
     try {
-        const testChess = new Chess(currentPuzzle.fen);
+        const testChess = new Chess(targetPuzzle.fen);
         testChess.move({ from: validMove.from, to: validMove.to, promotion: validMove.promotion || 'q' });
         if (testChess.in_checkmate()) return true;
     } catch (e) { }
@@ -2707,8 +2798,9 @@ function handlePuzzleSuccess(validMove, from, to) {
 
     if (currentPuzzle.pv && currentPuzzle.pv.length > 1) {
         const oppUci = currentPuzzle.pv[1];
+        const currentFen = currentPuzzleChess ? currentPuzzleChess.fen() : null;
         setTimeout(() => {
-            if (!isPuzzleSolved || !currentPuzzleChess) return;
+            if (!isPuzzleSolved || !currentPuzzleChess || (currentFen && currentPuzzleChess.fen() !== currentFen)) return;
             const oppFrom = oppUci.substring(0, 2);
             const oppTo = oppUci.substring(2, 4);
             const oppPromo = oppUci.length > 4 ? oppUci.charAt(4) : 'q';
@@ -2720,6 +2812,8 @@ function handlePuzzleSuccess(validMove, from, to) {
                 highlightPuzzleSquare(oppFrom, 'puzzle-sq-selected');
                 highlightPuzzleSquare(oppTo, 'puzzle-sq-selected');
                 if (msgEl) msgEl.textContent = t('puzzle_opponent_reply');
+            } else {
+                if (msgEl) msgEl.textContent = t('puzzle_success_msg');
             }
         }, 500);
     }
@@ -2885,8 +2979,11 @@ function handlePuzzleSolution() {
     const btnNext = document.getElementById('btn-next-puzzle');
     if (btnNext) btnNext.classList.remove('hidden');
 
+    const currentFen = currentPuzzleChess ? currentPuzzleChess.fen() : null;
+    if (!currentFen) return;
+
     setTimeout(() => {
-        if (!currentPuzzleChess) return;
+        if (!currentPuzzleChess || currentPuzzleChess.fen() !== currentFen) return;
         const validMove = currentPuzzleChess.move({ from, to, promotion: promo });
         if (validMove && puzzleBoard) {
             puzzleBoard.position(currentPuzzleChess.fen(), true);
@@ -2910,7 +3007,7 @@ function handleSkipPuzzle() {
 
 function handlePuzzleReviewGame() {
     if (!currentPuzzle || !currentPuzzle.gameUrl) return;
-    const targetGame = loadedGames.find(g => g.url === currentPuzzle.gameUrl);
+    const targetGame = AppState.loadedGames.find(g => g.url === currentPuzzle.gameUrl);
     closePersonalPuzzlesModal();
     if (targetGame) {
         selectGame(targetGame);
@@ -3233,8 +3330,8 @@ function showGameOverBanner({ result, reason, isBotGame = false, gamePositions: 
         }
     }
 
-    const activePositions = customPositions || (typeof gamePositions !== 'undefined' ? gamePositions : []);
-    const activeUserColor = customUserColor || ((typeof getCurrentUserColor === 'function' && selectedGameIndex !== null && loadedGames) ? getCurrentUserColor(loadedGames[selectedGameIndex]) : 'w');
+    const activePositions = customPositions || (typeof AppState.gamePositions !== 'undefined' ? AppState.gamePositions : []);
+    const activeUserColor = customUserColor || ((typeof getCurrentUserColor === 'function' && AppState.selectedGameIndex !== null && AppState.loadedGames) ? getCurrentUserColor(AppState.loadedGames[AppState.selectedGameIndex]) : 'w');
 
     const dynamicMsg = (typeof CoachDialogue !== 'undefined' && CoachDialogue.getGameOverMessage)
         ? CoachDialogue.getGameOverMessage({
@@ -3334,12 +3431,12 @@ function checkAndRenderGameOverReviewState() {
         hideGameOverBanner();
         return;
     }
-    if (!gamePositions || !gamePositions.length) return;
-    const totalMoves = gamePositions.length - 1;
-    if (currentMoveIndex === totalMoves && totalMoves > 0) {
-        const selectedGame = (selectedGameIndex !== null && loadedGames) ? loadedGames[selectedGameIndex] : null;
+    if (!AppState.gamePositions || !AppState.gamePositions.length) return;
+    const totalMoves = AppState.gamePositions.length - 1;
+    if (AppState.currentMoveIndex === totalMoves && totalMoves > 0) {
+        const selectedGame = (AppState.selectedGameIndex !== null && AppState.loadedGames) ? AppState.loadedGames[AppState.selectedGameIndex] : null;
         if (!selectedGame) return;
-        const currentPos = gamePositions[currentMoveIndex];
+        const currentPos = AppState.gamePositions[AppState.currentMoveIndex];
         const userColor = getCurrentUserColor(selectedGame);
         let winnerColor = 'draw';
         if (selectedGame.resultType === 'win') {
@@ -3353,7 +3450,7 @@ function checkAndRenderGameOverReviewState() {
             result: selectedGame.resultType,
             reason: selectedGame.rawResult || selectedGame.resultLabel,
             isBotGame: false,
-            gamePositions: gamePositions,
+            gamePositions: AppState.gamePositions,
             userColor: userColor
         });
     } else {
@@ -3455,7 +3552,7 @@ function buildPositionsFromPGN(pgn) {
 // ĐI THỬ & NHÁNH THỬ
 // ============================================================================
 function isInTrialBranch() {
-    return trialBranch !== null && trialBranch.isViewingBranch === true && Array.isArray(trialBranch.positions) && trialBranch.positions.length > 0 && typeof trialBranch.currentIndex === 'number' && trialBranch.currentIndex >= 0 && trialBranch.currentIndex < trialBranch.positions.length;
+    return AppState.trialBranch !== null && AppState.trialBranch.isViewingBranch === true && Array.isArray(AppState.trialBranch.positions) && AppState.trialBranch.positions.length > 0 && typeof AppState.trialBranch.currentIndex === 'number' && AppState.trialBranch.currentIndex >= 0 && AppState.trialBranch.currentIndex < AppState.trialBranch.positions.length;
 }
 
 function getCurrentBoardFen() {
@@ -3463,10 +3560,10 @@ function getCurrentBoardFen() {
         return botGameChess.fen();
     }
     if (isInTrialBranch()) {
-        const tPos = trialBranch.positions[trialBranch.currentIndex];
+        const tPos = AppState.trialBranch.positions[AppState.trialBranch.currentIndex];
         if (tPos && tPos.fen) return tPos.fen;
     }
-    if (gamePositions && gamePositions[currentMoveIndex]) return gamePositions[currentMoveIndex].fen;
+    if (AppState.gamePositions && AppState.gamePositions[AppState.currentMoveIndex]) return AppState.gamePositions[AppState.currentMoveIndex].fen;
     return 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 }
 
@@ -3540,7 +3637,8 @@ function handleDrop(source, target) {
         if (!testMove) { SoundManager.playIllegal(); return 'snapback'; }
         lastBoardDropTimestamp = Date.now();
         showPromotionModal(source, target, turn);
-        return 'snapback';
+        // Không return 'snapback', giữ nguyên quân Tốt ở ô đích trong khi chờ chọn Modal
+        return;
     }
     const moveRes = chess.move({ from: source, to: target });
     if (!moveRes) { SoundManager.playIllegal(); return 'snapback'; }
@@ -3553,6 +3651,10 @@ function handleSnapEnd() {
         clearSquareMoveHighlights();
     }
     if (!board) return;
+    if (pendingPromotion) {
+        // Đang chờ người dùng chọn quân trong Modal phong cấp, giữ nguyên vị trí Tốt ở ô đích
+        return;
+    }
     if (dragPositionSynced) {
         dragPositionSynced = false;
         return;
@@ -3642,7 +3744,7 @@ function handlePlayerMove(source, target, promotion = 'q', isDrag = false) {
     );
 
     if (!isInTrialBranch()) {
-        const nextOriginalPos = gamePositions[currentMoveIndex + 1];
+        const nextOriginalPos = AppState.gamePositions[AppState.currentMoveIndex + 1];
 
         // Xử lý vụ mặc định promotion='q' gây lỗi nhảy nhầm sang Nhánh thử
         const isSameMove = nextOriginalPos && nextOriginalPos.move &&
@@ -3653,19 +3755,19 @@ function handlePlayerMove(source, target, promotion = 'q', isDrag = false) {
         if (isSameMove) {
             if (!isDrag) {
                 // Click-to-Move: animation = true, playSound = false (đã phát âm thanh ở trên)
-                goToMove(currentMoveIndex + 1, true, false, false);
+                goToMove(AppState.currentMoveIndex + 1, true, false, false);
             } else if (isSpecialMove) {
                 // Drag nhập thành / bắt tốt qua đường: đồng bộ tức thì với false
-                goToMove(currentMoveIndex + 1, false, false, false);
+                goToMove(AppState.currentMoveIndex + 1, false, false, false);
                 dragPositionSynced = true;
             } else {
                 // Drag thông thường: cập nhật UI trong onDrop, để onSnapEnd gọi board.position(..., false)
-                goToMove(currentMoveIndex + 1, false, false, true);
+                goToMove(AppState.currentMoveIndex + 1, false, false, true);
                 dragPositionSynced = false;
             }
             return true;
         }
-        initTrialBranch(currentMoveIndex, moveRes, chess.fen(), isDrag);
+        initTrialBranch(AppState.currentMoveIndex, moveRes, chess.fen(), isDrag);
     } else {
         appendMoveToTrialBranch(moveRes, chess.fen(), isDrag);
     }
@@ -3679,7 +3781,7 @@ function initTrialBranch(baseIndex, moveRes, newFen, isDrag = false) {
     );
     const chess = new Chess(newFen);
     const uci = `${moveRes.from}${moveRes.to}${moveRes.promotion || ''}`;
-    const nextOrigPos = gamePositions[baseIndex + 1];
+    const nextOrigPos = AppState.gamePositions[baseIndex + 1];
     let inheritedEval = null;
     let inheritedCls = null;
     if (nextOrigPos && nextOrigPos.fen === newFen && nextOrigPos.eval) {
@@ -3687,8 +3789,8 @@ function initTrialBranch(baseIndex, moveRes, newFen, isDrag = false) {
         inheritedCls = nextOrigPos.classification ? { ...nextOrigPos.classification } : null;
     }
 
-    trialBranch = {
-        baseMoveIndex: baseIndex, baseFen: gamePositions[baseIndex] ? gamePositions[baseIndex].fen : getCurrentBoardFen(),
+    AppState.trialBranch = {
+        baseMoveIndex: baseIndex, baseFen: AppState.gamePositions[baseIndex] ? AppState.gamePositions[baseIndex].fen : getCurrentBoardFen(),
         positions: [{
             fen: newFen, turn: chess.turn(), eval: inheritedEval, classification: inheritedCls,
             move: { from: moveRes.from, to: moveRes.to, san: moveRes.san, color: moveRes.color, piece: moveRes.piece, captured: moveRes.captured || null, promotion: moveRes.promotion || null, uci: uci }
@@ -3708,19 +3810,19 @@ function initTrialBranch(baseIndex, moveRes, newFen, isDrag = false) {
 }
 
 function appendMoveToTrialBranch(moveRes, newFen, isDrag = false) {
-    if (!trialBranch) return;
-    if (trialBranch.currentIndex < trialBranch.positions.length - 1) trialBranch.positions = trialBranch.positions.slice(0, trialBranch.currentIndex + 1);
+    if (!AppState.trialBranch) return;
+    if (AppState.trialBranch.currentIndex < AppState.trialBranch.positions.length - 1) AppState.trialBranch.positions = AppState.trialBranch.positions.slice(0, AppState.trialBranch.currentIndex + 1);
     const isSpecialMove = Boolean(
         moveRes.san === 'O-O' || moveRes.san === 'O-O-O' ||
         (moveRes.flags && (moveRes.flags.includes('k') || moveRes.flags.includes('q') || moveRes.flags.includes('e')))
     );
     const chess = new Chess(newFen);
     const uci = `${moveRes.from}${moveRes.to}${moveRes.promotion || ''}`;
-    trialBranch.positions.push({
+    AppState.trialBranch.positions.push({
         fen: newFen, turn: chess.turn(), eval: null, classification: null,
         move: { from: moveRes.from, to: moveRes.to, san: moveRes.san, color: moveRes.color, piece: moveRes.piece, captured: moveRes.captured || null, promotion: moveRes.promotion || null, uci: uci }
     });
-    trialBranch.currentIndex = trialBranch.positions.length - 1; trialBranch.isViewingBranch = true;
+    AppState.trialBranch.currentIndex = AppState.trialBranch.positions.length - 1; AppState.trialBranch.isViewingBranch = true;
     if (!isDrag) {
         updateBoardToTrialCurrent(true, false, false);
     } else if (isSpecialMove) {
@@ -3734,16 +3836,16 @@ function appendMoveToTrialBranch(moveRes, newFen, isDrag = false) {
 }
 
 function exitTrialBranch() {
-    if (!trialBranch) return;
-    const returnIndex = trialBranch.baseMoveIndex;
-    trialBranch = null;
+    if (!AppState.trialBranch) return;
+    const returnIndex = AppState.trialBranch.baseMoveIndex;
+    AppState.trialBranch = null;
     if (btnCoachExitTrial) btnCoachExitTrial.classList.add('hidden');
     renderMoveList(); goToMove(returnIndex);
 }
 
 function updateBoardToTrialCurrent(useAnimation = true, playSound = true, skipBoardPosition = false) {
     if (!isInTrialBranch()) return;
-    const pos = trialBranch.positions[trialBranch.currentIndex];
+    const pos = AppState.trialBranch.positions[AppState.trialBranch.currentIndex];
     if (!skipBoardPosition && board) {
         board.position(pos.fen, useAnimation);
     }
@@ -3753,18 +3855,18 @@ function updateBoardToTrialCurrent(useAnimation = true, playSound = true, skipBo
     clearBoardHighlightsAndArrows();
     if (pos.move) highlightActualMove(pos.move);
 
-    const curBranchMove = trialBranch.currentIndex + 1; const totalBranchMoves = trialBranch.positions.length;
-    moveCounterSpan.textContent = t('trial_counter_format', curBranchMove, totalBranchMoves, trialBranch.baseMoveIndex);
+    const curBranchMove = AppState.trialBranch.currentIndex + 1; const totalBranchMoves = AppState.trialBranch.positions.length;
+    moveCounterSpan.textContent = t('trial_counter_format', curBranchMove, totalBranchMoves, AppState.trialBranch.baseMoveIndex);
 
-    btnStart.disabled = false; btnPrev.disabled = false; btnNext.disabled = (trialBranch.currentIndex === totalBranchMoves - 1);
-    btnEnd.disabled = (trialBranch.currentIndex === totalBranchMoves - 1); if (btnPlay) btnPlay.disabled = true;
+    btnStart.disabled = false; btnPrev.disabled = false; btnNext.disabled = (AppState.trialBranch.currentIndex === totalBranchMoves - 1);
+    btnEnd.disabled = (AppState.trialBranch.currentIndex === totalBranchMoves - 1); if (btnPlay) btnPlay.disabled = true;
 
     updateMoveListActiveForTrial();
     updatePlayersDisplay();
     updateCoachPanelForTrial();
 
-    const bIdx = trialBranch.currentIndex;
-    const trialPos = trialBranch.positions[bIdx];
+    const bIdx = AppState.trialBranch.currentIndex;
+    const trialPos = AppState.trialBranch.positions[bIdx];
 
     if (!trialPos.eval) {
         evaluateAndClassifyPosition(trialPos, true, true).catch(err => {
@@ -3775,22 +3877,26 @@ function updateBoardToTrialCurrent(useAnimation = true, playSound = true, skipBo
 
 function updateCoachPanelForTrial() {
     if (!isInTrialBranch()) return;
-    const pos = trialBranch.positions[trialBranch.currentIndex]; if (!pos) return;
+    const pos = AppState.trialBranch.positions[AppState.trialBranch.currentIndex]; if (!pos) return;
     if (btnCoachExitTrial) btnCoachExitTrial.classList.remove('hidden');
     btnCoachExplain.disabled = true; btnPrevMistake.disabled = true; btnNextMistake.disabled = true;
 
-    const selectedGame = (selectedGameIndex !== null && loadedGames) ? loadedGames[selectedGameIndex] : null;
+    const selectedGame = (AppState.selectedGameIndex !== null && AppState.loadedGames) ? AppState.loadedGames[AppState.selectedGameIndex] : null;
     const userColor = getCurrentUserColor(selectedGame);
     const isUserWhite = (userColor === 'w');
 
     const evalPerspectiveEl = document.getElementById('coach-eval-perspective');
     if (evalPerspectiveEl) {
-        evalPerspectiveEl.setAttribute('data-i18n', isUserWhite ? 'white_perspective' : 'black_perspective');
+        if (typeof evalPerspectiveEl.setAttribute === 'function') {
+            evalPerspectiveEl.setAttribute('data-i18n', isUserWhite ? 'white_perspective' : 'black_perspective');
+        }
         evalPerspectiveEl.textContent = isUserWhite ? t('white_perspective') : t('black_perspective');
     }
     const winProbLabelEl = document.getElementById('win-prob-label');
     if (winProbLabelEl) {
-        winProbLabelEl.setAttribute('data-i18n', isUserWhite ? 'win_prob_white' : 'win_prob_black');
+        if (typeof winProbLabelEl.setAttribute === 'function') {
+            winProbLabelEl.setAttribute('data-i18n', isUserWhite ? 'win_prob_white' : 'win_prob_black');
+        }
         winProbLabelEl.textContent = isUserWhite ? t('win_prob_white') : t('win_prob_black');
     }
 
@@ -3805,8 +3911,8 @@ function updateCoachPanelForTrial() {
         coachPanel.style.borderColor = effectiveColor; coachCommentText.style.color = effectiveColor;
         if (isBrill) coachPanel.classList.add('brilliant-move'); else coachPanel.classList.remove('brilliant-move');
 
-        const bIdx = trialBranch.currentIndex;
-        const prevEval = (bIdx === 0) ? (gamePositions[trialBranch.baseMoveIndex] ? gamePositions[trialBranch.baseMoveIndex].eval : null) : (trialBranch.positions[bIdx - 1] ? trialBranch.positions[bIdx - 1].eval : null);
+        const bIdx = AppState.trialBranch.currentIndex;
+        const prevEval = (bIdx === 0) ? (AppState.gamePositions[AppState.trialBranch.baseMoveIndex] ? AppState.gamePositions[AppState.trialBranch.baseMoveIndex].eval : null) : (AppState.trialBranch.positions[bIdx - 1] ? AppState.trialBranch.positions[bIdx - 1].eval : null);
         const bestUci = prevEval ? prevEval.bestmove : null;
         let isTrialTerminal = false;
         if (typeof Chess === 'function' && pos && pos.fen) {
@@ -3825,7 +3931,7 @@ function updateCoachPanelForTrial() {
         coachCommentText.textContent = getCoachCommentText(
             pos.move.san,
             effectiveCategory,
-            trialBranch.currentIndex + 1,
+            AppState.trialBranch.currentIndex + 1,
             true,
             currentLang,
             {
@@ -3834,7 +3940,7 @@ function updateCoachPanelForTrial() {
                 bestSan: trialBestSan
             }
         ) + (lossDesc ? ` (${lossDesc})` : '');
-        coachPosDesc.textContent = t('trial_pos_desc', trialBranch.baseMoveIndex);
+        coachPosDesc.textContent = t('trial_pos_desc', AppState.trialBranch.baseMoveIndex);
 
         if (coachMoveTitle) {
             const badgeMarkup = typeof badgeHTML === 'function'
@@ -3857,7 +3963,7 @@ function updateCoachPanelForTrial() {
     } else {
         coachPanel.style.borderColor = '#f59e0b'; coachCommentText.style.color = '#b45309';
         coachCommentText.textContent = `${pos.move.san}: ${t('waiting_stockfish')}`;
-        coachPosDesc.textContent = t('trial_pos_desc', trialBranch.baseMoveIndex);
+        coachPosDesc.textContent = t('trial_pos_desc', AppState.trialBranch.baseMoveIndex);
         if (coachMoveTitle) coachMoveTitle.innerHTML = `<span class="dot" style="background:var(--warn);"></span><span class="move-title-san">${escapeHTML(pos.move.san)}</span> <span class="chip">${t('trial_move')} · ${t('analyzing')}</span>`;
         if (currentWinProb) currentWinProb.textContent = formatWinProbability(pos.eval, userColor);
         coachEvalBadge.textContent = '...'; coachEvalBadge.className = 'coach-eval-badge'; btnCoachBest.classList.add('hidden');
@@ -3873,24 +3979,41 @@ function scrollElementInsideContainer(el) {
     if (!container) return;
 
     let elTop = 0;
-    let node = el;
-    while (node && node !== container) {
-        elTop += node.offsetTop;
-        node = node.offsetParent;
-        if (node && !container.contains(node)) {
-            elTop -= container.offsetTop;
-            break;
+    if (typeof el.getBoundingClientRect === 'function' && typeof container.getBoundingClientRect === 'function') {
+        const elRect = el.getBoundingClientRect();
+        const cRect = container.getBoundingClientRect();
+        elTop = (elRect.top - cRect.top) + container.scrollTop;
+    } else {
+        let node = el;
+        while (node && node !== container) {
+            elTop += (node.offsetTop || 0);
+            node = node.offsetParent;
+            if (node && !container.contains(node)) {
+                elTop -= (container.offsetTop || 0);
+                break;
+            }
         }
     }
 
-    const elHeight = el.offsetHeight || 30;
-    const cHeight = container.clientHeight;
+    const elHeight = el.offsetHeight || (el.getBoundingClientRect ? el.getBoundingClientRect().height : 30) || 30;
+    const cHeight = container.clientHeight || 200;
     const cScroll = container.scrollTop;
+    const padding = 12;
 
-    if (elTop < cScroll) {
-        container.scrollTop = Math.max(0, elTop - 6);
-    } else if (elTop + elHeight > cScroll + cHeight) {
-        container.scrollTop = elTop + elHeight - cHeight + 6;
+    if (elTop < cScroll + padding) {
+        const targetScroll = Math.max(0, elTop - padding);
+        if (typeof container.scrollTo === 'function') {
+            container.scrollTo({ top: targetScroll, behavior: 'smooth' });
+        } else {
+            container.scrollTop = targetScroll;
+        }
+    } else if (elTop + elHeight > cScroll + cHeight - padding) {
+        const targetScroll = elTop + elHeight - cHeight + padding;
+        if (typeof container.scrollTo === 'function') {
+            container.scrollTo({ top: targetScroll, behavior: 'smooth' });
+        } else {
+            container.scrollTop = targetScroll;
+        }
     }
 }
 
@@ -3901,7 +4024,7 @@ function updateMoveListActiveForTrial() {
     let activeTrialCell = null;
     trialCells.forEach(cell => {
         const idx = Number(cell.dataset.branchIndex);
-        if (isInTrialBranch() && idx === trialBranch.currentIndex) { cell.classList.add('active'); activeTrialCell = cell; }
+        if (isInTrialBranch() && idx === AppState.trialBranch.currentIndex) { cell.classList.add('active'); activeTrialCell = cell; }
         else { cell.classList.remove('active'); }
     });
     if (activeTrialCell) scrollElementInsideContainer(activeTrialCell);
@@ -3912,19 +4035,30 @@ function buildTrialBranchRowElement() {
     branchContainer.className = 'trial-branch-row';
     const header = document.createElement('div');
     header.className = 'trial-branch-header';
-    header.innerHTML = `<span class="trial-branch-badge">${t('trial_move')} (${t('move_word')} ${trialBranch.baseMoveIndex})</span><button class="btn-exit-trial" title="${t('btn_exit_trial')}">${t('btn_exit_trial')}</button>`;
+    header.innerHTML = `<span class="trial-branch-badge">${escapeHTML(t('trial_move'))} (${escapeHTML(t('move_word'))} ${AppState.trialBranch.baseMoveIndex})</span><button class="btn-exit-trial" title="${escapeHTML(t('btn_exit_trial'))}">${escapeHTML(t('btn_exit_trial'))}</button>`;
     const exitBtn = header.querySelector('.btn-exit-trial');
     if (exitBtn) exitBtn.addEventListener('click', (e) => { e.stopPropagation(); exitTrialBranch(); });
     branchContainer.appendChild(header);
 
-    const movesWrap = document.createElement('div'); movesWrap.className = 'trial-branch-moves';
-    trialBranch.positions.forEach((pos, bIdx) => {
-        const moveNumber = Math.ceil((trialBranch.baseMoveIndex + 1 + bIdx) / 2);
-        const isWhite = ((trialBranch.baseMoveIndex + 1 + bIdx) % 2) === 1;
-        let prefix = ''; if (isWhite) prefix = `${moveNumber}. `; else if (bIdx === 0) prefix = `${moveNumber}... `;
+    const movesWrap = document.createElement('div');
+    movesWrap.className = 'trial-branch-moves';
+    AppState.trialBranch.positions.forEach((pos, bIdx) => {
+        const moveNumber = Math.ceil((AppState.trialBranch.baseMoveIndex + 1 + bIdx) / 2);
+        const isWhite = ((AppState.trialBranch.baseMoveIndex + 1 + bIdx) % 2) === 1;
+        let prefix = '';
+        if (isWhite) prefix = `${moveNumber}. `;
+        else if (bIdx === 0) prefix = `${moveNumber}... `;
 
-        const cell = document.createElement('span'); cell.className = 'trial-move-cell'; cell.dataset.branchIndex = bIdx;
-        let badgeHtml = '';
+        const cell = document.createElement('span');
+        cell.className = 'trial-move-cell';
+        cell.dataset.branchIndex = bIdx;
+        if (isInTrialBranch() && AppState.trialBranch.currentIndex === bIdx) {
+            cell.classList.add('active');
+        }
+
+        const moveText = document.createTextNode(`${prefix}${(pos.move && pos.move.san) ? pos.move.san : ''}`);
+        cell.appendChild(moveText);
+
         if (pos.classification && pos.classification.info) {
             const isBrill = Boolean(pos.classification?.isBrilliant);
             const cat = isBrill ? 'Brilliant' : (pos.classification.category || 'Best');
@@ -3933,6 +4067,8 @@ function buildTrialBranchRowElement() {
             const catName = isBrill
                 ? (currentLang === 'en' ? 'Brilliant !!' : 'Xuất thần !!')
                 : (typeof getCategoryName === 'function' ? getCategoryName(cat, currentLang) : (pos.classification.info ? pos.classification.info.viName : cat));
+
+            let badgeHtml = '';
             if (typeof badgeHTML === 'function') {
                 badgeHtml = ' ' + badgeHTML(cat, 20, {
                     class: `move-class-badge badge-${catClass}`,
@@ -3942,10 +4078,12 @@ function buildTrialBranchRowElement() {
                 const symbol = EVAL_BADGE_SYMBOLS[cat] || SVG_ICONS.Best;
                 badgeHtml = ` <span class="move-class-badge badge-${catClass}" title="${catName} (${textSym})">${symbol}</span>`;
             }
+            const badgeSpan = document.createElement('span');
+            badgeSpan.innerHTML = badgeHtml;
+            cell.appendChild(badgeSpan);
         }
-        cell.innerHTML = `${prefix}${escapeHTML(pos.move.san)}${badgeHtml}`;
-        if (isInTrialBranch() && trialBranch.currentIndex === bIdx) cell.classList.add('active');
-        cell.addEventListener('click', () => { stopAutoplay(); trialBranch.isViewingBranch = true; trialBranch.currentIndex = bIdx; updateBoardToTrialCurrent(); });
+
+        // Clicks are handled via event delegation on moveListContainer
         movesWrap.appendChild(cell);
     });
     branchContainer.appendChild(movesWrap);
@@ -4107,7 +4245,7 @@ function startBotGame() {
     botUserEvalSessionId++;
 
     // Xác định màu quân người chơi:
-    const selectedGame = (selectedGameIndex !== null && loadedGames) ? loadedGames[selectedGameIndex] : null;
+    const selectedGame = (AppState.selectedGameIndex !== null && AppState.loadedGames) ? AppState.loadedGames[AppState.selectedGameIndex] : null;
     botPlayerColor = selectedGame ? selectedGame.userColor : (board && board.orientation() === 'black' ? 'b' : 'w');
 
     // Cập nhật DOM
@@ -4198,7 +4336,7 @@ function exitBotGame() {
 
     // Khôi phục bàn cờ về nước đi hiện tại trong ván
     renderMoveList();
-    goToMove(currentMoveIndex);
+    goToMove(AppState.currentMoveIndex);
 }
 
 function updateBotGameUI() {
@@ -4361,7 +4499,7 @@ async function executeBotMoveSafe() {
     // 2. TẠM TẮT Live Engine & Analysis để chống đụng độ (Race Condition)
     const wasLiveEngineEnabled = isLiveEngineEnabled;
     isLiveEngineEnabled = false;
-    isAnalyzing = true; // Khóa luồng phân tích phụ
+    AppState.isAnalyzing = true; // Khóa luồng phân tích phụ
     botThinking = true;
     updateBotGameUI();
 
@@ -4416,7 +4554,7 @@ async function executeBotMoveSafe() {
         // 5. Trả lại trạng thái sau khi Bot đi xong
         botThinking = false;
         isLiveEngineEnabled = wasLiveEngineEnabled;
-        isAnalyzing = false;
+        AppState.isAnalyzing = false;
         updateBotGameUI();
 
         // Gọi lại phân tích cho nước Bot vừa đi (nếu cần), đảm bảo Engine sẵn sàng và ván cờ chưa kết thúc
@@ -4442,11 +4580,11 @@ if (typeof window !== 'undefined') {
  * Đánh giá và chấm điểm (classification, badge) CHỈ cho nước đi của người chơi trong chế độ Bot
  */
 async function evaluateAndClassifyBotUserMove(userPly, fenBefore, fenAfter, moveRes, evalSessionId) {
-    if (!isBotGameActive || !botGameChess || isAnalyzing) return;
+    if (!isBotGameActive || !botGameChess || AppState.isAnalyzing) return;
     if (evalSessionId !== undefined && evalSessionId !== botUserEvalSessionId) return;
     try {
         const evalBefore = await stockfishEngine.evaluatePosition(fenBefore, 10);
-        if (!isBotGameActive || !botGameChess || isAnalyzing) return;
+        if (!isBotGameActive || !botGameChess || AppState.isAnalyzing) return;
         if (evalSessionId !== undefined && evalSessionId !== botUserEvalSessionId) return;
         const evalAfter = await stockfishEngine.evaluatePosition(fenAfter, 10);
         if (!isBotGameActive || !botGameChess) return;
@@ -4634,25 +4772,25 @@ function handleBotUndo() {
 function handlePrevMove() {
     stopAutoplay();
     if (isInTrialBranch()) {
-        if (trialBranch.currentIndex > 0) { trialBranch.currentIndex--; updateBoardToTrialCurrent(); }
-        else { trialBranch.isViewingBranch = false; trialBranch.currentIndex = null; goToMove(trialBranch.baseMoveIndex); }
+        if (AppState.trialBranch.currentIndex > 0) { AppState.trialBranch.currentIndex--; updateBoardToTrialCurrent(); }
+        else { AppState.trialBranch.isViewingBranch = false; AppState.trialBranch.currentIndex = null; goToMove(AppState.trialBranch.baseMoveIndex); }
         return;
     }
-    if (currentMoveIndex > 0) goToMove(currentMoveIndex - 1);
+    if (AppState.currentMoveIndex > 0) goToMove(AppState.currentMoveIndex - 1);
 }
 function handleNextMove() {
     stopAutoplay();
     if (isInTrialBranch()) {
-        if (trialBranch.currentIndex < trialBranch.positions.length - 1) { trialBranch.currentIndex++; updateBoardToTrialCurrent(); }
+        if (AppState.trialBranch.currentIndex < AppState.trialBranch.positions.length - 1) { AppState.trialBranch.currentIndex++; updateBoardToTrialCurrent(); }
         return;
     }
-    if (trialBranch && currentMoveIndex === trialBranch.baseMoveIndex && trialBranch.positions.length > 0) {
-        trialBranch.isViewingBranch = true; trialBranch.currentIndex = 0; updateBoardToTrialCurrent(); return;
+    if (AppState.trialBranch && AppState.currentMoveIndex === AppState.trialBranch.baseMoveIndex && AppState.trialBranch.positions.length > 0) {
+        AppState.trialBranch.isViewingBranch = true; AppState.trialBranch.currentIndex = 0; updateBoardToTrialCurrent(); return;
     }
-    if (currentMoveIndex < gamePositions.length - 1) goToMove(currentMoveIndex + 1);
+    if (AppState.currentMoveIndex < AppState.gamePositions.length - 1) goToMove(AppState.currentMoveIndex + 1);
 }
-function handleStartMove() { stopAutoplay(); if (isInTrialBranch()) { trialBranch.isViewingBranch = false; trialBranch.currentIndex = null; goToMove(trialBranch.baseMoveIndex); return; } goToMove(0); }
-function handleEndMove() { stopAutoplay(); if (isInTrialBranch()) { trialBranch.currentIndex = trialBranch.positions.length - 1; updateBoardToTrialCurrent(); return; } goToMove(gamePositions.length - 1); }
+function handleStartMove() { stopAutoplay(); if (isInTrialBranch()) { AppState.trialBranch.isViewingBranch = false; AppState.trialBranch.currentIndex = null; goToMove(AppState.trialBranch.baseMoveIndex); return; } goToMove(0); }
+function handleEndMove() { stopAutoplay(); if (isInTrialBranch()) { AppState.trialBranch.currentIndex = AppState.trialBranch.positions.length - 1; updateBoardToTrialCurrent(); return; } goToMove(AppState.gamePositions.length - 1); }
 
 function highlightCheckSquare(turn) {
     const boardEl = document.getElementById('board');
@@ -4715,7 +4853,7 @@ function drawBestMoveOnBoard(bestUci, categoryOverride, validationFen = null) {
         // Nếu activeTurn === 'w' mà nước đi trong bestmove lại là của quân đen (hoặc ngược lại), chỉ ép re-eval nếu là FEN hiện tại
         if (!piece || piece.color !== activeTurn) {
             console.warn(`[BestMoveArrow] Mũi tên ${bestUci} không khớp với lượt đi (${activeTurn}) của FEN (${currentFen}).`);
-            if (currentFen === getCurrentBoardFen() && !isAnalyzing && typeof triggerLiveAnalysis === 'function') {
+            if (currentFen === getCurrentBoardFen() && !AppState.isAnalyzing && typeof triggerLiveAnalysis === 'function') {
                 triggerLiveAnalysis(currentFen, true);
             }
             return;
@@ -4726,7 +4864,7 @@ function drawBestMoveOnBoard(bestUci, categoryOverride, validationFen = null) {
         const isLegal = legalMoves.some(m => m.from === fromSquare && m.to === toSquare);
         if (!isLegal) {
             console.warn(`[BestMoveArrow] Nước đi ${bestUci} không phải nước đi hợp lệ cho lượt hiện tại (${activeTurn}).`);
-            if (currentFen === getCurrentBoardFen() && !isAnalyzing && typeof triggerLiveAnalysis === 'function') {
+            if (currentFen === getCurrentBoardFen() && !AppState.isAnalyzing && typeof triggerLiveAnalysis === 'function') {
                 triggerLiveAnalysis(currentFen, true);
             }
             return;
@@ -4752,7 +4890,7 @@ function drawBestMoveOnBoard(bestUci, categoryOverride, validationFen = null) {
 
 function updateCurrentMoveArrow() {
     if (isShowingHints) return;
-    clearArrows();
+    if (typeof clearArrows === 'function') clearArrows();
     const boardEl = document.getElementById('board');
     if (boardEl) {
         boardEl.querySelectorAll('.square-55d63').forEach(sq => sq.classList.remove('highlight-best-move'));
@@ -4769,7 +4907,7 @@ function updateCurrentMoveArrow() {
     }
 
     if (isInTrialBranch()) {
-        const trialPos = trialBranch.positions[trialBranch.currentIndex];
+        const trialPos = AppState.trialBranch.positions[AppState.trialBranch.currentIndex];
         if (trialPos) {
             if (trialPos.move && trialPos.classification) {
                 const isBrill = Boolean(trialPos.classification?.isBrilliant);
@@ -4788,19 +4926,19 @@ function updateCurrentMoveArrow() {
         return;
     }
 
-    if (!gamePositions || !gamePositions.length) {
+    if (!AppState.gamePositions || !AppState.gamePositions.length) {
         clearBoardEvaluationBadge();
         return;
     }
 
-    const currentPos = gamePositions[currentMoveIndex];
+    const currentPos = AppState.gamePositions[AppState.currentMoveIndex];
     if (!currentPos) {
         clearBoardEvaluationBadge();
         return;
     }
 
     // Hiển thị badge đánh giá nước đi vừa thực hiện trên ô đích
-    if (currentMoveIndex > 0 && currentPos.move && currentPos.classification) {
+    if (AppState.currentMoveIndex > 0 && currentPos.move && currentPos.classification) {
         const isBrill = Boolean(currentPos.classification?.isBrilliant);
         const cat = isBrill ? 'Brilliant' : currentPos.classification.category;
         renderBoardMoveEvaluationBadge(currentPos.move.to, cat, isBrill);
@@ -4809,9 +4947,9 @@ function updateCurrentMoveArrow() {
     }
 
     // Vẽ mũi tên gợi ý nước đi tốt nhất (Best Move) sửa sai cho người dùng:
-    // Khi đang xem lại nước đi (currentMoveIndex > 0), phải lấy prevPos.eval.bestmove thay vì currentPos.eval.bestmove
-    const prevPos = currentMoveIndex > 0 ? gamePositions[currentMoveIndex - 1] : null;
-    const targetPos = (currentMoveIndex > 0 && prevPos) ? prevPos : currentPos;
+    // Khi đang xem lại nước đi (AppState.currentMoveIndex > 0), phải lấy prevPos.eval.bestmove thay vì currentPos.eval.bestmove
+    const prevPos = AppState.currentMoveIndex > 0 ? AppState.gamePositions[AppState.currentMoveIndex - 1] : null;
+    const targetPos = (AppState.currentMoveIndex > 0 && prevPos) ? prevPos : currentPos;
     const bestUci = targetPos?.eval?.bestmove;
     const targetFen = targetPos ? targetPos.fen : getCurrentBoardFen();
 
@@ -4848,8 +4986,8 @@ function setEvalBarDisplay(whiteWinPct, scoreText, isWhiteAhead) {
 }
 
 function updateEvalBar() {
-    if (!gamePositions || !gamePositions.length) { setEvalBarDisplay(50, '', null); return; }
-    const currentPos = gamePositions[currentMoveIndex];
+    if (!AppState.gamePositions || !AppState.gamePositions.length) { setEvalBarDisplay(50, '', null); return; }
+    const currentPos = AppState.gamePositions[AppState.currentMoveIndex];
     if (!currentPos || !currentPos.eval) { setEvalBarDisplay(50, '', null); return; }
     const ev = currentPos.eval;
     let whiteWinPct = 50; let scoreText = '0.0'; let isWhiteAhead = true;
@@ -4860,7 +4998,9 @@ function updateEvalBar() {
         if (ev.mateWhite > 0) { whiteWinPct = 100; scoreText = `M${Math.abs(ev.mateWhite)}`; isWhiteAhead = true; }
         else { whiteWinPct = 0; scoreText = `-M${Math.abs(ev.mateWhite)}`; isWhiteAhead = false; }
     } else if (ev.cpWhite !== null && ev.cpWhite !== undefined) {
-        whiteWinPct = calculateWinPercentage(ev.cpWhite);
+        whiteWinPct = (typeof calculateWinPercentage === 'function')
+            ? calculateWinPercentage(ev.cpWhite)
+            : (50 + 50 * (2 / (1 + Math.exp(-0.00368208 * ev.cpWhite)) - 1));
         const centered = whiteWinPct - 50;
         whiteWinPct = Math.max(2, Math.min(98, 50 + centered * 1.35));
         const scoreVal = ev.cpWhite / 100;
@@ -4873,12 +5013,12 @@ function updateEvalBar() {
 
 function drawEvalChart() {
     if (!evalChartSvg) return;
-    if (!gamePositions || gamePositions.length === 0) { evalChartSvg.innerHTML = ''; return; }
-    const totalPositions = gamePositions.length; const svgWidth = 600; const svgHeight = 100; const centerY = 50; const padY = 8; const effectiveHeight = svgHeight - 2 * padY;
+    if (!AppState.gamePositions || AppState.gamePositions.length === 0) { evalChartSvg.innerHTML = ''; return; }
+    const totalPositions = AppState.gamePositions.length; const svgWidth = 600; const svgHeight = 100; const centerY = 50; const padY = 8; const effectiveHeight = svgHeight - 2 * padY;
     const points = [];
     for (let i = 0; i < totalPositions; i++) {
         const x = (totalPositions > 1) ? (i / (totalPositions - 1)) * svgWidth : (svgWidth / 2);
-        const pos = gamePositions[i];
+        const pos = AppState.gamePositions[i];
         let winPct = 50;
         if (pos && pos.eval) {
             if (pos.eval.mateWhite === 0) winPct = (pos.eval.cpWhite > 0) ? 100 : 0;
@@ -4915,19 +5055,19 @@ function drawEvalChart() {
         if (cat === 'Mistake') dotsHtml += `<circle class="chart-error-dot" data-move-index="${i}" cx="${pt.x}" cy="${pt.y}" r="4" fill="#ea580c" stroke="#ffffff" stroke-width="1.5"><title>Nước ${movePrefix}${moveSan} - Sai lầm (Mistake)</title></circle>`;
         else if (cat === 'Blunder') dotsHtml += `<circle class="chart-error-dot" data-move-index="${i}" cx="${pt.x}" cy="${pt.y}" r="5" fill="#dc2626" stroke="#ffffff" stroke-width="1.8"><title>Nước ${movePrefix}${moveSan} - Sai lầm nặng (Blunder)</title></circle>`;
     }
-    const curIdx = Math.max(0, Math.min(points.length - 1, currentMoveIndex));
+    const curIdx = Math.max(0, Math.min(points.length - 1, AppState.currentMoveIndex));
     const curPoint = points[curIdx] || { x: 0, y: centerY };
     evalChartSvg.innerHTML = `<defs><clipPath id="chart-clip-white"><rect x="0" y="0" width="${svgWidth}" height="${centerY}" /></clipPath><clipPath id="chart-clip-black"><rect x="0" y="${centerY}" width="${svgWidth}" height="${svgHeight - centerY}" /></clipPath></defs><rect x="0" y="0" width="${svgWidth}" height="${centerY}" fill="#64748b" /><rect x="0" y="${centerY}" width="${svgWidth}" height="${svgHeight - centerY}" fill="#475569" /><path d="${areaPolygonD}" fill="#ffffff" clip-path="url(#chart-clip-white)" /><path d="${areaPolygonD}" fill="#0f172a" clip-path="url(#chart-clip-black)" /><line x1="0" y1="${centerY}" x2="${svgWidth}" y2="${centerY}" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,3" /><path d="${linePathD}" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" /><g id="chart-error-dots">${dotsHtml}</g><line id="chart-marker-line" x1="${curPoint.x}" y1="0" x2="${curPoint.x}" y2="${svgHeight}" stroke="#ffffff" stroke-width="1.8" stroke-dasharray="3,2" /><circle id="chart-marker-handle" cx="${curPoint.x}" cy="${curPoint.y}" r="5" fill="#0284c7" stroke="#ffffff" stroke-width="2" />`;
 }
 
 function updateEvalChartMarker(overrideIndex = null) {
     const markerLine = document.getElementById('chart-marker-line'); const markerHandle = document.getElementById('chart-marker-handle');
-    if (!markerLine || !markerHandle || !gamePositions || !gamePositions.length) { drawEvalChart(); return; }
-    const totalPositions = gamePositions.length; const svgWidth = 600; const svgHeight = 100; const padY = 8; const effectiveHeight = svgHeight - 2 * padY;
-    const activeIndex = (overrideIndex !== null && typeof overrideIndex === 'number') ? overrideIndex : currentMoveIndex;
+    if (!markerLine || !markerHandle || !AppState.gamePositions || !AppState.gamePositions.length) { drawEvalChart(); return; }
+    const totalPositions = AppState.gamePositions.length; const svgWidth = 600; const svgHeight = 100; const padY = 8; const effectiveHeight = svgHeight - 2 * padY;
+    const activeIndex = (overrideIndex !== null && typeof overrideIndex === 'number') ? overrideIndex : AppState.currentMoveIndex;
     const curIdx = Math.max(0, Math.min(totalPositions - 1, activeIndex));
     const curX = (totalPositions > 1) ? (curIdx / (totalPositions - 1)) * svgWidth : (svgWidth / 2);
-    const pos = gamePositions[curIdx]; let winPct = 50;
+    const pos = AppState.gamePositions[curIdx]; let winPct = 50;
     if (pos && pos.eval) {
         if (pos.eval.mateWhite === 0) winPct = (pos.eval.cpWhite > 0) ? 100 : 0;
         else if (pos.eval.mateWhite !== null && pos.eval.mateWhite !== undefined) winPct = (pos.eval.mateWhite > 0) ? 100 : 0;
@@ -4961,21 +5101,21 @@ function formatCapturedPiecesHtml(captured, color) {
     return html;
 }
 function updatePlayersDisplay() {
-    if (selectedGameIndex === null || !loadedGames[selectedGameIndex]) return;
-    const game = loadedGames[selectedGameIndex];
+    if (AppState.selectedGameIndex === null || !AppState.loadedGames[AppState.selectedGameIndex]) return;
+    const game = AppState.loadedGames[AppState.selectedGameIndex];
     const currentOrientation = board ? board.orientation() : (game.userColor === 'w' ? 'white' : 'black');
     const whitePlayer = { name: game.userColor === 'w' ? game.userUsername : game.opponentUsername, rating: game.userColor === 'w' ? game.userRating : game.opponentRating, isUser: game.userColor === 'w', color: 'w', avatar: '♔' };
     const blackPlayer = { name: game.userColor === 'b' ? game.userUsername : game.opponentUsername, rating: game.userColor === 'b' ? game.userRating : game.opponentRating, isUser: game.userColor === 'b', color: 'b', avatar: '♚' };
     const topPlayer = (currentOrientation === 'white') ? blackPlayer : whitePlayer;
     const bottomPlayer = (currentOrientation === 'white') ? whitePlayer : blackPlayer;
-    const currentFen = (typeof getCurrentBoardFen === 'function') ? getCurrentBoardFen() : ((gamePositions && gamePositions[currentMoveIndex]) ? gamePositions[currentMoveIndex].fen : game.pgn);
+    const currentFen = (typeof getCurrentBoardFen === 'function') ? getCurrentBoardFen() : ((AppState.gamePositions && AppState.gamePositions[AppState.currentMoveIndex]) ? AppState.gamePositions[AppState.currentMoveIndex].fen : game.pgn);
     const materialData = calculateMaterialAndCaptured(currentFen);
 
     if (playerTopAvatar) playerTopAvatar.textContent = topPlayer.avatar;
     if (playerTopName) playerTopName.textContent = topPlayer.name + (topPlayer.isUser ? ` ${t('player_you_suffix')}` : '');
     if (playerTopRating) playerTopRating.textContent = `(${topPlayer.rating})`;
     const inTrial = (typeof isInTrialBranch === 'function') && isInTrialBranch();
-    const currentPos = inTrial ? null : ((gamePositions && gamePositions[currentMoveIndex]) ? gamePositions[currentMoveIndex] : null);
+    const currentPos = inTrial ? null : ((AppState.gamePositions && AppState.gamePositions[AppState.currentMoveIndex]) ? AppState.gamePositions[AppState.currentMoveIndex] : null);
     if (playerTopClock) {
         const topClock = currentPos ? (topPlayer.color === 'w' ? currentPos.whiteClock : currentPos.blackClock) : null;
         if (topClock && topClock.str) { playerTopClock.textContent = topClock.str; playerTopClock.classList.remove('hidden'); } else playerTopClock.classList.add('hidden');
@@ -5007,27 +5147,34 @@ function showCopyToast() { if (!copyToast) return; copyToast.classList.remove('h
 // COACH PANEL
 // ============================================================================
 function updateCoachPanel() {
-    if (!gamePositions.length) return;
+    if (!AppState.gamePositions.length) return;
     if (btnCoachExitTrial) btnCoachExitTrial.classList.add('hidden');
-    const currentPos = gamePositions[currentMoveIndex]; const prevPos = currentMoveIndex > 0 ? gamePositions[currentMoveIndex - 1] : null;
+    const currentPos = AppState.gamePositions[AppState.currentMoveIndex];
+    if (!currentPos) return;
+    const prevPos = AppState.currentMoveIndex > 0 ? AppState.gamePositions[AppState.currentMoveIndex - 1] : null;
+    const moveSan = (currentPos.move && currentPos.move.san) ? currentPos.move.san : '';
     updateNextMistakeButtonState();
-    const selectedGame = (selectedGameIndex !== null) ? loadedGames[selectedGameIndex] : null;
+    const selectedGame = (AppState.selectedGameIndex !== null) ? AppState.loadedGames[AppState.selectedGameIndex] : null;
     const userColor = getCurrentUserColor(selectedGame);
     const isUserWhite = (userColor === 'w');
     const isUserMove = Boolean(selectedGame && currentPos.move && currentPos.move.color === userColor);
 
     const evalPerspectiveEl = document.getElementById('coach-eval-perspective');
     if (evalPerspectiveEl) {
-        evalPerspectiveEl.setAttribute('data-i18n', isUserWhite ? 'white_perspective' : 'black_perspective');
+        if (typeof evalPerspectiveEl.setAttribute === 'function') {
+            evalPerspectiveEl.setAttribute('data-i18n', isUserWhite ? 'white_perspective' : 'black_perspective');
+        }
         evalPerspectiveEl.textContent = isUserWhite ? t('white_perspective') : t('black_perspective');
     }
     const winProbLabelEl = document.getElementById('win-prob-label');
     if (winProbLabelEl) {
-        winProbLabelEl.setAttribute('data-i18n', isUserWhite ? 'win_prob_white' : 'win_prob_black');
+        if (typeof winProbLabelEl.setAttribute === 'function') {
+            winProbLabelEl.setAttribute('data-i18n', isUserWhite ? 'win_prob_white' : 'win_prob_black');
+        }
         winProbLabelEl.textContent = isUserWhite ? t('win_prob_white') : t('win_prob_black');
     }
 
-    if (currentMoveIndex === 0) {
+    if (AppState.currentMoveIndex === 0) {
         coachPanel.style.borderColor = 'var(--line)'; coachCommentText.style.color = 'var(--ink)';
         coachCommentText.textContent = t('starting_comment');
         coachPosDesc.textContent = currentPos.eval ? getPositionDescriptionText(currentPos.eval, currentLang, userColor) : t('starting_pos');
@@ -5044,9 +5191,9 @@ function updateCoachPanel() {
 
     if (!currentPos.eval || !currentPos.classification) {
         coachPanel.style.borderColor = 'var(--line)'; coachCommentText.style.color = 'var(--ink)';
-        coachCommentText.textContent = `${currentPos.move.san}: ${t('waiting_stockfish')}`;
+        coachCommentText.textContent = moveSan ? `${moveSan}: ${t('waiting_stockfish')}` : t('waiting_stockfish');
         coachPosDesc.textContent = t('calculating_eval'); coachEvalBadge.textContent = '...';
-        if (coachMoveTitle) coachMoveTitle.innerHTML = `<span class="dot" style="background:var(--warn);"></span><span class="move-title-san">${escapeHTML(currentPos.move.san)}</span> <span class="chip">${t('analyzing')}</span>`;
+        if (coachMoveTitle) coachMoveTitle.innerHTML = `<span class="dot" style="background:var(--warn);"></span><span class="move-title-san">${escapeHTML(moveSan)}</span> <span class="chip">${t('analyzing')}</span>`;
         if (currentWinProb) currentWinProb.textContent = '--%';
         btnCoachBest.classList.add('hidden'); btnCoachExplain.disabled = true; btnCoachExplain.textContent = t('btn_explain'); coachExplainBox.classList.add('hidden');
         if (btnCoachHint) { btnCoachHint.disabled = false; btnCoachHint.classList.toggle('active', isShowingHints); btnCoachHint.textContent = isShowingHints ? t('btn_close_hints') : t('btn_hints_lbl'); }
@@ -5063,7 +5210,7 @@ function updateCoachPanel() {
     const catName = typeof getCategoryName === 'function' ? getCategoryName(effectiveCategory, currentLang) : (currentLang === 'en' ? (catInfo.enName || effectiveCategory) : catInfo.viName);
     const effectiveLabel = isBrilliant ? (currentLang === 'en' ? 'Brilliant !!' : 'Xuất thần !!') : catName;
 
-    const targetPos = (currentMoveIndex > 0 && prevPos) ? prevPos : currentPos;
+    const targetPos = (AppState.currentMoveIndex > 0 && prevPos) ? prevPos : currentPos;
     const targetFen = targetPos ? targetPos.fen : getCurrentBoardFen();
     let isTargetTerminal = false;
     if (typeof Chess === 'function' && targetFen) {
@@ -5079,13 +5226,13 @@ function updateCoachPanel() {
     }
 
     coachCommentText.textContent = getCoachCommentText(
-        currentPos.move.san,
+        moveSan,
         cls.category,
-        currentMoveIndex,
+        AppState.currentMoveIndex,
         isUserMove,
         currentLang,
         {
-            move: currentPos.move,
+            move: currentPos.move || {},
             prevPos: prevPos,
             currPos: currentPos,
             bestSan: computedBestSan
@@ -5099,7 +5246,7 @@ function updateCoachPanel() {
         const badgeMarkup = typeof badgeHTML === 'function'
             ? badgeHTML(effectiveCategory, 36)
             : `<span class="dot" style="background:var(--${effectiveVarName});"></span>`;
-        coachMoveTitle.innerHTML = `${badgeMarkup}<span class="move-title-san">${escapeHTML(currentPos.move.san)}</span> <span class="chip">${escapeHTML(effectiveLabel)} · ${moverLabel}</span>`;
+        coachMoveTitle.innerHTML = `${badgeMarkup}<span class="move-title-san">${escapeHTML(moveSan)}</span> <span class="chip">${escapeHTML(effectiveLabel)} · ${moverLabel}</span>`;
     }
     if (currentWinProb) currentWinProb.textContent = formatWinProbability(currentPos.eval, userColor);
     coachEvalBadge.textContent = formatEvaluationBadge(currentPos.eval, userColor).replace('.', ',');
@@ -5126,19 +5273,19 @@ function updateCoachPanel() {
 
 function findNextMistakeIndex(fromIndex) {
     const errorCategories = ['Inaccuracy', 'Mistake', 'Blunder'];
-    for (let i = fromIndex + 1; i < gamePositions.length; i++) { const cls = gamePositions[i].classification; if (cls && errorCategories.includes(cls.category)) return i; }
-    for (let i = 1; i <= fromIndex; i++) { const cls = gamePositions[i].classification; if (cls && errorCategories.includes(cls.category)) return i; }
+    for (let i = fromIndex + 1; i < AppState.gamePositions.length; i++) { const cls = AppState.gamePositions[i].classification; if (cls && errorCategories.includes(cls.category)) return i; }
+    for (let i = 1; i <= fromIndex; i++) { const cls = AppState.gamePositions[i].classification; if (cls && errorCategories.includes(cls.category)) return i; }
     return -1;
 }
 function findPrevMistakeIndex(fromIndex) {
     const errorCategories = ['Inaccuracy', 'Mistake', 'Blunder'];
-    for (let i = fromIndex - 1; i >= 1; i--) { const cls = gamePositions[i].classification; if (cls && errorCategories.includes(cls.category)) return i; }
-    for (let i = gamePositions.length - 1; i >= fromIndex; i--) { const cls = gamePositions[i].classification; if (cls && errorCategories.includes(cls.category)) return i; }
+    for (let i = fromIndex - 1; i >= 1; i--) { const cls = AppState.gamePositions[i].classification; if (cls && errorCategories.includes(cls.category)) return i; }
+    for (let i = AppState.gamePositions.length - 1; i >= fromIndex; i--) { const cls = AppState.gamePositions[i].classification; if (cls && errorCategories.includes(cls.category)) return i; }
     return -1;
 }
 function updateMistakeButtonsState() {
-    if (btnNextMistake) btnNextMistake.disabled = (findNextMistakeIndex(currentMoveIndex) === -1);
-    if (btnPrevMistake) btnPrevMistake.disabled = (findPrevMistakeIndex(currentMoveIndex) === -1);
+    if (btnNextMistake) btnNextMistake.disabled = (findNextMistakeIndex(AppState.currentMoveIndex) === -1);
+    if (btnPrevMistake) btnPrevMistake.disabled = (findPrevMistakeIndex(AppState.currentMoveIndex) === -1);
 }
 function updateNextMistakeButtonState() { updateMistakeButtonsState(); }
 
@@ -5161,37 +5308,85 @@ function buildMoveCellBadgeHtml(pos) {
     return `<span class="move-class-badge badge-${catClass}" title="${catName} (${textSym})">${symbol}</span>`;
 }
 
+function createMoveCell(pos) {
+    const cell = document.createElement('div');
+    cell.className = 'move-cell';
+    if (!isInTrialBranch() && pos.index === AppState.currentMoveIndex) {
+        cell.classList.add('active');
+    }
+    cell.dataset.moveIndex = pos.index;
+
+    const sanSpan = document.createElement('span');
+    sanSpan.className = 'move-san';
+    sanSpan.textContent = (pos.move && pos.move.san) ? pos.move.san : '';
+    cell.appendChild(sanSpan);
+
+    if (pos.timeSpentStr) {
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'move-time-spent';
+        timeSpan.title = t('thinking_time', pos.timeSpentStr);
+        timeSpan.textContent = pos.timeSpentStr;
+        cell.appendChild(timeSpan);
+    }
+
+    const badgeWrap = document.createElement('span');
+    badgeWrap.className = 'move-badges-wrap';
+    badgeWrap.id = `move-badge-${pos.index}`;
+    badgeWrap.innerHTML = buildMoveCellBadgeHtml(pos);
+    cell.appendChild(badgeWrap);
+
+    return cell;
+}
+
 function renderMoveList() {
+    initDelegatedEventListeners();
+    if (!moveListContainer) return;
     moveListContainer.innerHTML = '';
-    if (gamePositions.length <= 1) { moveListContainer.innerHTML = `<p class="empty-text">${t('no_moves_game')}</p>`; return; }
-    if (trialBranch && trialBranch.baseMoveIndex === 0) moveListContainer.appendChild(buildTrialBranchRowElement());
+    if (AppState.gamePositions.length <= 1) {
+        const emptyP = document.createElement('p');
+        emptyP.className = 'empty-text';
+        emptyP.textContent = t('no_moves_game');
+        moveListContainer.appendChild(emptyP);
+        return;
+    }
 
-    for (let i = 1; i < gamePositions.length; i += 2) {
-        const moveTurnNumber = Math.ceil(i / 2); const whitePos = gamePositions[i]; const blackPos = gamePositions[i + 1] || null;
-        const row = document.createElement('div'); row.className = 'move-row';
-        const numSpan = document.createElement('span'); numSpan.className = 'move-number'; numSpan.textContent = `${moveTurnNumber}.`; row.appendChild(numSpan);
+    const fragment = document.createDocumentFragment();
 
-        const whiteCell = document.createElement('div'); whiteCell.className = 'move-cell';
-        if (!isInTrialBranch() && whitePos.index === currentMoveIndex) whiteCell.classList.add('active');
-        whiteCell.dataset.moveIndex = whitePos.index;
-        const whiteTimeHtml = whitePos.timeSpentStr ? `<span class="move-time-spent" title="${t('thinking_time', escapeHTML(whitePos.timeSpentStr))}">${escapeHTML(whitePos.timeSpentStr)}</span>` : '';
-        whiteCell.innerHTML = `<span class="move-san">${escapeHTML(whitePos.move.san)}</span>${whiteTimeHtml}<span class="move-badges-wrap" id="move-badge-${whitePos.index}">${buildMoveCellBadgeHtml(whitePos)}</span>`;
-        whiteCell.addEventListener('click', () => { stopAutoplay(); goToMove(whitePos.index); }); row.appendChild(whiteCell);
+    if (AppState.trialBranch && AppState.trialBranch.baseMoveIndex === 0) {
+        fragment.appendChild(buildTrialBranchRowElement());
+    }
+
+    for (let i = 1; i < AppState.gamePositions.length; i += 2) {
+        const moveTurnNumber = Math.ceil(i / 2);
+        const whitePos = AppState.gamePositions[i];
+        const blackPos = AppState.gamePositions[i + 1] || null;
+
+        const row = document.createElement('div');
+        row.className = 'move-row';
+
+        const numSpan = document.createElement('span');
+        numSpan.className = 'move-number';
+        numSpan.textContent = `${moveTurnNumber}.`;
+        row.appendChild(numSpan);
+
+        row.appendChild(createMoveCell(whitePos));
 
         if (blackPos) {
-            const blackCell = document.createElement('div'); blackCell.className = 'move-cell';
-            if (!isInTrialBranch() && blackPos.index === currentMoveIndex) blackCell.classList.add('active');
-            blackCell.dataset.moveIndex = blackPos.index;
-            const blackTimeHtml = blackPos.timeSpentStr ? `<span class="move-time-spent" title="${t('thinking_time', escapeHTML(blackPos.timeSpentStr))}">${escapeHTML(blackPos.timeSpentStr)}</span>` : '';
-            blackCell.innerHTML = `<span class="move-san">${escapeHTML(blackPos.move.san)}</span>${blackTimeHtml}<span class="move-badges-wrap" id="move-badge-${blackPos.index}">${buildMoveCellBadgeHtml(blackPos)}</span>`;
-            blackCell.addEventListener('click', () => { stopAutoplay(); goToMove(blackPos.index); }); row.appendChild(blackCell);
-        } else { row.appendChild(document.createElement('div')); }
-        moveListContainer.appendChild(row);
+            row.appendChild(createMoveCell(blackPos));
+        } else {
+            row.appendChild(document.createElement('div'));
+        }
 
-        if (trialBranch && trialBranch.baseMoveIndex > 0) {
-            if (trialBranch.baseMoveIndex === whitePos.index || (blackPos && trialBranch.baseMoveIndex === blackPos.index)) moveListContainer.appendChild(buildTrialBranchRowElement());
+        fragment.appendChild(row);
+
+        if (AppState.trialBranch && AppState.trialBranch.baseMoveIndex > 0) {
+            if (AppState.trialBranch.baseMoveIndex === whitePos.index || (blackPos && AppState.trialBranch.baseMoveIndex === blackPos.index)) {
+                fragment.appendChild(buildTrialBranchRowElement());
+            }
         }
     }
+
+    moveListContainer.appendChild(fragment);
 }
 
 function getPhaseEvalBadge(positions, color, minTurn, maxTurn) {
@@ -5231,8 +5426,8 @@ function getPhaseEvalBadge(positions, color, minTurn, maxTurn) {
 function renderStatsTable(stats, game) {
     currentStats = stats;
     let userBrilliant = 0; let oppBrilliant = 0; const userColor = game.userColor || 'w'; const oppColor = userColor === 'w' ? 'b' : 'w';
-    for (let i = 1; i < gamePositions.length; i++) {
-        const p = gamePositions[i];
+    for (let i = 1; i < AppState.gamePositions.length; i++) {
+        const p = AppState.gamePositions[i];
         if (p && p.move && (p.classification?.category === 'Brilliant' || p.classification?.isBrilliant)) {
             if (p.move.color === userColor) userBrilliant++; else if (p.move.color === oppColor) oppBrilliant++;
         }
@@ -5258,8 +5453,13 @@ function renderStatsTable(stats, game) {
     const countBlunder = userStats.counts.Blunder || 0;
     const userRatingNum = Number(game.userRating) || 0;
     const oppRatingNum = Number(game.opponentRating) || userRatingNum || 1000;
+    const userMovesCount = Array.isArray(userStats.accuracies) && userStats.accuracies.length > 0
+        ? userStats.accuracies.length
+        : (userStats.counts
+            ? Object.values(userStats.counts).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0)
+            : (AppState.gamePositions ? Math.max(0, Math.floor((AppState.gamePositions.length - 1) / 2)) : 0));
 
-    const perfRating = calculatePerformanceRating(userAccNum, countMistake, countBlunder, oppRatingNum);
+    const perfRating = calculatePerformanceRating(userAccNum, countMistake, countBlunder, oppRatingNum, userMovesCount);
 
     const kpiPerfRatingEl = document.getElementById('kpi-performance-rating');
     const kpiPerfDiffEl = document.getElementById('kpi-perf-diff');
@@ -5343,8 +5543,8 @@ function renderStatsTable(stats, game) {
         ];
         let phasesHtml = '';
         phases.forEach(phase => {
-            const wBadge = getPhaseEvalBadge(gamePositions, 'w', phase.minTurn, phase.maxTurn);
-            const bBadge = getPhaseEvalBadge(gamePositions, 'b', phase.minTurn, phase.maxTurn);
+            const wBadge = getPhaseEvalBadge(AppState.gamePositions, 'w', phase.minTurn, phase.maxTurn);
+            const bBadge = getPhaseEvalBadge(AppState.gamePositions, 'b', phase.minTurn, phase.maxTurn);
             phasesHtml += `<div class="sym-row phase-row"><div class="phase-badge sym-left">${wBadge}</div><div class="sym-center phase-center"><span class="phase-name">${phase.title}</span><span class="phase-sub">${phase.sub}</span></div><div class="phase-badge sym-right">${bBadge}</div></div>`;
         });
 
@@ -5409,13 +5609,13 @@ function renderStatsTable(stats, game) {
 let autoplayIntervalId = null;
 function isAutoplayRunning() { return autoplayIntervalId !== null; }
 function startAutoplay() {
-    if (!gamePositions || gamePositions.length <= 1 || isAutoplayRunning()) return;
-    if (currentMoveIndex >= gamePositions.length - 1) goToMove(0);
+    if (!AppState.gamePositions || AppState.gamePositions.length <= 1 || isAutoplayRunning()) return;
+    if (AppState.currentMoveIndex >= AppState.gamePositions.length - 1) goToMove(0);
     if (btnPlay) { btnPlay.textContent = t('btn_pause_lbl'); btnPlay.title = 'Tạm dừng (Phím Space)'; btnPlay.classList.add('playing'); }
     autoplayIntervalId = setInterval(() => {
-        if (!gamePositions || currentMoveIndex >= gamePositions.length - 1) { stopAutoplay(); return; }
-        goToMove(currentMoveIndex + 1);
-        if (currentMoveIndex >= gamePositions.length - 1) stopAutoplay();
+        if (!AppState.gamePositions || AppState.currentMoveIndex >= AppState.gamePositions.length - 1) { stopAutoplay(); return; }
+        goToMove(AppState.currentMoveIndex + 1);
+        if (AppState.currentMoveIndex >= AppState.gamePositions.length - 1) stopAutoplay();
     }, 1000);
 }
 function stopAutoplay() {
@@ -5425,54 +5625,112 @@ function stopAutoplay() {
 function toggleAutoplay() { if (isAutoplayRunning()) stopAutoplay(); else startAutoplay(); }
 
 function renderKeyMovesList() {
+    initDelegatedEventListeners();
     if (!keyMovesList) return;
-    if (!gamePositions || gamePositions.length <= 1 || selectedGameIndex === null) {
-        keyMovesList.innerHTML = '<p class="empty-text">Chưa chọn ván cờ.</p>'; if (keyMovesCountBadge) keyMovesCountBadge.textContent = '0'; return;
+    keyMovesList.innerHTML = '';
+    if (!AppState.gamePositions || AppState.gamePositions.length <= 1 || AppState.selectedGameIndex === null) {
+        const emptyP = document.createElement('p');
+        emptyP.className = 'empty-text';
+        emptyP.textContent = (currentLang === 'en') ? 'No game selected.' : 'Chưa chọn ván cờ.';
+        keyMovesList.appendChild(emptyP);
+        if (keyMovesCountBadge) keyMovesCountBadge.textContent = '0';
+        return;
     }
-    const selectedGame = loadedGames[selectedGameIndex]; if (!selectedGame) return;
+    const selectedGame = AppState.loadedGames[AppState.selectedGameIndex];
+    if (!selectedGame) return;
     const userColor = selectedGame.userColor;
     const myCriticalMoves = [];
-    for (let i = 1; i < gamePositions.length; i++) {
-        const pos = gamePositions[i]; if (!pos || !pos.move || pos.move.color !== userColor || !pos.classification) continue;
-        const cat = pos.classification.category; if (cat === 'Mistake' || cat === 'Blunder') myCriticalMoves.push(pos);
+    for (let i = 1; i < AppState.gamePositions.length; i++) {
+        const pos = AppState.gamePositions[i];
+        if (!pos || !pos.move || pos.move.color !== userColor || !pos.classification) continue;
+        const cat = pos.classification.category;
+        if (cat === 'Mistake' || cat === 'Blunder') myCriticalMoves.push(pos);
     }
     if (keyMovesCountBadge) keyMovesCountBadge.textContent = String(myCriticalMoves.length);
     if (myCriticalMoves.length === 0) {
-        if (isAnalyzing) keyMovesList.innerHTML = `<div class="key-moves-empty info">${t('status_analyzing')}</div>`;
-        else keyMovesList.innerHTML = `<div class="key-moves-empty success"><strong>${currentLang === 'en' ? 'Great!' : 'Tuyệt vời!'}</strong> ${currentLang === 'en' ? 'You made no major mistakes.' : 'Bạn không mắc sai lầm nào.'}</div>`;
+        const emptyDiv = document.createElement('div');
+        if (AppState.isAnalyzing) {
+            emptyDiv.className = 'key-moves-empty info';
+            emptyDiv.textContent = t('status_analyzing');
+        } else {
+            emptyDiv.className = 'key-moves-empty success';
+            const strong = document.createElement('strong');
+            strong.textContent = (currentLang === 'en' ? 'Great!' : 'Tuyệt vời!') + ' ';
+            emptyDiv.appendChild(strong);
+            emptyDiv.appendChild(document.createTextNode(currentLang === 'en' ? 'You made no major mistakes.' : 'Bạn không mắc sai lầm nào.'));
+        }
+        keyMovesList.appendChild(emptyDiv);
         return;
     }
-    let html = '';
+
+    const fragment = document.createDocumentFragment();
     myCriticalMoves.forEach((pos) => {
-        const moveNumber = Math.ceil(pos.index / 2); const movePrefix = (pos.move.color === 'w') ? `${moveNumber}.` : `${moveNumber}...`;
-        const moveSan = pos.move.san; const cat = pos.classification.category; const isBlunder = (cat === 'Blunder');
+        const moveNumber = Math.ceil(pos.index / 2);
+        const movePrefix = (pos.move.color === 'w') ? `${moveNumber}.` : `${moveNumber}...`;
+        const moveSan = (pos.move && pos.move.san) ? pos.move.san : '';
+        const cat = pos.classification.category;
+        const isBlunder = (cat === 'Blunder');
         const badgeLabel = typeof getCategoryName === 'function' ? getCategoryName(cat, currentLang) : (isBlunder ? 'Sai lầm nặng' : 'Sai lầm');
         const badgeClass = isBlunder ? 'badge-blunder' : 'badge-mistake';
-        const isActive = (pos.index === currentMoveIndex);
-        const iconBadge = typeof badgeHTML === 'function' ? badgeHTML(cat, 22, `move-class-badge badge-${cat.toLowerCase()}`) : '';
-        html += `<div class="key-move-item ${isActive ? 'active' : ''}" data-index="${pos.index}" title="Bấm để nhảy tới nước ${movePrefix} ${moveSan}"><div class="key-move-left"><span class="key-move-num">${movePrefix}</span><span class="key-move-san">${moveSan}</span></div><div class="key-move-right" style="display:flex;align-items:center;gap:6px;">${iconBadge}<span class="key-move-badge ${badgeClass}">${badgeLabel}</span></div></div>`;
+        const isActive = (pos.index === AppState.currentMoveIndex);
+
+        const item = document.createElement('div');
+        item.className = `key-move-item ${isActive ? 'active' : ''}`.trim();
+        item.dataset.index = pos.index;
+        item.title = `${currentLang === 'en' ? 'Click to jump to move' : 'Bấm để nhảy tới nước'} ${movePrefix} ${moveSan}`;
+
+        const left = document.createElement('div');
+        left.className = 'key-move-left';
+        const numSpan = document.createElement('span');
+        numSpan.className = 'key-move-num';
+        numSpan.textContent = movePrefix;
+        const sanSpan = document.createElement('span');
+        sanSpan.className = 'key-move-san';
+        sanSpan.textContent = moveSan;
+        left.appendChild(numSpan);
+        left.appendChild(sanSpan);
+
+        const right = document.createElement('div');
+        right.className = 'key-move-right';
+        right.style.display = 'flex';
+        right.style.alignItems = 'center';
+        right.style.gap = '6px';
+
+        if (typeof badgeHTML === 'function') {
+            const iconWrap = document.createElement('span');
+            iconWrap.innerHTML = badgeHTML(cat, 22, `move-class-badge badge-${cat.toLowerCase()}`);
+            right.appendChild(iconWrap);
+        }
+        const badgeSpan = document.createElement('span');
+        badgeSpan.className = `key-move-badge ${badgeClass}`;
+        badgeSpan.textContent = badgeLabel;
+        right.appendChild(badgeSpan);
+
+        item.appendChild(left);
+        item.appendChild(right);
+        fragment.appendChild(item);
     });
-    keyMovesList.innerHTML = html;
-    keyMovesList.querySelectorAll('.key-move-item').forEach((item) => { item.addEventListener('click', () => { stopAutoplay(); const idx = Number(item.dataset.index); if (!isNaN(idx)) goToMove(idx); }); });
+
+    keyMovesList.appendChild(fragment);
 }
 
 function updateKeyMovesActive() {
     if (!keyMovesList) return;
-    keyMovesList.querySelectorAll('.key-move-item').forEach((item) => { const idx = Number(item.dataset.index); item.classList.toggle('active', idx === currentMoveIndex); });
+    keyMovesList.querySelectorAll('.key-move-item').forEach((item) => { const idx = Number(item.dataset.index); item.classList.toggle('active', idx === AppState.currentMoveIndex); });
 }
 
 let previousMoveIndex = 0;
 function goToMove(index, animate = null, playSound = true, skipBoardPosition = false) {
-    if (!gamePositions.length) return;
-    if (index < 0) index = 0; if (index >= gamePositions.length) index = gamePositions.length - 1;
-    if (trialBranch) { trialBranch.isViewingBranch = false; trialBranch.currentIndex = null; }
-    if (index !== currentMoveIndex) {
+    if (!AppState.gamePositions.length) return;
+    if (index < 0) index = 0; if (index >= AppState.gamePositions.length) index = AppState.gamePositions.length - 1;
+    if (AppState.trialBranch) { AppState.trialBranch.isViewingBranch = false; AppState.trialBranch.currentIndex = null; }
+    if (index !== AppState.currentMoveIndex) {
         isGameOverBannerDismissed = false;
     }
     selectedSquareForMove = null; clearSquareMoveHighlights();
     const isSingleStep = Math.abs(index - previousMoveIndex) === 1;
     const useAnimation = (animate !== null) ? Boolean(animate) : isSingleStep;
-    currentMoveIndex = index; const currentPos = gamePositions[currentMoveIndex];
+    AppState.currentMoveIndex = index; const currentPos = AppState.gamePositions[AppState.currentMoveIndex];
     isShowingBestMove = true; isShowingHints = false; currentHintsData = [];
     if (coachHintsBox) coachHintsBox.classList.add('hidden');
     if (btnCoachHint) { btnCoachHint.classList.remove('active'); btnCoachHint.textContent = t('btn_hints_lbl'); }
@@ -5480,23 +5738,23 @@ function goToMove(index, animate = null, playSound = true, skipBoardPosition = f
     if (!skipBoardPosition && board) {
         board.position(currentPos.fen, useAnimation);
     }
-    if (playSound && isSingleStep && currentMoveIndex > 0 && currentPos.move) {
+    if (playSound && isSingleStep && AppState.currentMoveIndex > 0 && currentPos.move) {
         if (currentPos.move.captured || (currentPos.move.san && currentPos.move.san.includes('x'))) SoundManager.playCapture(); else SoundManager.playMove();
     }
-    previousMoveIndex = currentMoveIndex;
+    previousMoveIndex = AppState.currentMoveIndex;
 
     clearBoardHighlightsAndArrows(); if (currentPos.move) highlightActualMove(currentPos.move); updateCurrentMoveArrow();
-    const totalMoves = gamePositions.length - 1; moveCounterSpan.textContent = `${currentMoveIndex} / ${totalMoves}`;
-    btnStart.disabled = (currentMoveIndex === 0); btnPrev.disabled = (currentMoveIndex === 0); btnNext.disabled = (currentMoveIndex === totalMoves); btnEnd.disabled = (currentMoveIndex === totalMoves);
+    const totalMoves = AppState.gamePositions.length - 1; moveCounterSpan.textContent = `${AppState.currentMoveIndex} / ${totalMoves}`;
+    btnStart.disabled = (AppState.currentMoveIndex === 0); btnPrev.disabled = (AppState.currentMoveIndex === 0); btnNext.disabled = (AppState.currentMoveIndex === totalMoves); btnEnd.disabled = (AppState.currentMoveIndex === totalMoves);
     if (btnPlay) btnPlay.disabled = (totalMoves <= 0);
-    if (currentMoveIndex >= totalMoves && isAutoplayRunning()) stopAutoplay();
+    if (AppState.currentMoveIndex >= totalMoves && isAutoplayRunning()) stopAutoplay();
 
     const allCells = moveListContainer.querySelectorAll('.move-cell'); let activeCell = null;
-    allCells.forEach(cell => { const cellIndex = Number(cell.dataset.moveIndex); if (cellIndex === currentMoveIndex) { cell.classList.add('active'); activeCell = cell; } else cell.classList.remove('active'); });
+    allCells.forEach(cell => { const cellIndex = Number(cell.dataset.moveIndex); if (cellIndex === AppState.currentMoveIndex) { cell.classList.add('active'); activeCell = cell; } else cell.classList.remove('active'); });
     moveListContainer.querySelectorAll('.trial-move-cell.active').forEach(tc => tc.classList.remove('active'));
     if (activeCell) {
         scrollElementInsideContainer(activeCell);
-    } else if (currentMoveIndex === 0 && moveListContainer) {
+    } else if (AppState.currentMoveIndex === 0 && moveListContainer) {
         moveListContainer.scrollTop = 0;
         if (typeof window !== 'undefined' && window.innerWidth > 960) {
             const scrollBox = moveListContainer.closest('.scroll');
@@ -5506,7 +5764,7 @@ function goToMove(index, animate = null, playSound = true, skipBoardPosition = f
 
     updateCoachPanel(); updateEvalBar(); updateEvalChartMarker(); updateKeyMovesActive(); updatePlayersDisplay();
     checkAndRenderGameOverReviewState();
-    if (!isAnalyzing || isAnalysisPaused || isInTrialBranch()) {
+    if (!AppState.isAnalyzing || isAnalysisPaused || isInTrialBranch()) {
         triggerLiveAnalysis(currentPos.fen);
     }
 }
@@ -5522,9 +5780,9 @@ function stopElapsedTimer() { clearInterval(analysisTimerInterval); updateElapse
  * Xóa sổ hoàn toàn sự bất đồng bộ giữa các chế độ.
  */
 async function evaluateAndClassifyPosition(pos, isTrial, clearHash = false, moveTime = null) {
-    const isLiveMode = isTrial || (isLiveEngineEnabled && !isAnalyzing);
+    const isLiveMode = isTrial || (isLiveEngineEnabled && !AppState.isAnalyzing);
     const targetDepth = isLiveMode ? currentLiveDepth : (currentDepth || 16);
-    // For full Game Review (!isTrial && isAnalyzing), pass 0 so Stockfish completes the selected depth.
+    // For full Game Review (!isTrial && AppState.isAnalyzing), pass 0 so Stockfish completes the selected depth.
     // For Live Engine / Trial, respect user's currentMoveTime (or explicit moveTime).
     const targetMoveTime = isLiveMode
         ? (moveTime !== null ? moveTime : Math.max(currentMoveTime || 180, 250))
@@ -5565,17 +5823,17 @@ async function evaluateAndClassifyPosition(pos, isTrial, clearHash = false, move
     let evalBefore = null;
     let prevPos = null;
     if (isTrial) {
-        const bIdx = trialBranch.currentIndex;
+        const bIdx = AppState.trialBranch.currentIndex;
         if (bIdx === 0) {
-            prevPos = gamePositions[trialBranch.baseMoveIndex];
+            prevPos = AppState.gamePositions[AppState.trialBranch.baseMoveIndex];
             evalBefore = prevPos?.eval;
         } else {
-            prevPos = trialBranch.positions[bIdx - 1];
+            prevPos = AppState.trialBranch.positions[bIdx - 1];
             evalBefore = prevPos?.eval;
         }
     } else {
         if (pos.index > 0) {
-            prevPos = gamePositions[pos.index - 1];
+            prevPos = AppState.gamePositions[pos.index - 1];
             evalBefore = prevPos?.eval;
         }
     }
@@ -5583,14 +5841,14 @@ async function evaluateAndClassifyPosition(pos, isTrial, clearHash = false, move
     if (evalBefore && evalBefore.bestmove && pos.move) {
         const playedUci = pos.move.uci || `${pos.move.from}${pos.move.to}${pos.move.promotion || ''}`;
         let evalPrevPrev = null;
-        if (!isTrial && pos.index >= 2 && gamePositions[pos.index - 2]) {
-            evalPrevPrev = gamePositions[pos.index - 2].eval;
-        } else if (isTrial && trialBranch) {
-            const bIdx = trialBranch.currentIndex;
-            if (bIdx >= 2 && trialBranch.positions[bIdx - 2]) {
-                evalPrevPrev = trialBranch.positions[bIdx - 2].eval;
+        if (!isTrial && pos.index >= 2 && AppState.gamePositions[pos.index - 2]) {
+            evalPrevPrev = AppState.gamePositions[pos.index - 2].eval;
+        } else if (isTrial && AppState.trialBranch) {
+            const bIdx = AppState.trialBranch.currentIndex;
+            if (bIdx >= 2 && AppState.trialBranch.positions[bIdx - 2]) {
+                evalPrevPrev = AppState.trialBranch.positions[bIdx - 2].eval;
             } else if (bIdx === 1) {
-                evalPrevPrev = gamePositions[trialBranch.baseMoveIndex]?.eval;
+                evalPrevPrev = AppState.gamePositions[AppState.trialBranch.baseMoveIndex]?.eval;
             }
         }
         pos.classification = evaluateMoveQuality(evalBefore, pos.eval, pos.move.color, playedUci, evalBefore.bestmove, pos.index, {
@@ -5612,7 +5870,7 @@ async function evaluateAndClassifyPosition(pos, isTrial, clearHash = false, move
         updateLiveEngineUIComplete(rawResult, targetDepth, pos.fen);
         const badgeContainer = document.getElementById(`move-badge-${pos.index}`);
         if (badgeContainer) badgeContainer.innerHTML = buildMoveCellBadgeHtml(pos);
-        if (pos.index === currentMoveIndex) {
+        if (pos.index === AppState.currentMoveIndex) {
             updateCoachPanel();
             updateEvalBar();
         }
@@ -5626,7 +5884,7 @@ async function triggerLiveAnalysis(fen, forceReeval = false) {
     if (typeof isBotGameActive !== 'undefined' && isBotGameActive) return;
     const inTrial = isInTrialBranch();
 
-    if (inTrial && isAnalyzing && !isAnalysisPaused) {
+    if (inTrial && AppState.isAnalyzing && !isAnalysisPaused) {
         if (typeof pauseAnalysis === 'function') pauseAnalysis();
     }
 
@@ -5635,26 +5893,26 @@ async function triggerLiveAnalysis(fen, forceReeval = false) {
         return;
     }
 
-    if (isAnalyzing && !isAnalysisPaused && !inTrial) return;
+    if (AppState.isAnalyzing && !isAnalysisPaused && !inTrial) return;
 
     // FIX LỖI GHI ĐÈ KẾT QUẢ VÁN GỐC: 
-    if (!forceReeval && !inTrial && gamePositions[currentMoveIndex] && gamePositions[currentMoveIndex].eval) {
-        const existingEval = gamePositions[currentMoveIndex].eval;
+    if (!forceReeval && !inTrial && AppState.gamePositions[AppState.currentMoveIndex] && AppState.gamePositions[AppState.currentMoveIndex].eval) {
+        const existingEval = AppState.gamePositions[AppState.currentMoveIndex].eval;
         updateLiveEngineUIComplete(existingEval, currentDepth || 16, fen);
         return;
     }
 
-    if (forceReeval && !inTrial && gamePositions[currentMoveIndex]) {
-        gamePositions[currentMoveIndex].eval = null;
-        gamePositions[currentMoveIndex].classification = null;
+    if (forceReeval && !inTrial && AppState.gamePositions[AppState.currentMoveIndex]) {
+        AppState.gamePositions[AppState.currentMoveIndex].eval = null;
+        AppState.gamePositions[AppState.currentMoveIndex].classification = null;
     }
 
     try {
         if (inTrial) {
-            const bIdx = trialBranch.currentIndex;
-            await evaluateAndClassifyPosition(trialBranch.positions[bIdx], true, true);
+            const bIdx = AppState.trialBranch.currentIndex;
+            await evaluateAndClassifyPosition(AppState.trialBranch.positions[bIdx], true, true);
         } else {
-            await evaluateAndClassifyPosition(gamePositions[currentMoveIndex], false, false);
+            await evaluateAndClassifyPosition(AppState.gamePositions[AppState.currentMoveIndex], false, false);
         }
     } catch (err) {
         if (err && err.message !== 'ENGINE_STOPPED' && err.message !== 'ENGINE_INTERRUPTED') {
@@ -5670,7 +5928,7 @@ async function analyzeCurrentGame(game, startIndex = 0) {
     const currentSession = ++analysisSessionId;
     stockfishEngine.stop();
 
-    const totalPositions = gamePositions.length;
+    const totalPositions = AppState.gamePositions.length;
     if (totalPositions === 0) return;
 
     if (startIndex === 0) {
@@ -5688,7 +5946,7 @@ async function analyzeCurrentGame(game, startIndex = 0) {
         startElapsedTimer(true);
     }
 
-    isAnalyzing = true; isAnalysisPaused = false;
+    AppState.isAnalyzing = true; isAnalysisPaused = false;
     progressBox.classList.remove('hidden', 'done', 'paused');
     progressText.textContent = t('progress_analyzing_format', startIndex, totalPositions);
 
@@ -5708,11 +5966,11 @@ async function analyzeCurrentGame(game, startIndex = 0) {
             if (currentSession !== analysisSessionId || isAnalysisPaused) return;
 
             const shouldClearHash = (i === startIndex && startIndex === 0);
-            await evaluateAndClassifyPosition(gamePositions[i], false, shouldClearHash);
+            await evaluateAndClassifyPosition(AppState.gamePositions[i], false, shouldClearHash);
 
             if (currentSession !== analysisSessionId || isAnalysisPaused) return;
 
-            if (i !== currentMoveIndex) updateNextMistakeButtonState();
+            if (i !== AppState.currentMoveIndex) updateNextMistakeButtonState();
             if (i % 2 === 0 || i === totalPositions - 1) { drawEvalChart(); renderKeyMovesList(); }
 
             const completed = i + 1; lastCompletedIndex = completed;
@@ -5721,15 +5979,59 @@ async function analyzeCurrentGame(game, startIndex = 0) {
             progressPercent.textContent = `${percent}%`; progressFill.style.width = `${percent}%`;
         }
 
-        isAnalyzing = false; isAnalysisPaused = false; stopElapsedTimer();
+        AppState.isAnalyzing = false; isAnalysisPaused = false; stopElapsedTimer();
         if (btnPauseAnalysis) btnPauseAnalysis.classList.add('hidden');
 
-        const finalStats = classifyAllMovesAndStats(gamePositions);
+        if (progressText) {
+            progressText.textContent = (typeof currentLang !== 'undefined' && currentLang === 'en')
+                ? 'Classifying moves & calculating accuracy...'
+                : 'Đang phân loại nước đi & tính độ chính xác...';
+        }
+        if (progressBox) {
+            progressBox.classList.remove('paused');
+        }
+
+        const classifyFn = (typeof classifyAllMovesAndStatsAsync === 'function')
+            ? classifyAllMovesAndStatsAsync
+            : classifyAllMovesAndStats;
+
+        const finalStats = await classifyFn(AppState.gamePositions, {
+            chunkSize: 8,
+            onProgress: (done, total) => {
+                if (progressText) {
+                    const statusText = (typeof currentLang !== 'undefined' && currentLang === 'en')
+                        ? 'Calculating accuracy'
+                        : 'Đang tính độ chính xác';
+                    progressText.textContent = `${statusText} (${done}/${total})...`;
+                }
+            }
+        });
+        // Gắn weightedSum và totalWeight để lưu cache chuẩn xác cho Global Weighted Mean
+        ['w', 'b'].forEach(c => {
+            if (finalStats && finalStats[c]) {
+                if (typeof finalStats[c].weightedSum !== 'number' || typeof finalStats[c].totalWeight !== 'number' || finalStats[c].totalWeight <= 0) {
+                    const arr = Array.isArray(finalStats[c].accuracies) ? finalStats[c].accuracies : [];
+                    let wSum = 0;
+                    let tWeight = 0;
+                    for (const acc of arr) {
+                        const num = Number(acc);
+                        if (Number.isFinite(num)) {
+                            const weight = num < 50 ? 2.0 : (num < 80 ? 1.4 : 1.0);
+                            wSum += num * weight;
+                            tWeight += weight;
+                        }
+                    }
+                    finalStats[c].weightedSum = Number(wSum.toFixed(2));
+                    finalStats[c].totalWeight = Number(tWeight.toFixed(2));
+                }
+            }
+        });
+
         renderStatsTable(finalStats, game);
         updateCoachPanel(); updateEvalBar(); drawEvalChart(); renderKeyMovesList();
 
         if (typeof saveGameAnalysisCache === 'function') {
-            await saveGameAnalysisCache(game.url, currentDepth, gamePositions, finalStats, game.userColor);
+            await saveGameAnalysisCache(game.url, currentDepth, AppState.gamePositions, finalStats, game.userColor);
             analyzedGameUrls.add(game.url); applyGameListFilters();
             updatePersonalPuzzlesBadge();
         }
@@ -5756,13 +6058,13 @@ async function analyzeCurrentGame(game, startIndex = 0) {
         }
         if (error && (error.message === 'ENGINE_STOPPED' || error.message === 'ENGINE_INTERRUPTED')) {
             if (!isAnalysisPaused && currentSession === analysisSessionId) {
-                isAnalyzing = false;
+                AppState.isAnalyzing = false;
                 stopElapsedTimer();
                 if (btnPauseAnalysis) btnPauseAnalysis.classList.add('hidden');
             }
             return;
         }
-        isAnalyzing = false; stopElapsedTimer();
+        AppState.isAnalyzing = false; stopElapsedTimer();
         if (btnPauseAnalysis) btnPauseAnalysis.classList.add('hidden');
         showStatus(error.message, 'error'); progressBox.classList.add('hidden');
         if (isBatchAnalyzing) {
@@ -5777,7 +6079,7 @@ async function analyzeCurrentGame(game, startIndex = 0) {
  * Bắt đầu tiến trình phân tích chạy nền liên tục (Batch Analysis) cho toàn bộ ván cờ trong tháng
  */
 async function startBatchAnalysis() {
-    if (!loadedGames || loadedGames.length === 0) {
+    if (!AppState.loadedGames || AppState.loadedGames.length === 0) {
         showStatus(t('batch_no_games'), 'info');
         return;
     }
@@ -5792,7 +6094,7 @@ async function startBatchAnalysis() {
     if (btnStop) btnStop.style.display = '';
 
     // Nếu đã duyệt hết danh sách trước đó, reset về 0 để quét lại từ đầu
-    if (currentBatchIndex >= loadedGames.length) {
+    if (currentBatchIndex >= AppState.loadedGames.length) {
         currentBatchIndex = 0;
     }
 
@@ -5830,17 +6132,17 @@ async function analyzeNextUnanalyzedGame() {
     // 1. Kiểm tra điều kiện ngắt ngay lập tức: nếu người dùng đã bấm Dừng, thoát ngay
     if (!isBatchAnalyzing) return;
 
-    if (!loadedGames || loadedGames.length === 0) {
+    if (!AppState.loadedGames || AppState.loadedGames.length === 0) {
         stopBatchAnalysis();
         return;
     }
 
-    const totalGames = loadedGames.length;
+    const totalGames = AppState.loadedGames.length;
     let foundIndex = -1;
 
     // Quét tìm ván chưa phân tích tính từ currentBatchIndex đến hết mảng
     for (let i = currentBatchIndex; i < totalGames; i++) {
-        const game = loadedGames[i];
+        const game = AppState.loadedGames[i];
         if (game && game.url && !analyzedGameUrls.has(game.url)) {
             foundIndex = i;
             break;
@@ -5850,7 +6152,7 @@ async function analyzeNextUnanalyzedGame() {
     // Nếu từ currentBatchIndex trở đi không còn, nhưng có thể các ván trước đó chưa phân tích
     if (foundIndex === -1) {
         for (let i = 0; i < currentBatchIndex; i++) {
-            const game = loadedGames[i];
+            const game = AppState.loadedGames[i];
             if (game && game.url && !analyzedGameUrls.has(game.url)) {
                 foundIndex = i;
                 break;
@@ -5882,39 +6184,61 @@ async function analyzeNextUnanalyzedGame() {
 }
 
 function pauseAnalysis() {
-    if (!isAnalyzing || isAnalysisPaused) return;
+    if (!AppState.isAnalyzing || isAnalysisPaused) return;
     isAnalysisPaused = true; stockfishEngine.stop(); pauseElapsedTimer();
     if (btnPauseAnalysis) { btnPauseAnalysis.textContent = t('btn_resume_analysis'); btnPauseAnalysis.classList.add('btn-resume'); btnPauseAnalysis.classList.remove('btn-pause'); }
-    progressBox.classList.add('paused'); progressText.textContent = t('progress_paused_format', lastCompletedIndex, gamePositions.length); drawEvalChart();
+    progressBox.classList.add('paused'); progressText.textContent = t('progress_paused_format', lastCompletedIndex, AppState.gamePositions.length); drawEvalChart();
 }
 function resumeAnalysis() {
-    if (!isAnalysisPaused || selectedGameIndex === null) return;
+    if (!isAnalysisPaused || AppState.selectedGameIndex === null) return;
     isAnalysisPaused = false;
     if (btnPauseAnalysis) { btnPauseAnalysis.textContent = t('btn_pause_analysis'); btnPauseAnalysis.classList.remove('btn-resume'); btnPauseAnalysis.classList.add('btn-pause'); }
-    progressBox.classList.remove('paused'); analyzeCurrentGame(loadedGames[selectedGameIndex], lastCompletedIndex);
+    progressBox.classList.remove('paused'); analyzeCurrentGame(AppState.loadedGames[AppState.selectedGameIndex], lastCompletedIndex);
 }
-function applyCachedAnalysis(cachedData, game) {
-    ++analysisSessionId; stockfishEngine.stop(); isAnalyzing = false; isAnalysisPaused = false; stopElapsedTimer();
+async function applyCachedAnalysis(cachedData, game) {
+    const currentSession = ++analysisSessionId;
+    stockfishEngine.stop(); AppState.isAnalyzing = false; isAnalysisPaused = false; stopElapsedTimer();
     if (btnPauseAnalysis) btnPauseAnalysis.classList.add('hidden');
-    if (cachedData.positions && cachedData.positions.length) {
-        cachedData.positions.forEach(p => {
-            if (gamePositions[p.index]) {
-                gamePositions[p.index].eval = p.eval;
-            }
-        });
-        // Tự động phân loại lại theo thuật toán mới nhất
-        if (typeof classifyAllMovesAndStats === 'function') {
-            const freshStats = classifyAllMovesAndStats(gamePositions);
-            cachedData.stats = freshStats;
+    if (progressBox) {
+        progressBox.classList.remove('hidden', 'paused');
+        if (progressText) {
+            progressText.textContent = (typeof currentLang !== 'undefined' && currentLang === 'en')
+                ? 'Loading cached analysis...'
+                : 'Đang tải phân tích đã lưu...';
         }
     }
-    for (let i = 1; i < gamePositions.length; i++) {
+    if (cachedData.positions && cachedData.positions.length) {
+        cachedData.positions.forEach(p => {
+            if (AppState.gamePositions[p.index]) {
+                AppState.gamePositions[p.index].eval = p.eval;
+            }
+        });
+        // Tự động phân loại lại theo thuật toán mới nhất với Yielding
+        const classifyFn = (typeof classifyAllMovesAndStatsAsync === 'function')
+            ? classifyAllMovesAndStatsAsync
+            : classifyAllMovesAndStats;
+
+        const freshStats = await classifyFn(AppState.gamePositions, {
+            chunkSize: 12,
+            onProgress: (done, total) => {
+                if (progressText && currentSession === analysisSessionId) {
+                    const statusText = (typeof currentLang !== 'undefined' && currentLang === 'en')
+                        ? 'Reading cache'
+                        : 'Đang nạp phân tích';
+                    progressText.textContent = `${statusText} (${done}/${total})...`;
+                }
+            }
+        });
+        if (currentSession !== analysisSessionId) return;
+        cachedData.stats = freshStats;
+    }
+    for (let i = 1; i < AppState.gamePositions.length; i++) {
         const badgeContainer = document.getElementById(`move-badge-${i}`);
-        if (badgeContainer) badgeContainer.innerHTML = buildMoveCellBadgeHtml(gamePositions[i]);
+        if (badgeContainer) badgeContainer.innerHTML = buildMoveCellBadgeHtml(AppState.gamePositions[i]);
     }
     const statsToRender = (cachedData.stats && cachedData.stats.w)
         ? cachedData.stats
-        : (typeof classifyAllMovesAndStats === 'function' ? classifyAllMovesAndStats(gamePositions) : null);
+        : null;
     if (statsToRender) renderStatsTable(statsToRender, game);
     if (cacheStatusBadge) cacheStatusBadge.classList.remove('hidden');
     if (btnReanalyze) btnReanalyze.classList.remove('hidden');
@@ -5926,7 +6250,7 @@ function applyCachedAnalysis(cachedData, game) {
     if (analysisElapsedTime) analysisElapsedTime.textContent = t('cache_saved');
     drawEvalChart();
     renderKeyMovesList();
-    goToMove(currentMoveIndex);
+    goToMove(AppState.currentMoveIndex);
 }
 
 function updateLiveEngineUIOff() {
@@ -5980,20 +6304,27 @@ function formatTimeClass(timeClass, lang = currentLang) {
 }
 
 function renderGameList(games) {
-    const list = Array.isArray(games) ? games : loadedGames;
+    initDelegatedEventListeners();
+    const list = Array.isArray(games) ? games : AppState.loadedGames;
+    if (!gameListContainer) return;
     gameListContainer.innerHTML = '';
-    gameCountSpan.textContent = list.length;
+    if (gameCountSpan) gameCountSpan.textContent = list.length;
     if (list.length === 0) {
-        gameListContainer.innerHTML = `<p class="empty-text">${t('no_games_found')}</p>`;
+        const emptyP = document.createElement('p');
+        emptyP.className = 'empty-text';
+        emptyP.textContent = t('no_games_found');
+        gameListContainer.appendChild(emptyP);
         return;
     }
+
+    const fragment = document.createDocumentFragment();
 
     list.forEach((game) => {
         const item = document.createElement('div');
         item.className = 'game-item';
-        const originalIndex = loadedGames.indexOf(game);
+        const originalIndex = AppState.loadedGames.indexOf(game);
         item.dataset.index = originalIndex;
-        if (originalIndex === selectedGameIndex) item.classList.add('active');
+        if (originalIndex === AppState.selectedGameIndex) item.classList.add('active');
         const colorClass = game.userColor === 'w' ? 'white' : 'black';
         const badgeClass = `badge-${game.resultType}`;
         const timeClassSafe = (game.timeClass || 'rapid').toLowerCase();
@@ -6028,13 +6359,72 @@ function renderGameList(games) {
             });
         }
 
-        item.innerHTML = `<div class="game-item-header"><div class="game-player-info"><span class="color-square ${colorClass}"></span><span class="opponent-name">${escapeHTML(game.opponentUsername)}</span><span class="opponent-rating">(${escapeHTML(game.opponentRating)})</span></div><span class="game-date">${escapeHTML(displayDate)}</span></div><div class="game-item-meta"><div class="game-item-tags"><span class="time-class-badge time-${timeClassSafe}">${timeIcon} ${escapeHTML(formatTimeClass(game.timeClass, currentLang))}</span>${isAnalyzed ? `<span class="badge-analyzed">${t('badge_analyzed')}</span>` : ''}</div><span class="badge-result ${badgeClass}">${resultIcon} ${escapeHTML(res.label)}</span></div>`;
-        item.addEventListener('click', () => selectGame(game));
-        gameListContainer.appendChild(item);
+        const header = document.createElement('div');
+        header.className = 'game-item-header';
+
+        const playerInfo = document.createElement('div');
+        playerInfo.className = 'game-player-info';
+
+        const colorSq = document.createElement('span');
+        colorSq.className = `color-square ${colorClass}`;
+
+        const oppName = document.createElement('span');
+        oppName.className = 'opponent-name';
+        oppName.textContent = game.opponentUsername || '';
+
+        const oppRating = document.createElement('span');
+        oppRating.className = 'opponent-rating';
+        oppRating.textContent = `(${game.opponentRating || '?'})`;
+
+        playerInfo.appendChild(colorSq);
+        playerInfo.appendChild(oppName);
+        playerInfo.appendChild(oppRating);
+
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'game-date';
+        dateSpan.textContent = displayDate || '';
+
+        header.appendChild(playerInfo);
+        header.appendChild(dateSpan);
+
+        const meta = document.createElement('div');
+        meta.className = 'game-item-meta';
+
+        const tags = document.createElement('div');
+        tags.className = 'game-item-tags';
+
+        const timeBadge = document.createElement('span');
+        timeBadge.className = `time-class-badge time-${timeClassSafe}`;
+        timeBadge.innerHTML = `${timeIcon} `;
+        timeBadge.appendChild(document.createTextNode(formatTimeClass(game.timeClass, currentLang)));
+        tags.appendChild(timeBadge);
+
+        if (isAnalyzed) {
+            const analyzedBadge = document.createElement('span');
+            analyzedBadge.className = 'badge-analyzed';
+            analyzedBadge.textContent = t('badge_analyzed');
+            tags.appendChild(analyzedBadge);
+        }
+
+        const resBadge = document.createElement('span');
+        resBadge.className = `badge-result ${badgeClass}`;
+        resBadge.innerHTML = `${resultIcon} `;
+        resBadge.appendChild(document.createTextNode(res.label || ''));
+
+        meta.appendChild(tags);
+        meta.appendChild(resBadge);
+
+        item.appendChild(header);
+        item.appendChild(meta);
+
+        // Click handled via event delegation on gameListContainer
+        fragment.appendChild(item);
     });
+
+    gameListContainer.appendChild(fragment);
 }
 function applyGameListFilters() {
-    let result = [...loadedGames];
+    let result = [...AppState.loadedGames];
     if (currentFilterResult !== 'all') result = result.filter(game => game.resultType === currentFilterResult);
     if (currentFilterTimeClass !== 'all') result = result.filter(game => (game.timeClass || '').toLowerCase() === currentFilterTimeClass.toLowerCase());
     if (currentSortOrder === 'oldest') result.reverse();
@@ -6047,14 +6437,14 @@ async function selectGame(gameOrIndex, keepDrawerOpen = false) {
     const myToken = ++selectGameToken;
     if (!keepDrawerOpen && !isBatchAnalyzing) closeGameDrawer();
     let index, game;
-    if (typeof gameOrIndex === 'number') { index = gameOrIndex; game = loadedGames[index]; } else { game = gameOrIndex; index = loadedGames.indexOf(game); }
-    selectedGameIndex = index;
-    gameListContainer.querySelectorAll('.game-item').forEach((el) => el.classList.toggle('active', Number(el.dataset.index) === selectedGameIndex));
+    if (typeof gameOrIndex === 'number') { index = gameOrIndex; game = AppState.loadedGames[index]; } else { game = gameOrIndex; index = AppState.loadedGames.indexOf(game); }
+    AppState.selectedGameIndex = index;
+    gameListContainer.querySelectorAll('.game-item').forEach((el) => el.classList.toggle('active', Number(el.dataset.index) === AppState.selectedGameIndex));
     try {
         if (isBotGameActive) exitBotGame();
         const btnPlayBotEl = document.getElementById('btn-play-bot');
         if (btnPlayBotEl) btnPlayBotEl.disabled = false;
-        hideStatus(); trialBranch = null; if (btnCoachExitTrial) btnCoachExitTrial.classList.add('hidden');
+        hideStatus(); AppState.trialBranch = null; if (btnCoachExitTrial) btnCoachExitTrial.classList.add('hidden');
         selectedSquareForMove = null; clearSquareMoveHighlights(); isShowingBestMove = true; isShowingExplain = false;
         if (kpiOpening) kpiOpening.textContent = (typeof extractOpeningNameFromPGN === 'function') ? extractOpeningNameFromPGN(game.pgn) : '--';
         document.getElementById('kpi-user-accuracy').textContent = '--%'; document.getElementById('kpi-opp-accuracy').textContent = '--%';
@@ -6070,8 +6460,9 @@ async function selectGame(gameOrIndex, keepDrawerOpen = false) {
         setTimeout(() => { if (board && typeof board.resize === 'function') board.resize(); }, 50);
 
         const userColor = getCurrentUserColor(game);
-        const whitePlayer = userColor === 'w' ? `${game.userUsername || 'bazu25022005'} (${game.userRating || '?'})` : `${game.opponentUsername || 'Opponent'} (${game.opponentRating || '?'})`;
-        const blackPlayer = userColor === 'b' ? `${game.userUsername || 'bazu25022005'} (${game.userRating || '?'})` : `${game.opponentUsername || 'Opponent'} (${game.opponentRating || '?'})`;
+        const myUsername = game.userUsername || (typeof getAppUsername === 'function' ? getAppUsername() : '') || (currentLang === 'en' ? 'You' : 'Bạn');
+        const whitePlayer = userColor === 'w' ? `${myUsername} (${game.userRating || '?'})` : `${game.opponentUsername || 'Opponent'} (${game.opponentRating || '?'})`;
+        const blackPlayer = userColor === 'b' ? `${myUsername} (${game.userRating || '?'})` : `${game.opponentUsername || 'Opponent'} (${game.opponentRating || '?'})`;
         const whiteLabel = t('white_player_lbl');
         const blackLabel = t('black_player_lbl');
         if (gamePlayersInfo) gamePlayersInfo.innerHTML = `<strong>⬜ ${whiteLabel}:</strong> ${escapeHTML(whitePlayer)} &nbsp;|&nbsp; <strong>⬛ ${blackLabel}:</strong> ${escapeHTML(blackPlayer)}`;
@@ -6090,7 +6481,7 @@ async function selectGame(gameOrIndex, keepDrawerOpen = false) {
             }
         }
 
-        isAnalyzing = false; isAnalysisPaused = false; stockfishEngine.stop(); stopElapsedTimer();
+        AppState.isAnalyzing = false; isAnalysisPaused = false; stockfishEngine.stop(); stopElapsedTimer();
         const userOrientation = (userColor === 'b') ? 'black' : 'white';
         const autoFlip = (typeof localStorage !== 'undefined' && localStorage.getItem('chess_auto_flip') !== 'false');
         if (autoFlip) {
@@ -6103,7 +6494,7 @@ async function selectGame(gameOrIndex, keepDrawerOpen = false) {
         if (typeof board.resize === 'function') board.resize();
         stopAutoplay();
         if (game.isCustomFen) {
-            gamePositions = [{
+            AppState.gamePositions = [{
                 index: 0,
                 fen: game.fen,
                 turn: new Chess(game.fen).turn(),
@@ -6127,14 +6518,14 @@ async function selectGame(gameOrIndex, keepDrawerOpen = false) {
             triggerLiveAnalysis(game.fen);
             return;
         }
-        gamePositions = buildPositionsFromPGN(game.pgn);
+        AppState.gamePositions = buildPositionsFromPGN(game.pgn);
         renderMoveList(); drawEvalChart(); renderKeyMovesList(); goToMove(0);
 
         let cachedData = null;
         if (typeof getGameAnalysisCache === 'function') cachedData = await getGameAnalysisCache(game.url, currentDepth);
         if (myToken !== selectGameToken) return;
         if (cachedData && cachedData.positions && cachedData.positions.length) {
-            applyCachedAnalysis(cachedData, game);
+            await applyCachedAnalysis(cachedData, game);
             analyzedGameUrls.add(game.url);
             applyGameListFilters();
             if (isBatchAnalyzing) {
@@ -6159,7 +6550,7 @@ async function selectGame(gameOrIndex, keepDrawerOpen = false) {
 
 /**
  * Render Mini-Dashboard trên màn hình chờ (#review-placeholder)
- * @param {Array} games - Danh sách ván cờ đã tải (loadedGames)
+ * @param {Array} games - Danh sách ván cờ đã tải (AppState.loadedGames)
  */
 async function renderWelcomeDashboard(games) {
     const placeholderEl = document.getElementById('review-placeholder');
@@ -6367,18 +6758,22 @@ async function handleFetchGames() {
     const progressEl = document.getElementById('batch-progress-text');
     if (progressEl) progressEl.textContent = '';
 
-    const username = (typeof getAppUsername === 'function' ? getAppUsername() : (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : 'bazu25022005'));
+    const username = (typeof getAppUsername === 'function' ? getAppUsername() : (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : ''));
+    if (!username) {
+        showStatus((typeof currentLang !== 'undefined' && currentLang === 'en') ? 'Please enter a Chess.com username in Settings.' : 'Vui lòng nhập username Chess.com trong Cài đặt.', 'error');
+        return;
+    }
     const year = parseInt(yearInput.value, 10); const month = monthSelect.value;
     if (isFutureMonth(year, month)) { showStatus(t('future_month_error_format', month, year), 'error'); updateMonthNavButtons(); return; }
     btnFetch.disabled = true; btnFetch.textContent = t('btn_loading'); showStatus(t('loading_games'), 'info');
     try {
-        loadedGames = await fetchMonthlyGames(username, year, month);
+        AppState.loadedGames = await fetchMonthlyGames(username, year, month);
         if (typeof getAllCachedGameUrls === 'function') analyzedGameUrls = await getAllCachedGameUrls(currentDepth);
         applyGameListFilters();
-        await renderWelcomeDashboard(loadedGames);
+        await renderWelcomeDashboard(AppState.loadedGames);
         hideStatus();
     } catch (error) {
-        loadedGames = []; gameCountSpan.textContent = '0'; gameListContainer.innerHTML = `<p class="empty-text">${t('no_games_found')}</p>`;
+        AppState.loadedGames = []; gameCountSpan.textContent = '0'; gameListContainer.innerHTML = `<p class="empty-text">${t('no_games_found')}</p>`;
         await renderWelcomeDashboard([]);
         showStatus(error.message, 'error');
     } finally { btnFetch.disabled = false; btnFetch.textContent = t('fetch_btn'); }
@@ -6403,10 +6798,10 @@ btnFlip.addEventListener('click', () => {
             highlightCheckSquare(botGameChess.turn());
         }
     } else if (typeof isInTrialBranch === 'function' && isInTrialBranch()) {
-        const trialPos = trialBranch.positions[trialBranch.currentIndex];
+        const trialPos = AppState.trialBranch.positions[AppState.trialBranch.currentIndex];
         if (trialPos && trialPos.move) highlightActualMove(trialPos.move);
     } else {
-        const currentPos = gamePositions[currentMoveIndex];
+        const currentPos = AppState.gamePositions[AppState.currentMoveIndex];
         if (currentPos && currentPos.move) highlightActualMove(currentPos.move);
     }
 
@@ -6430,8 +6825,8 @@ if (btnCloseGob) {
 
 if (btnCopyPgn) {
     btnCopyPgn.addEventListener('click', async () => {
-        if (selectedGameIndex === null || !loadedGames[selectedGameIndex]) return;
-        const game = loadedGames[selectedGameIndex]; if (!game.pgn) return;
+        if (AppState.selectedGameIndex === null || !AppState.loadedGames[AppState.selectedGameIndex]) return;
+        const game = AppState.loadedGames[AppState.selectedGameIndex]; if (!game.pgn) return;
         try { await navigator.clipboard.writeText(game.pgn); showCopyToast(); } catch (err) {
             const ta = document.createElement('textarea'); ta.value = game.pgn; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); showCopyToast();
         }
@@ -6440,7 +6835,7 @@ if (btnCopyPgn) {
 
 btnCoachBest.addEventListener('click', () => {
     if (isInTrialBranch()) {
-        const trialPos = trialBranch.positions[trialBranch.currentIndex];
+        const trialPos = AppState.trialBranch.positions[AppState.trialBranch.currentIndex];
         if (!trialPos || !trialPos.eval || !trialPos.eval.bestmove) return;
         if (isShowingHints) {
             isShowingHints = false;
@@ -6456,9 +6851,9 @@ btnCoachBest.addEventListener('click', () => {
         updateCoachPanelForTrial();
         return;
     }
-    const currentPos = gamePositions[currentMoveIndex];
-    const prevPos = currentMoveIndex > 0 ? gamePositions[currentMoveIndex - 1] : null;
-    const targetPos = (currentMoveIndex > 0 && prevPos) ? prevPos : currentPos;
+    const currentPos = AppState.gamePositions[AppState.currentMoveIndex];
+    const prevPos = AppState.currentMoveIndex > 0 ? AppState.gamePositions[AppState.currentMoveIndex - 1] : null;
+    const targetPos = (AppState.currentMoveIndex > 0 && prevPos) ? prevPos : currentPos;
     if (!targetPos || !targetPos.eval || !targetPos.eval.bestmove) return;
     if (isShowingHints) {
         isShowingHints = false;
@@ -6522,32 +6917,32 @@ function renderHintsList(fen, results) {
 
 if (btnCoachHint) {
     btnCoachHint.addEventListener('click', async () => {
-        if (!gamePositions || gamePositions.length === 0) return;
-        const currentPos = gamePositions[currentMoveIndex]; if (!currentPos) return;
-        if (isShowingHints) { isShowingHints = false; currentHintsData = []; clearArrows(); if (coachHintsBox) coachHintsBox.classList.add('hidden'); btnCoachHint.classList.remove('active'); btnCoachHint.textContent = t('btn_hints_lbl'); return; }
-        if (isAnalyzing && !isAnalysisPaused) { showStatus(t('analysis_in_progress'), 'info'); return; }
+        if (!AppState.gamePositions || AppState.gamePositions.length === 0) return;
+        const currentPos = AppState.gamePositions[AppState.currentMoveIndex]; if (!currentPos) return;
+        if (isShowingHints) { isShowingHints = false; currentHintsData = []; if (typeof clearArrows === 'function') clearArrows(); if (coachHintsBox) coachHintsBox.classList.add('hidden'); btnCoachHint.classList.remove('active'); btnCoachHint.textContent = t('btn_hints_lbl'); return; }
+        if (AppState.isAnalyzing && !isAnalysisPaused) { showStatus(t('analysis_in_progress'), 'info'); return; }
 
         let targetFen = currentPos.fen;
         if (isInTrialBranch()) {
-            const bIdx = trialBranch.currentIndex;
-            targetFen = (bIdx === 0) ? trialBranch.baseFen : trialBranch.positions[bIdx - 1].fen;
-        } else if (currentMoveIndex > 0) {
-            targetFen = gamePositions[currentMoveIndex - 1].fen;
+            const bIdx = AppState.trialBranch.currentIndex;
+            targetFen = (bIdx === 0) ? AppState.trialBranch.baseFen : AppState.trialBranch.positions[bIdx - 1].fen;
+        } else if (AppState.currentMoveIndex > 0) {
+            targetFen = AppState.gamePositions[AppState.currentMoveIndex - 1].fen;
         }
 
         const chessCheck = new Chess(targetFen);
         if (chessCheck.in_checkmate() || chessCheck.in_draw() || chessCheck.in_stalemate() || chessCheck.in_threefold_repetition() || chessCheck.insufficient_material()) return;
         if (isShowingBestMove) { isShowingBestMove = false; updateCoachPanel(); }
 
-        const analyzingMoveIndex = currentMoveIndex;
+        const analyzingMoveIndex = AppState.currentMoveIndex;
         btnCoachHint.disabled = true; btnCoachHint.textContent = t('btn_calculating');
         try {
             const results = await stockfishEngine.evaluateMultiPV(targetFen, 15, 3);
-            if (currentMoveIndex !== analyzingMoveIndex) return;
+            if (AppState.currentMoveIndex !== analyzingMoveIndex) return;
             btnCoachHint.disabled = false;
             if (!results || results.length === 0) { btnCoachHint.textContent = t('btn_hints_lbl'); return; }
             isShowingHints = true; currentHintsData = results; btnCoachHint.classList.add('active'); btnCoachHint.textContent = t('btn_close_hints');
-            clearArrows();
+            if (typeof clearArrows === 'function') clearArrows();
             const hintColors = [ARROW_COLORS.BEST, ARROW_COLORS.SUGGEST_2, ARROW_COLORS.SUGGEST_3];
             const hintWidths = [17, 15, 14]; const hintOpacities = [0.85, 0.78, 0.72];
             results.forEach((item, idx) => {
@@ -6560,10 +6955,10 @@ if (btnCoachHint) {
     });
 }
 
-if (btnCloseHints) btnCloseHints.addEventListener('click', () => { isShowingHints = false; currentHintsData = []; clearArrows(); if (coachHintsBox) coachHintsBox.classList.add('hidden'); if (btnCoachHint) { btnCoachHint.classList.remove('active'); btnCoachHint.textContent = t('btn_hints_lbl'); } });
-btnCoachExplain.addEventListener('click', () => { if (currentMoveIndex <= 0) return; isShowingExplain = !isShowingExplain; updateCoachPanel(); });
-if (btnPrevMistake) btnPrevMistake.addEventListener('click', () => { stopAutoplay(); const prevErrIdx = findPrevMistakeIndex(currentMoveIndex); if (prevErrIdx !== -1) goToMove(prevErrIdx); });
-btnNextMistake.addEventListener('click', () => { stopAutoplay(); const nextErrIdx = findNextMistakeIndex(currentMoveIndex); if (nextErrIdx !== -1) goToMove(nextErrIdx); });
+if (btnCloseHints) btnCloseHints.addEventListener('click', () => { isShowingHints = false; currentHintsData = []; if (typeof clearArrows === 'function') clearArrows(); if (coachHintsBox) coachHintsBox.classList.add('hidden'); if (btnCoachHint) { btnCoachHint.classList.remove('active'); btnCoachHint.textContent = t('btn_hints_lbl'); } });
+btnCoachExplain.addEventListener('click', () => { if (AppState.currentMoveIndex <= 0) return; isShowingExplain = !isShowingExplain; updateCoachPanel(); });
+if (btnPrevMistake) btnPrevMistake.addEventListener('click', () => { stopAutoplay(); const prevErrIdx = findPrevMistakeIndex(AppState.currentMoveIndex); if (prevErrIdx !== -1) goToMove(prevErrIdx); });
+btnNextMistake.addEventListener('click', () => { stopAutoplay(); const nextErrIdx = findNextMistakeIndex(AppState.currentMoveIndex); if (nextErrIdx !== -1) goToMove(nextErrIdx); });
 if (btnCoachExitTrial) btnCoachExitTrial.addEventListener('click', () => { stopAutoplay(); exitTrialBranch(); });
 if (btnPlayBot) btnPlayBot.addEventListener('click', () => { startBotGame(); });
 if (btnExitBot) btnExitBot.addEventListener('click', () => { exitBotGame(); });
@@ -6575,22 +6970,22 @@ let evalChartThrottleTimer = null;
 let lastChartTargetMove = -1;
 
 function getChartMoveIndexFromEvent(e) {
-    if (!gamePositions || gamePositions.length === 0) return -1;
+    if (!AppState.gamePositions || AppState.gamePositions.length === 0) return -1;
     if (e.target && e.target.classList && e.target.classList.contains('chart-error-dot')) {
         const moveIdx = Number(e.target.dataset.moveIndex);
-        if (!isNaN(moveIdx) && moveIdx >= 0 && moveIdx < gamePositions.length) return moveIdx;
+        if (!isNaN(moveIdx) && moveIdx >= 0 && moveIdx < AppState.gamePositions.length) return moveIdx;
     }
     const rect = evalChartSvg.getBoundingClientRect();
     if (rect.width <= 0) return -1;
     const clientX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
     const clickX = clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, clickX / rect.width));
-    return Math.round(ratio * (gamePositions.length - 1));
+    return Math.round(ratio * (AppState.gamePositions.length - 1));
 }
 
 function handleEvalChartInteraction(e, isDrag = false) {
     if (typeof isBotGameActive !== 'undefined' && isBotGameActive) return;
-    if (!gamePositions || gamePositions.length === 0) return;
+    if (!AppState.gamePositions || AppState.gamePositions.length === 0) return;
     stopAutoplay();
     const targetMove = getChartMoveIndexFromEvent(e);
     if (targetMove === -1) return;
@@ -6610,7 +7005,7 @@ function handleEvalChartInteraction(e, isDrag = false) {
     if (!evalChartThrottleTimer) {
         evalChartThrottleTimer = setTimeout(() => {
             evalChartThrottleTimer = null;
-            if (lastChartTargetMove !== -1 && lastChartTargetMove !== currentMoveIndex) {
+            if (lastChartTargetMove !== -1 && lastChartTargetMove !== AppState.currentMoveIndex) {
                 goToMove(lastChartTargetMove);
             }
         }, 40);
@@ -6629,7 +7024,7 @@ if (evalChartSvg) {
         if (isDraggingEvalChart) {
             isDraggingEvalChart = false;
             if (evalChartThrottleTimer) { clearTimeout(evalChartThrottleTimer); evalChartThrottleTimer = null; }
-            if (lastChartTargetMove !== -1 && lastChartTargetMove !== currentMoveIndex) {
+            if (lastChartTargetMove !== -1 && lastChartTargetMove !== AppState.currentMoveIndex) {
                 goToMove(lastChartTargetMove);
             }
         }
@@ -6645,7 +7040,7 @@ if (evalChartSvg) {
         if (isDraggingEvalChart) {
             isDraggingEvalChart = false;
             if (evalChartThrottleTimer) { clearTimeout(evalChartThrottleTimer); evalChartThrottleTimer = null; }
-            if (lastChartTargetMove !== -1 && lastChartTargetMove !== currentMoveIndex) {
+            if (lastChartTargetMove !== -1 && lastChartTargetMove !== AppState.currentMoveIndex) {
                 goToMove(lastChartTargetMove);
             }
         }
@@ -6680,7 +7075,7 @@ document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') exitBotGame();
         return;
     }
-    if (!gamePositions || !gamePositions.length) return;
+    if (!AppState.gamePositions || !AppState.gamePositions.length) return;
     if (e.key === 'ArrowLeft') { e.preventDefault(); handlePrevMove(); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); handleNextMove(); }
     else if (e.key === 'Home') { e.preventDefault(); handleStartMove(); }
@@ -6728,12 +7123,12 @@ if (btnStopBatch) btnStopBatch.addEventListener('click', stopBatchAnalysis);
 
 if (btnReanalyze) {
     btnReanalyze.addEventListener('click', async () => {
-        if (selectedGameIndex === null || !loadedGames[selectedGameIndex]) return;
-        const game = loadedGames[selectedGameIndex];
+        if (AppState.selectedGameIndex === null || !AppState.loadedGames[AppState.selectedGameIndex]) return;
+        const game = AppState.loadedGames[AppState.selectedGameIndex];
         if (typeof deleteGameAnalysisCache === 'function') await deleteGameAnalysisCache(game.url, currentDepth);
         analyzedGameUrls.delete(game.url); applyGameListFilters();
         if (cacheStatusBadge) cacheStatusBadge.classList.add('hidden'); btnReanalyze.classList.add('hidden');
-        stopAutoplay(); gamePositions = buildPositionsFromPGN(game.pgn);
+        stopAutoplay(); AppState.gamePositions = buildPositionsFromPGN(game.pgn);
         renderMoveList(); drawEvalChart(); renderKeyMovesList(); goToMove(0);
         analyzeCurrentGame(game, 0);
     });
@@ -6811,13 +7206,79 @@ if (tabButtons.length > 0) {
     });
 }
 
+function initDelegatedEventListeners() {
+    if (typeof document === 'undefined') return;
+
+    if (moveListContainer && !moveListContainer._delegated && !moveListContainer.dataset?.delegated) {
+        moveListContainer._delegated = true;
+        if (moveListContainer.dataset) moveListContainer.dataset.delegated = 'true';
+        moveListContainer.addEventListener('click', (e) => {
+            if (!e || !e.target) return;
+            const cell = e.target.closest?.('.move-cell');
+            if (cell && cell.dataset?.moveIndex !== undefined) {
+                stopAutoplay();
+                const idx = Number(cell.dataset.moveIndex);
+                if (!isNaN(idx)) goToMove(idx);
+                return;
+            }
+            const trialCell = e.target.closest?.('.trial-move-cell');
+            if (trialCell && trialCell.dataset?.branchIndex !== undefined) {
+                stopAutoplay();
+                if (AppState.trialBranch) {
+                    AppState.trialBranch.isViewingBranch = true;
+                    AppState.trialBranch.currentIndex = Number(trialCell.dataset.branchIndex);
+                    updateBoardToTrialCurrent();
+                }
+                return;
+            }
+            const btnExitTrial = e.target.closest?.('.btn-exit-trial');
+            if (btnExitTrial) {
+                stopAutoplay();
+                exitTrialBranch();
+                return;
+            }
+        });
+    }
+
+    if (keyMovesList && !keyMovesList._delegated && !keyMovesList.dataset?.delegated) {
+        keyMovesList._delegated = true;
+        if (keyMovesList.dataset) keyMovesList.dataset.delegated = 'true';
+        keyMovesList.addEventListener('click', (e) => {
+            if (!e || !e.target) return;
+            const item = e.target.closest?.('.key-move-item');
+            if (item && item.dataset?.index !== undefined) {
+                stopAutoplay();
+                const idx = Number(item.dataset.index);
+                if (!isNaN(idx)) goToMove(idx);
+            }
+        });
+    }
+
+    if (gameListContainer && !gameListContainer._delegated && !gameListContainer.dataset?.delegated) {
+        gameListContainer._delegated = true;
+        if (gameListContainer.dataset) gameListContainer.dataset.delegated = 'true';
+        gameListContainer.addEventListener('click', (e) => {
+            if (!e || !e.target) return;
+            const item = e.target.closest?.('.game-item');
+            if (item && item.dataset?.index !== undefined) {
+                const idx = Number(item.dataset.index);
+                if (!isNaN(idx) && AppState.loadedGames[idx]) {
+                    selectGame(AppState.loadedGames[idx]);
+                }
+            }
+        });
+    }
+}
+
 function bootApplication() {
     initCustomizationControls();
     initDefaultDate();
+    initDelegatedEventListeners();
     handleFetchGames();
 }
 
 if (typeof document !== 'undefined') {
+    initDelegatedEventListeners();
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', bootApplication);
     } else {
@@ -6826,6 +7287,10 @@ if (typeof document !== 'undefined') {
 }
 
 if (typeof window !== 'undefined') {
+    window.initDelegatedEventListeners = initDelegatedEventListeners;
+    window.renderMoveList = renderMoveList;
+    window.renderKeyMovesList = renderKeyMovesList;
+    window.renderGameList = renderGameList;
     window.applyReviewDepth = applyReviewDepth;
     window.syncSettingsToUnifiedStorage = syncSettingsToUnifiedStorage;
     window.readStoredSetting = readStoredSetting;
@@ -6858,9 +7323,20 @@ if (typeof window !== 'undefined') {
     window.hideGameOverBanner = hideGameOverBanner;
     window.formatGameOverReason = formatGameOverReason;
     window.checkAndRenderGameOverReviewState = checkAndRenderGameOverReviewState;
+    window.applyCachedAnalysis = applyCachedAnalysis;
+    window.isMoveMatchingPuzzleBest = isMoveMatchingPuzzleBest;
+    window.triggerLiveAnalysis = triggerLiveAnalysis;
 }
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        AppState,
+        applyCachedAnalysis,
+        isMoveMatchingPuzzleBest,
+        triggerLiveAnalysis,
+        initDelegatedEventListeners,
+        renderMoveList,
+        renderKeyMovesList,
+        renderGameList,
         applyReviewDepth,
         syncSettingsToUnifiedStorage,
         readStoredSetting,

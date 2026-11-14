@@ -43,11 +43,98 @@ function escapeHTML(str) {
 }
 
 /**
+ * Trích xuất tổng trọng số (totalWeight) và tổng tích lũy (weightedSum) của từng ván đấu
+ * Giải quyết triệt để Nghịch lý Simpson (Simpson's Paradox) khi tính độ chính xác trung bình tích lũy.
+ * @param {Object} userStats - Thống kê của người chơi trong ván đấu
+ * @param {Object} [cachedRecord] - Bản ghi cache đầy đủ (nếu có)
+ * @returns {{ weightedSum: number, totalWeight: number }}
+ */
+function getGameWeightedAccuracy(userStats, cachedRecord = null) {
+    if (!userStats || typeof userStats !== 'object') {
+        return { weightedSum: 0, totalWeight: 0 };
+    }
+
+    // 1. Nếu ván đấu đã lưu sẵn weightedSum và totalWeight (từ classify.js / app.js)
+    if (typeof userStats.weightedSum === 'number' && typeof userStats.totalWeight === 'number' && userStats.totalWeight > 0) {
+        return {
+            weightedSum: userStats.weightedSum,
+            totalWeight: userStats.totalWeight
+        };
+    }
+
+    // 2. Nếu có mảng accuracies của từng nước đi trong ván
+    const accuracies = Array.isArray(userStats.accuracies) ? userStats.accuracies : null;
+    if (accuracies && accuracies.length > 0) {
+        let weightedSum = 0;
+        let totalWeight = 0;
+        for (const acc of accuracies) {
+            const num = Number(acc);
+            if (Number.isFinite(num)) {
+                const weight = num < 50 ? 2.0 : (num < 80 ? 1.4 : 1.0);
+                weightedSum += num * weight;
+                totalWeight += weight;
+            }
+        }
+        if (totalWeight > 0) {
+            return {
+                weightedSum: Number(weightedSum.toFixed(2)),
+                totalWeight: Number(totalWeight.toFixed(2))
+            };
+        }
+    }
+
+    // 3. Nếu có cachedRecord.positions chứa các nước đi đã phân loại
+    if (cachedRecord && Array.isArray(cachedRecord.positions) && cachedRecord.positions.length > 1) {
+        const targetColor = cachedRecord.userColor || userStats.userColor;
+        let weightedSum = 0;
+        let totalWeight = 0;
+        for (let i = 1; i < cachedRecord.positions.length; i++) {
+            const pos = cachedRecord.positions[i];
+            const moveColor = pos?.move?.color || (pos?.turn === 'w' ? 'b' : 'w');
+            if (!targetColor || moveColor === targetColor) {
+                const num = pos?.classification?.accuracy;
+                if (typeof num === 'number' && Number.isFinite(num)) {
+                    const weight = num < 50 ? 2.0 : (num < 80 ? 1.4 : 1.0);
+                    weightedSum += num * weight;
+                    totalWeight += weight;
+                }
+            }
+        }
+        if (totalWeight > 0) {
+            return {
+                weightedSum: Number(weightedSum.toFixed(2)),
+                totalWeight: Number(totalWeight.toFixed(2))
+            };
+        }
+    }
+
+    // 4. Fallback: Nếu chỉ có avgAccuracy / accuracy và tổng số nước đi (từ counts)
+    const acc = Number(userStats.avgAccuracy ?? userStats.accuracy);
+    if (Number.isFinite(acc) && acc >= 0) {
+        let moveCount = 0;
+        if (userStats.counts && typeof userStats.counts === 'object') {
+            for (const val of Object.values(userStats.counts)) {
+                if (typeof val === 'number' && val > 0) moveCount += val;
+            }
+        }
+        const weight = acc < 50 ? 2.0 : (acc < 80 ? 1.4 : 1.0);
+        const totalWeight = (moveCount > 0 ? moveCount : 1) * weight;
+        const weightedSum = acc * totalWeight;
+        return {
+            weightedSum: Number(weightedSum.toFixed(2)),
+            totalWeight: Number(totalWeight.toFixed(2))
+        };
+    }
+
+    return { weightedSum: 0, totalWeight: 0 };
+}
+
+/**
  * Tính toán thống kê trọn đời / sự nghiệp của người chơi
  * @param {Object} options
  * @param {Array} [options.loadedGames] - Danh sách ván cờ đã tải từ API Chess.com
  * @param {Array} [options.cachedAnalyses] - Danh sách phân tích đã lưu trong IndexedDB
- * @param {string} [options.username] - Tên người dùng (mặc định: bazu25022005)
+ * @param {string} [options.username] - Tên người dùng
  * @param {string} [options.lang] - Ngôn ngữ ('vi' | 'en')
  * @returns {Object} Đối tượng thống kê chi tiết
  */
@@ -66,7 +153,7 @@ function calculateLifetimeStats(options = {}) {
         ? options.cachedAnalyses
         : [];
 
-    const rawUser = options.username || (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : 'bazu25022005');
+    const rawUser = options.username || (typeof getAppUsername === 'function' ? getAppUsername() : (typeof CHESSCOM_USERNAME !== 'undefined' ? CHESSCOM_USERNAME : ''));
     const username = String(rawUser).trim().toLowerCase();
     const lang = options.lang || (typeof currentLang !== 'undefined' ? currentLang : 'vi');
 
@@ -108,7 +195,7 @@ function calculateLifetimeStats(options = {}) {
     const drawPct = (totalGames > 0 && Number.isFinite(draws / totalGames)) ? Number(((draws / totalGames) * 100).toFixed(1)) : 0;
     const lossPct = (totalGames > 0 && Number.isFinite(losses / totalGames)) ? Number(((losses / totalGames) * 100).toFixed(1)) : 0;
 
-    // 2. Thống kê phân tích (Accuracy & Move Badges)
+    // 2. Thống kê phân tích (Global Weighted Accuracy & Move Badges)
     const cacheByUrl = new Map();
     for (const item of analyses) {
         if (!item || typeof item !== 'object') continue;
@@ -139,12 +226,17 @@ function calculateLifetimeStats(options = {}) {
         Blunder: 0
     };
 
-    let userAccSum = 0;
-    let userAccCount = 0;
-    let whiteAccSum = 0;
-    let whiteAccCount = 0;
-    let blackAccSum = 0;
-    let blackAccCount = 0;
+    let userAnalyzedCount = 0;
+    let userGlobalWeightedSum = 0;
+    let userGlobalTotalWeight = 0;
+
+    let whiteAnalyzedCount = 0;
+    let whiteGlobalWeightedSum = 0;
+    let whiteGlobalTotalWeight = 0;
+
+    let blackAnalyzedCount = 0;
+    let blackGlobalWeightedSum = 0;
+    let blackGlobalTotalWeight = 0;
 
     const processedGameUrls = new Set();
 
@@ -157,16 +249,19 @@ function calculateLifetimeStats(options = {}) {
             const userStats = cached.stats[userColor];
 
             if (userStats && typeof userStats === 'object') {
-                const acc = Number(userStats.avgAccuracy ?? userStats.accuracy);
-                if (Number.isFinite(acc) && acc > 0) {
-                    userAccSum += acc;
-                    userAccCount++;
+                const { weightedSum, totalWeight } = getGameWeightedAccuracy(userStats, cached);
+                if (totalWeight > 0) {
+                    userAnalyzedCount++;
+                    userGlobalWeightedSum += weightedSum;
+                    userGlobalTotalWeight += totalWeight;
                     if (userColor === 'w') {
-                        whiteAccSum += acc;
-                        whiteAccCount++;
+                        whiteAnalyzedCount++;
+                        whiteGlobalWeightedSum += weightedSum;
+                        whiteGlobalTotalWeight += totalWeight;
                     } else {
-                        blackAccSum += acc;
-                        blackAccCount++;
+                        blackAnalyzedCount++;
+                        blackGlobalWeightedSum += weightedSum;
+                        blackGlobalTotalWeight += totalWeight;
                     }
                 }
 
@@ -190,16 +285,19 @@ function calculateLifetimeStats(options = {}) {
             if (targetColor && (targetColor === 'w' || targetColor === 'b')) {
                 const sideStats = item.stats[targetColor];
                 if (sideStats && typeof sideStats === 'object') {
-                    const acc = Number(sideStats.avgAccuracy ?? sideStats.accuracy);
-                    if (Number.isFinite(acc) && acc > 0) {
-                        userAccSum += acc;
-                        userAccCount++;
+                    const { weightedSum, totalWeight } = getGameWeightedAccuracy(sideStats, item);
+                    if (totalWeight > 0) {
+                        userAnalyzedCount++;
+                        userGlobalWeightedSum += weightedSum;
+                        userGlobalTotalWeight += totalWeight;
                         if (targetColor === 'w') {
-                            whiteAccSum += acc;
-                            whiteAccCount++;
+                            whiteAnalyzedCount++;
+                            whiteGlobalWeightedSum += weightedSum;
+                            whiteGlobalTotalWeight += totalWeight;
                         } else {
-                            blackAccSum += acc;
-                            blackAccCount++;
+                            blackAnalyzedCount++;
+                            blackGlobalWeightedSum += weightedSum;
+                            blackGlobalTotalWeight += totalWeight;
                         }
                     }
                     if (sideStats.counts && typeof sideStats.counts === 'object') {
@@ -214,9 +312,16 @@ function calculateLifetimeStats(options = {}) {
         }
     }
 
-    const avgAccuracy = (userAccCount > 0 && Number.isFinite(userAccSum / userAccCount)) ? Number((userAccSum / userAccCount).toFixed(1)) : null;
-    const whiteAccuracy = (whiteAccCount > 0 && Number.isFinite(whiteAccSum / whiteAccCount)) ? Number((whiteAccSum / whiteAccCount).toFixed(1)) : null;
-    const blackAccuracy = (blackAccCount > 0 && Number.isFinite(blackAccSum / blackAccCount)) ? Number((blackAccSum / blackAccCount).toFixed(1)) : null;
+    // Global Weighted Mean: Tính trung bình chung có trọng số, triệt tiêu Simpson's Paradox
+    const avgAccuracy = (userGlobalTotalWeight > 0 && Number.isFinite(userGlobalWeightedSum / userGlobalTotalWeight))
+        ? Number((userGlobalWeightedSum / userGlobalTotalWeight).toFixed(1))
+        : null;
+    const whiteAccuracy = (whiteGlobalTotalWeight > 0 && Number.isFinite(whiteGlobalWeightedSum / whiteGlobalTotalWeight))
+        ? Number((whiteGlobalWeightedSum / whiteGlobalTotalWeight).toFixed(1))
+        : null;
+    const blackAccuracy = (blackGlobalTotalWeight > 0 && Number.isFinite(blackGlobalWeightedSum / blackGlobalTotalWeight))
+        ? Number((blackGlobalWeightedSum / blackGlobalTotalWeight).toFixed(1))
+        : null;
 
     // 3. Khai cuộc phổ biến nhất (Top 5)
     const favoriteOpenings = Array.from(openingsMap.values())
@@ -247,10 +352,12 @@ function calculateLifetimeStats(options = {}) {
         winPct,
         drawPct,
         lossPct,
-        analyzedCount: userAccCount,
+        analyzedCount: userAnalyzedCount,
         avgAccuracy,
         whiteAccuracy,
         blackAccuracy,
+        weightedSum: Number(userGlobalWeightedSum.toFixed(2)),
+        totalWeight: Number(userGlobalTotalWeight.toFixed(2)),
         badges,
         favoriteOpenings
     };
@@ -461,7 +568,7 @@ async function openLifetimeStatsModal() {
         : (typeof loadedGames !== 'undefined' ? loadedGames : []);
 
     const lang = typeof currentLang !== 'undefined' ? currentLang : 'vi';
-    const username = (typeof CHESSCOM_USERNAME !== 'undefined') ? CHESSCOM_USERNAME : 'bazu25022005';
+    const username = (typeof getAppUsername === 'function') ? getAppUsername() : ((typeof CHESSCOM_USERNAME !== 'undefined') ? CHESSCOM_USERNAME : '');
 
     const stats = calculateLifetimeStats({
         loadedGames: currentGames,
@@ -513,13 +620,17 @@ function initLifetimeStatsUI() {
         });
     }
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            if (modal && !modal.classList.contains('hidden')) {
-                closeLifetimeStatsModal();
+    if (!document._lifetimeStatsKeydownBound) {
+        document._lifetimeStatsKeydownBound = true;
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const currentModal = document.getElementById('lifetime-stats-modal');
+                if (currentModal && !currentModal.classList.contains('hidden')) {
+                    closeLifetimeStatsModal();
+                }
             }
-        }
-    });
+        });
+    }
 }
 
 /**
@@ -585,7 +696,11 @@ async function extractPersonalPuzzles(loadedGamesList = null) {
     const puzzles = [];
     const seenFens = new Set();
 
-    for (const record of analyses) {
+    for (let recordIdx = 0; recordIdx < analyses.length; recordIdx++) {
+        const record = analyses[recordIdx];
+        if (recordIdx > 0 && recordIdx % 8 === 0) {
+            await new Promise(r => setTimeout(r, 0));
+        }
         if (!record || !record.positions || !Array.isArray(record.positions)) continue;
 
         const matchedGame = games.find(g => g.url === record.gameUrl) || null;
@@ -690,6 +805,7 @@ if (typeof document !== 'undefined') {
 // Xuất cho môi trường trình duyệt
 if (typeof window !== 'undefined') {
     window.extractOpeningNameFromPGN = extractOpeningNameFromPGN;
+    window.getGameWeightedAccuracy = getGameWeightedAccuracy;
     window.calculateLifetimeStats = calculateLifetimeStats;
     window.renderLifetimeStatsModal = renderLifetimeStatsModal;
     window.openLifetimeStatsModal = openLifetimeStatsModal;
@@ -702,6 +818,7 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         extractOpeningNameFromPGN,
+        getGameWeightedAccuracy,
         calculateLifetimeStats,
         renderLifetimeStatsModal,
         openLifetimeStatsModal,

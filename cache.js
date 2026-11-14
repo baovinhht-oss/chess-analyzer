@@ -29,14 +29,19 @@ function openCacheDB() {
 
         request.onupgradeneeded = (event) => {
             const db = event.target.result;
-            // Xóa bảng cũ (nếu có) để dọn dẹp cấu trúc dữ liệu lỗi
-            if (db.objectStoreNames.contains(CACHE_STORE_NAME)) {
-                db.deleteObjectStore(CACHE_STORE_NAME);
+            let store;
+            // Bảo tồn dữ liệu: Chỉ tạo mới store nếu chưa tồn tại, tránh xóa sạch cache khi nâng cấp phiên bản
+            if (!db.objectStoreNames.contains(CACHE_STORE_NAME)) {
+                store = db.createObjectStore(CACHE_STORE_NAME, { keyPath: 'id' });
+            } else {
+                store = event.target.transaction.objectStore(CACHE_STORE_NAME);
             }
-            // Khởi tạo bảng mới
-            const store = db.createObjectStore(CACHE_STORE_NAME, { keyPath: 'id' });
-            store.createIndex('gameUrl', 'gameUrl', { unique: false });
-            store.createIndex('depth', 'depth', { unique: false });
+            if (store && !store.indexNames.contains('gameUrl')) {
+                store.createIndex('gameUrl', 'gameUrl', { unique: false });
+            }
+            if (store && !store.indexNames.contains('depth')) {
+                store.createIndex('depth', 'depth', { unique: false });
+            }
         };
 
         request.onsuccess = () => {
@@ -59,6 +64,44 @@ function makeCacheKey(gameUrl, depth) {
 }
 
 /**
+ * Kiểm tra tính hợp lệ và toàn vẹn của dữ liệu phân tích trước khi lưu vào IndexedDB
+ * @param {string} gameUrl
+ * @param {number} depth
+ * @param {Array} positions
+ * @param {Object} stats
+ * @returns {{ valid: boolean, error?: string }}
+ */
+function validateAnalysisData(gameUrl, depth, positions, stats) {
+    if (!gameUrl || typeof gameUrl !== 'string' || !gameUrl.trim()) {
+        return { valid: false, error: 'gameUrl không hợp lệ hoặc bị rỗng' };
+    }
+    const numDepth = Number(depth);
+    if (!Number.isInteger(numDepth) || numDepth <= 0 || numDepth > 100) {
+        return { valid: false, error: 'Độ sâu depth không hợp lệ' };
+    }
+    if (!Array.isArray(positions) || positions.length === 0) {
+        return { valid: false, error: 'Danh sách positions không phải là mảng hoặc bị rỗng' };
+    }
+    if (!positions[0] || typeof positions[0].fen !== 'string' || !positions[0].fen.includes('/')) {
+        return { valid: false, error: 'Thế cờ đầu tiên thiếu chuỗi FEN hợp lệ' };
+    }
+    return { valid: true };
+}
+
+/**
+ * Kiểm tra tính toàn vẹn của một bản ghi phân tích lấy từ IndexedDB
+ * @param {Object} record
+ * @returns {boolean}
+ */
+function validateCachedRecord(record) {
+    if (!record || typeof record !== 'object') return false;
+    if (!record.id || !record.gameUrl || !record.depth) return false;
+    if (!Array.isArray(record.positions) || record.positions.length === 0) return false;
+    if (!record.positions[0] || typeof record.positions[0].fen !== 'string') return false;
+    return true;
+}
+
+/**
  * Lấy dữ liệu phân tích đã lưu từ IndexedDB
  */
 async function getGameAnalysisCache(gameUrl, depth) {
@@ -70,7 +113,15 @@ async function getGameAnalysisCache(gameUrl, depth) {
             const key = makeCacheKey(gameUrl, depth);
             const request = store.get(key);
 
-            request.onsuccess = () => resolve(request.result || null);
+            request.onsuccess = () => {
+                const res = request.result;
+                if (res && !validateCachedRecord(res)) {
+                    console.warn('⚠️ Bản ghi cache bị lỗi cấu trúc dữ liệu, bỏ qua:', key);
+                    resolve(null);
+                    return;
+                }
+                resolve(res || null);
+            };
             request.onerror = () => reject(request.error);
         });
     } catch (err) {
@@ -83,6 +134,12 @@ async function getGameAnalysisCache(gameUrl, depth) {
  * Lưu kết quả phân tích ván cờ vào IndexedDB
  */
 async function saveGameAnalysisCache(gameUrl, depth, positions, stats, userColor = null) {
+    const val = validateAnalysisData(gameUrl, depth, positions, stats);
+    if (!val.valid) {
+        console.warn('⚠️ Bỏ qua lưu cache vì dữ liệu không hợp lệ:', val.error);
+        return;
+    }
+
     try {
         const db = await openCacheDB();
         return new Promise((resolve, reject) => {
@@ -207,7 +264,11 @@ async function getAllCachedAnalyses() {
             const tx = db.transaction(CACHE_STORE_NAME, 'readonly');
             const store = tx.objectStore(CACHE_STORE_NAME);
             const request = store.getAll();
-            request.onsuccess = () => resolve(request.result || []);
+            request.onsuccess = () => {
+                const list = request.result || [];
+                const validList = list.filter(validateCachedRecord);
+                resolve(validList);
+            };
             request.onerror = () => reject(request.error);
         });
     } catch (err) {
@@ -217,6 +278,8 @@ async function getAllCachedAnalyses() {
 }
 
 if (typeof window !== 'undefined') {
+    window.validateAnalysisData = validateAnalysisData;
+    window.validateCachedRecord = validateCachedRecord;
     window.getAllCachedAnalyses = getAllCachedAnalyses;
 }
 
@@ -227,6 +290,8 @@ if (typeof module !== 'undefined' && module.exports) {
         CACHE_STORE_NAME,
         makeCacheKey,
         openCacheDB,
+        validateAnalysisData,
+        validateCachedRecord,
         getGameAnalysisCache,
         saveGameAnalysisCache,
         deleteGameAnalysisCache,

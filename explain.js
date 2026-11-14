@@ -24,6 +24,23 @@ const PIECE_VALUES = {
 };
 
 /**
+ * Chống tấn công XSS: Chuyển đổi các ký tự nguy hiểm sang thực thể HTML an toàn
+ */
+function escapeHTML(str) {
+    if (typeof str !== 'string') {
+        if (str === null || str === undefined) return '';
+        str = String(str);
+    }
+    return str.replace(/[&<>'"]/g, match => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    }[match]));
+}
+
+/**
  * Trợ thủ lấy hàm khởi tạo Chess an toàn cho cả trình duyệt và Node.js
  */
 function getChessConstructor() {
@@ -170,10 +187,10 @@ function convertPvToSanLine(fenBefore, pvUciList, maxMoves = 4, lang = (typeof c
         if (!moveObj) break;
 
         if (i === 0) {
-            sanMoves.push(moveObj.san);
+            sanMoves.push(escapeHTML(moveObj.san));
         } else {
             const prefix = (turnBeforeMove === 'b') ? '...' : '';
-            sanMoves.push(`${prefix}${moveObj.san}`);
+            sanMoves.push(`${prefix}${escapeHTML(moveObj.san)}`);
         }
     }
 
@@ -206,11 +223,11 @@ function getPieceName(code, lang = 'vi') {
 function describeSingleMoveStory(moveObj, isMoverTurn, lang = 'vi') {
     const isEn = lang === 'en';
     const piece = (moveObj.piece || 'p').toLowerCase();
-    const pieceName = getPieceName(piece, lang);
+    const pieceName = escapeHTML(getPieceName(piece, lang));
     const captured = moveObj.captured ? moveObj.captured.toLowerCase() : null;
-    const capturedName = captured ? getPieceName(captured, lang) : '';
-    const to = moveObj.to;
-    const san = moveObj.san;
+    const capturedName = captured ? escapeHTML(getPieceName(captured, lang)) : '';
+    const to = escapeHTML(moveObj.to);
+    const san = escapeHTML(moveObj.san);
 
     if (san === 'O-O' || san === 'O-O-O') {
         return isEn
@@ -294,13 +311,13 @@ function translatePvToConversationalStory(fen, pvUciList, userColor, lang = 'vi'
 function describeMoveAction(currPos, isUserMove, lang = 'vi') {
     const isEn = lang === 'en';
     const move = currPos.move || {};
-    const san = move.san || '';
-    const from = move.from || '';
-    const to = move.to || '';
+    const san = escapeHTML(move.san || '');
+    const from = escapeHTML(move.from || '');
+    const to = escapeHTML(move.to || '');
     const piece = (move.piece || 'p').toLowerCase();
     const captured = move.captured ? move.captured.toLowerCase() : null;
-    const pieceName = getPieceName(piece, lang);
-    const capturedName = captured ? getPieceName(captured, lang) : '';
+    const pieceName = escapeHTML(getPieceName(piece, lang));
+    const capturedName = captured ? escapeHTML(getPieceName(captured, lang)) : '';
 
     const subject = isEn ? (isUserMove ? 'You' : 'Your opponent') : (isUserMove ? 'Bạn' : 'Đối thủ');
     const oppPossessive = isEn ? (isUserMove ? "the opponent's" : 'your') : (isUserMove ? 'của đối thủ' : 'của bạn');
@@ -372,10 +389,10 @@ function detectTacticalReason(prevPos, currPos, isUserMove = true, lang = (typeo
     const move = currPos.move || {};
     const category = (currPos.classification && currPos.classification.category) || 'Good';
     const piece = (move.piece || 'p').toLowerCase();
-    const pieceName = getPieceName(piece, lang);
-    const to = move.to || '';
-    const from = move.from || '';
-    const san = move.san || '';
+    const pieceName = escapeHTML(getPieceName(piece, lang));
+    const to = escapeHTML(move.to || '');
+    const from = escapeHTML(move.from || '');
+    const san = escapeHTML(move.san || '');
     const subject = isEn ? (isUserMove ? 'you' : 'your opponent') : (isUserMove ? 'bạn' : 'đối thủ');
     const subjectCap = isEn ? (isUserMove ? 'You' : 'Your opponent') : (isUserMove ? 'Bạn' : 'Đối thủ');
     const otherSide = isEn ? (isUserMove ? 'the opponent' : 'you') : (isUserMove ? 'đối thủ' : 'bạn');
@@ -742,6 +759,7 @@ function buildMoveExplanation(prevPos, currPos, isUserMove = true, lang = (typeo
 }
 
 if (typeof window !== 'undefined') {
+    window.escapeHTML = escapeHTML;
     window.PIECE_NAMES = PIECE_NAMES;
     window.formatEvaluationBadge = formatEvaluationBadge;
     window.getPositionDescriptionText = getPositionDescriptionText;
@@ -757,6 +775,7 @@ if (typeof window !== 'undefined') {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        escapeHTML,
         formatEvaluationBadge,
         getPositionDescriptionText,
         buildMoveExplanation,
